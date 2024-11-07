@@ -2,7 +2,7 @@
 
 ## Dynamic Components
 
-> [!WARNING] Outdated Documentation
+> [!WARNING]
 > Some of the below documentation is slightly outdated and requires revision.
 
 The `App` component is designed to be extensible. It includes a `DynamicComponents` component that dynamically renders other components from fragments with either of the following classes:

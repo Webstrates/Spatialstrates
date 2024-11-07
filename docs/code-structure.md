@@ -4,7 +4,7 @@ The code of Spatialstrates is modular and organized into the structure below. Th
 
 Each package defines their own dependencies, and the WPM GUI in Cauldron can be used to define which packages should be loaded. For instance, if the WebRTC streaming features are not required, one can simply tick off the `StreamingBundle` package in the WPM GUI to avoid loading it.
 
-> [!WARNING] Outdated Documentation
+> [!WARNING]
 > Some of the below documentation is slightly outdated and requires revision.
 
 
