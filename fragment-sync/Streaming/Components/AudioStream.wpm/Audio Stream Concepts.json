@@ -1,0 +1,10 @@
+{
+    "concepts": {
+        "AudioStream": {
+            "schema": {
+                "client": "string",
+                "muted": "boolean"
+            }
+        }
+    }
+}

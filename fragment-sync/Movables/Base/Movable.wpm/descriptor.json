@@ -1,0 +1,11 @@
+{
+    "description": "Basic movable component and mechanism with helpers",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Icon",
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

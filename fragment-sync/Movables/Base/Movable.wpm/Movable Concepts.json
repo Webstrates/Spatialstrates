@@ -1,0 +1,26 @@
+{
+    "concepts": {
+        "Movable": {
+            "schema": {
+                "position": { "array": {
+                    "items": "number",
+                    "default": [ 0, 1.5, 0 ]
+                }},
+                "rotation": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "selected": "boolean",
+                "hovered": "boolean",
+                "beingDragged": "boolean",
+                "private": "boolean",
+                "author": "User"
+            },
+            "mappings": {
+                "selected": [ "memory", "cauldron" ],
+                "hovered": [ "memory", "cauldron" ],
+                "beingDragged": [ "memory", "cauldron" ]
+            }
+        }
+    }
+}

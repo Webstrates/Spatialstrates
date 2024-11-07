@@ -1,0 +1,10 @@
+{
+    "description": "The Spatialstrates core package and implementation",
+    "dependencies": [
+        "varv-repos varv-react"
+    ],
+    "assets": [
+        "inter-variable.zip"
+    ],
+    "version": "0.1.0"
+}

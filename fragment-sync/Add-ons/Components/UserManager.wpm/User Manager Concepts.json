@@ -1,0 +1,18 @@
+{
+    "concepts": {
+        "UserManager": {
+            "schema": {
+                "placeholder": "string",
+                "localUser": "User"
+            },
+            "mappings": {
+                "localUser": [ "memory", "cauldron" ]
+            }
+        },
+        "User": {
+            "schema": {
+                "name": "string"
+            }
+        }
+    }
+}

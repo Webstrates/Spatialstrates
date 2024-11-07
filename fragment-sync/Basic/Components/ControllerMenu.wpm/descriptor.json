@@ -1,0 +1,12 @@
+{
+    "description": "A simple controller menu for immersive XR",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Icon",
+        "#Text"
+    ],
+    "assets": [
+        "button.glb"
+    ],
+    "version": "0.1.0"
+}

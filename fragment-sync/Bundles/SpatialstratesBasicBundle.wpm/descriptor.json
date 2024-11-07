@@ -1,0 +1,11 @@
+{
+    "description": "A bundle with all basic Spatialstrates packages",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Menu",
+        "#ControllerMenu",
+        "#BasicMenu"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

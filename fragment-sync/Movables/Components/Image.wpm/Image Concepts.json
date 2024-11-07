@@ -1,0 +1,12 @@
+{
+    "concepts": {
+        "Image": {
+            "schema": {
+                "url": "string"
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "description": "Stream component for video streams",
+    "dependencies": [
+        "#StreamManager",
+        "#VideoStreamManager",
+        "#Menu"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

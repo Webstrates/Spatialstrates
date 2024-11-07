@@ -1,0 +1,12 @@
+{
+    "concepts": {
+        "StickyNote": {
+            "schema": {
+                "text": "string"
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

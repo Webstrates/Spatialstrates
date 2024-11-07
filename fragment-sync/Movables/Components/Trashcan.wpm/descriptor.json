@@ -1,0 +1,13 @@
+{
+    "description": "A trashcan component that can be used to delete movables",
+    "dependencies": [
+        "#Movable",
+        "#Icon",
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [
+        "trash.glb"
+    ],
+    "version": "0.1.0"
+}

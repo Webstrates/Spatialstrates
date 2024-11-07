@@ -1,0 +1,8 @@
+{
+    "description": "A simple menu GUI for Spatialstrates",
+    "dependencies": [
+        "#Spatialstrates"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

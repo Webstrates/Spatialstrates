@@ -1,0 +1,12 @@
+{
+    "concepts": {
+        "Trashcan": {
+            "schema": {
+                "placeholder": "string"
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

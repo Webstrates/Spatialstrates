@@ -1,0 +1,10 @@
+{
+    "description": "Stream component for audio streams",
+    "dependencies": [
+        "#AudioStreamManager",
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

@@ -1,0 +1,56 @@
+body {
+    margin: 0;
+    font-family: Inter, sans-serif;
+    height: 100vh;
+}
+
+#cauldron-edit-button {
+    z-index: 100001;
+    user-select: none;
+    cursor: pointer;
+
+    border-radius: 4px;
+    height: 24px;
+    box-sizing: unset;
+    line-height: 24px;
+    font-family: 'Inter', sans-serif;
+    padding: 0 8px;
+    top: 12px !important;
+    right: 12px !important;
+    font-weight: 500;
+    font-size: 13px;
+
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    background: rgba(255, 255, 255, .60) !important;
+    border: 1px solid #cccccc70;
+
+    &:hover {
+        background: rgba(255, 255, 255, .80) !important;
+    }
+}
+
+.crosshair {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: #FF3D00;
+    outline: 2px solid #E4E3DF;
+    border: 2px solid #231F20;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+.spatial-strates-stats {
+    top: 48px !important;
+    right: 12px !important;
+    left: auto !important;
+
+    canvas {
+        border-radius: 3px;
+    }
+}

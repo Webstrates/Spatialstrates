@@ -1,0 +1,12 @@
+{
+    "description": "A bundle for the Movable mechanism and basic components",
+    "dependencies": [
+        "#Movable",
+        "#StickyNote",
+        "#Image",
+        "#Trashcan",
+        "#Screenshots"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

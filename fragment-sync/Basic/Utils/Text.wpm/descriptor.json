@@ -1,0 +1,8 @@
+{
+    "description": "A helper component to globally control the font and text rendering.",
+    "dependencies": [],
+    "assets": [
+        "inter-medium.woff"
+    ],
+    "version": "0.1.0"
+}

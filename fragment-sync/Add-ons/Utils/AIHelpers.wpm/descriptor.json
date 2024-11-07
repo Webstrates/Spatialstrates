@@ -1,0 +1,6 @@
+{
+    "description": "Helper functions to call the OpenAI API",
+    "dependencies": [],
+    "assets": [],
+    "version": "0.1.0"
+}

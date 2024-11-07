@@ -1,0 +1,11 @@
+{
+    "description": "A bundle with Spatialstrates add-ons",
+    "dependencies": [
+        "#SpatialstratesLogo",
+        "#CalibrationPoint",
+        "#UserManager",
+        "#Avatar"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

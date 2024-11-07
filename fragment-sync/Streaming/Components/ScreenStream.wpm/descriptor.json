@@ -1,0 +1,11 @@
+{
+    "description": "Stream component for screen streams",
+    "dependencies": [
+        "#Movable",
+        "#StreamManager",
+        "#ScreenStreamManager",
+        "#Menu"
+    ],
+    "assets": [],
+    "version": "0.1.0"
+}

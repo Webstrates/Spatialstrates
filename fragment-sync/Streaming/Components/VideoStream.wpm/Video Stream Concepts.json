@@ -1,0 +1,9 @@
+{
+    "concepts": {
+        "VideoStream": {
+            "schema": {
+                "client": "string"
+            }
+        }
+    }
+}
