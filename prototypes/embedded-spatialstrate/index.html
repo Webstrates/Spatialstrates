@@ -1900,7 +1900,7 @@ if(typeof webstrate  !== "undefined") {
             "options": {}
         }
     ],
-    "updated": 1730981292912,
+    "updated": 1730991525571,
     "knownRepositories": [
         "varv-repos",
         "wpm-repos",
@@ -3136,7 +3136,7 @@ export function ControllerMenuButton({ position, name, theme = 'button', callbac
         &lt;Icon theme={theme + (hovered ? ':hovered' : '')}
             model={controllerButton}
             themesOverride={themes}
-            onPointerDown={callback}
+            onClick={callback}
             onPointerOver={() => setHovered(true)}
             onPointerOut={() => setHovered(false)} />
         &lt;Text
@@ -5396,14 +5396,9 @@ export const deselectMovables = async () => {
     }
 };
 
-export const createMovable = async (device, conceptName, properties = {}) => {
-    if (!device) {
-        console.warn('No device found, cannot create movable.');
-        return;
-    }
-
-    const [x, y, z] = devicePositionWithOffset(device, 0.5);
-    const [rx, ry, rz] = deviceRotation(device);
+export const createMovable = async (conceptName, properties = {}) => {
+    const [x, y, z] = devicePositionWithOffset(window.moduleDeviceManager.camera, 0.5);
+    const [rx, ry, rz] = deviceRotation(window.moduleDeviceManager.camera);
 
     await deselectMovables();
     const concept = await VarvEngine.getConceptFromType(conceptName);
@@ -5591,16 +5586,15 @@ export function Main() {
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
 import { addItem, ControllerMenuButton } from '#ControllerMenu .default';
 import { createMovable } from '#Movable .helpers';
-import { getDeviceFromInputEvent } from '#Spatialstrates .transform-helpers';
 
 
 
 addSubMenu('movables', 100, false);
 addItemToSubMenu('movables', 'title', &lt;MenuTitle title="Menu" />, 0);
-addItemToSubMenu('movables', 'add-sticky-note', &lt;MenuButton onClick={() => createMovable(window.moduleDeviceManager.camera, 'StickyNote')}>New Sticky Note&lt;/MenuButton>, 200);
+addItemToSubMenu('movables', 'add-sticky-note', &lt;MenuButton onClick={() => createMovable('StickyNote')}>New Sticky Note&lt;/MenuButton>, 200);
 addItemToSubMenu('movables', 'spacer-items', &lt;MenuSpacer />, 400);
 
-addItem('add-sticky-note', &lt;ControllerMenuButton position={[0.04, 0, 0]} name={'New Sticky Note'} callback={(e) => createMovable(getDeviceFromInputEvent(e), 'StickyNote')} />);
+addItem('add-sticky-note', &lt;ControllerMenuButton position={[0.04, 0, 0]} name={'New Sticky Note'} callback={(e) => createMovable('StickyNote')} />);
 </CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Image" name="Image"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple image component",
     "dependencies": [
@@ -5878,16 +5872,15 @@ export function Main() {
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
 import { addItem, ControllerMenuButton } from '#ControllerMenu .default';
 import { createMovable } from '#Movable .helpers';
-import { getDeviceFromInputEvent } from '#Spatialstrates .transform-helpers';
 
 
 
 addSubMenu('movables', 100, false);
 addItemToSubMenu('movables', 'title', &lt;MenuTitle title="Menu" />, 0);
-addItemToSubMenu('movables', 'add-trashcan', &lt;MenuButton onClick={() => createMovable(window.moduleDeviceManager.camera, 'Trashcan')}>New Trashcan&lt;/MenuButton>, 100);
+addItemToSubMenu('movables', 'add-trashcan', &lt;MenuButton onClick={() => createMovable('Trashcan')}>New Trashcan&lt;/MenuButton>, 100);
 addItemToSubMenu('movables', 'spacer-items', &lt;MenuSpacer />, 400);
 
-addItem('add-trashcan', &lt;ControllerMenuButton position={[0.04, 0.06, 0]} name={'New Trashcan'} callback={(e) => createMovable(getDeviceFromInputEvent(e), 'Trashcan')} />);
+addItem('add-trashcan', &lt;ControllerMenuButton position={[0.04, 0.06, 0]} name={'New Trashcan'} callback={(e) => createMovable('Trashcan')} />);
 </CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Add-ons"><WPM-PACKAGE id="Screenshots" name="Screenshots"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A screenshot function that creates images in Spatialstrates",
     "dependencies": [
