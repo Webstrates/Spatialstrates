@@ -35,10 +35,10 @@ Whenever code within the dynamic component is changed, the `App` component will 
 
 ## Menu
 
-The menu includes a small API to create submenus and entries:
+The menu includes a small API to create submenus and entries. All components are imported from `'#Menu .default'`.
 
 
-### `addSubMenu(id, weight, alwaysVisible)`
+### `addSubMenu`
 
 Adds a submenu to the menu.
 
@@ -49,7 +49,7 @@ Adds a submenu to the menu.
 | `alwaysVisible` | Whether the submenu should always be expanded. If not, it will expand on hover. |
 
 
-### `addItemToSubMenu(subMenuId, id, element, weight)`
+### `addItemToSubMenu`
 
 Adds a menu entry to a submenu.
 
@@ -103,7 +103,7 @@ addItemToSubMenu('my-sub-menu', 'my-button', <MenuButton onClick={() => console.
 
 ## Controller Menu
 
-The controller menu is attached to the left controller or hand during immersive XR.
+The controller menu is attached to the left controller or hand during immersive XR. All components are imported from `'#ControllerMenu .default'`.
 
 
 ### `addItem(id, element)`
@@ -177,31 +177,52 @@ const [value, setValue] = useProperty('propertyName');
 
 ## Movables
 
-> [!WARNING]
-> The Movables API is still under development.
-
 Movables are a class of components that are placed in the 3D scene and that have their position and rotation persisted and synchronized using Varv.
 
-Movables rely on Varv for sharing and persisting their location and rotation across clients. To use them, it is required to add a concept definition.
+Movables rely on Varv for sharing and persisting their location and rotation across clients. To use them, it is required to add a concept definition. See the example below for how to define a concept for a new movable component.
 
 
 ### `<Movable>`
 
-TODO
+The Movable component is a wrapper for other movable components. It handles grabbing events and synchronization of the position and rotation of the movable with the data store.
 
-| Parameter     | Description                                                     |
-| ------------- | --------------------------------------------------------------- |
-| `children`    | The children of the movable.                                    |
-| `handle`      | The handle of the movable.                                      |
-| `upright`     | Whether the movable should be upright or not.                   |
-| `onDragStart` | The function to call when the movable is started to be dragged. |
-| `onDragEnd`   | The function to call when the movable is stopped to be dragged. |
-| `onDragging`  | The function to call when the movable is being dragged.         |
+All children of the Movable component will be moved when the Movable is dragged. The handle of a Movable describes the part of a movable that can be dragged. For example, when creating a board game, the board could be the handle to move it, while the pieces on the board would be the children of the Movable and provide their own interactive behavior. But also the whole component can be the handle, this is, for instance, the case for the sticky note, trashcan, and image.
+
+It can be imported from `'#Movable .default'`.
+
+| Parameter     | Description                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| `children`    | The children of the movable.                                                                  |
+| `handle`      | The handle of the movable.                                                                    |
+| `upright`     | Whether the movable should be upright or not. If true, it will only rotate around the y-axis. |
+| `onDragStart` | The function to call when the movable is started to be dragged.                               |
+| `onDragEnd`   | The function to call when the movable is stopped to be dragged.                               |
+| `onDragging`  | The function to call when the movable is being dragged.                                       |
 
 
-### `createMovable()`
+### `createMovable`
 
-TODO
+Creates a new movable concept instance of the given concept type with the given properties. The new movable is placed in front of the current camera position by default.
+
+It can be imported from `'#Movable .helpers'`.
+
+| Parameter    | Description                                         |
+| ------------ | --------------------------------------------------- |
+| `concept`    | The name of the concept that should be created.     |
+| `properties` | An object with property values for the new movable. |
+
+
+### State Properties
+
+The following properties are available in concept instances that are derived from the `Movable` concept:
+
+| Property       | Description                                  |
+| -------------- | -------------------------------------------- |
+| `position`     | The position of the movable in the 3D scene. |
+| `rotation`     | The rotation of the movable in the 3D scene. |
+| `selected`     | Whether the movable is selected or not.      |
+| `hovered`      | Whether the movable is hovered or not.       |
+| `beingDragged` | Whether the movable is being dragged or not. |
 
 
 ### Example
@@ -227,6 +248,8 @@ TODO
 
 ```javascript
 import React from 'react';
+const { useMemo } = React;
+
 import { Varv, useProperty } from '#VarvReact';
 import { Movable } from '#Movable .default';
 import { Text } from '#Text .default';
@@ -234,8 +257,12 @@ import { Text } from '#Text .default';
 function MyMovable() {
     const [myProperty, setMyProperty] = useProperty('coinType');
 
-    return <Movable handle={handle} upright={false}>
+    const handle = useMemo(() => <Box args={[0.15, 0.15, 0.15]}>
+        <meshStandardMaterial color="red" />
+    </Box>, []);
 
+    return <Movable handle={handle} upright={false}>
+        <Text>{myProperty}</Text>
     </Movable>;
 }
 

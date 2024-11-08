@@ -33,8 +33,6 @@ Find the documentation in the [docs](docs) folder.
 
 ## Attribution
 
-### Models
-
 Spatialstrates uses the following models from Sketchfab:
 
 - [Quest 3](https://sketchfab.com/3d-models/quest-3-e5c334a9598c4e85bb182eebf15a2e32) by Redcodi
