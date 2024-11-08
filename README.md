@@ -31,18 +31,6 @@ https://your-webstrates-server.com/new?prototypeUrl=https://cdn.jsdelivr.net/gh/
 Find the documentation in the [docs](docs) folder.
 
 
-## Known Bugs and Limitations
-
-### Performance
-
-Spatialstrates is a research prototype and as such not optimized for performance. Especially in scene with many elements the performance can drop on slower devices.
-
-
-### Compatibility
-
-We tested Spatialstrates on desktop (Windows, macOS) with a variety of browsers (Chrome, Edge, Safari), on Android using Chrome, and on the Meta Quest 3 and Pro headsets. On the Apple Vision Pro headset, WebXR does not yet support AR, but VR works with some rendering bugs.
-
-
 ## Attribution
 
 ### Models

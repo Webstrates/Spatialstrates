@@ -4,16 +4,15 @@ The code of Spatialstrates is modular and organized into the structure below. Th
 
 Each package defines their own dependencies, and the WPM GUI in Cauldron can be used to define which packages should be loaded. For instance, if the WebRTC streaming features are not required, one can simply tick off the `StreamingBundle` package in the WPM GUI to avoid loading it.
 
-> [!WARNING]
-> Some of the below documentation is slightly outdated and requires revision.
-
 
 ## [Bundles](/fragment-sync/Bundles)
 
-This folder contains four WPM bundles that include multiple packages. This makes importing certain types of functionality easier, as less individual packages have to be imported.
+This folder contains four WPM bundles, which each include multiple packages. This makes importing certain types of functionality easier, as less individual packages have to be imported.
 
 
 ### [Spatialstrates Basic Bundle](/fragment-sync/Bundles/SpatialstratesBasicBundle.wpm)
+
+The minimum recommended set of packages to include when starting a new Spatialstrates project.
 
 - [Spatialstrates](#spatialstrates)
 - [Menu](#menu)
@@ -23,6 +22,8 @@ This folder contains four WPM bundles that include multiple packages. This makes
 
 ### [Spatialstrates Add-Ons Bundle](/fragment-sync/Bundles/SpatialstratesAddOnsBundle.wpm)
 
+Some useful additions to Spatialstrates.
+
 - [Spatialstrates Logo](#spatialstrates-logo)
 - [Calibration Point](#calibration-point)
 - [User Manager](#user-manager)
@@ -30,6 +31,8 @@ This folder contains four WPM bundles that include multiple packages. This makes
 
 
 ### [Streaming Bundle](/fragment-sync/Bundles/StreamingBundle.wpm)
+
+WebRTC streaming functionality for audio, video, and screen sharing.
 
 - [Stream Manager](#streaming-utils)
 - [Screen Stream Manager](#streaming-utils)
@@ -41,6 +44,8 @@ This folder contains four WPM bundles that include multiple packages. This makes
 
 
 ### [Movable Bundle](/fragment-sync/Bundles/MovableBundle.wpm)
+
+The base Movable implementation and basic components.
 
 - [Movable](#movable)
 - [Sticky Note](#sticky-note)
@@ -56,7 +61,7 @@ The main components of Spatialstrates that bootstrap the system.
 
 ### [📦Import Mapping](/fragment-sync/Core/ImportMapping.wpm)
 
-Includes the [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) used in `import` statements. It uses the `esm.sh` CDN for serving ES modules.
+Includes the [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) used in `import` statements. It uses the `esm.sh` CDN for serving ES modules. As the import map script needs to be present in the DOM on load, this package needs to be embedded into a webstrate in order to work properly.
 
 For development we use the `?dev` version of modules in the import map. We also use the `*` operator in front of modules, which prevents the import of dependencies. This is necessary as some packages otherwise import different versions of React or R3F, which causes all kinds of issues. For some packages, like Vega or D3, we omit the `*` operator as those are largely self-contained and so far did not cause conflicts with other packages.
 
@@ -67,21 +72,19 @@ If additional packages are needed, they can be added to the import map here.
 
 The main package that bootstraps Spatialstrates. The `React Reloader` fragment creates a React root and initializes it with the `App` component. It also listens for changes to the `App` component and the Varv model and reloads Spatialstrates when either of them changes.
 
-The `App` component creates the R3F scene and XR session. It handles what basic elements are visible in the scene, e.g., lighting and the grey background.
+The `App` component creates the R3F scene and XR session. It handles what basic elements are visible in the scene, e.g., lighting and the grey background. Apart from that, the package includes basic styling and the `Camera`, a custom camera that can be controlled using the mouse and keyboard.
 
-Apart from that, the package includes basic styling, the `Mesh Cache`, an optimization that preloads and caches 3D models to avoid loading them multiple times, and the `Camera`, a custom camera that can be controlled using the mouse and keyboard.
-
-See the [Dynamic Components API](spatialstrates-api.md#dynamic-components) for how to add dynamic components to Spatialstrates.
+It also adds the Dynamic Components mechanism, which enables "hot-(re)loading" of new components while Spatialstrates is running. See the [Dynamic Components API](spatialstrates-api.md#dynamic-components) for how to add dynamic components to Spatialstrates.
 
 
 ## [Basic](/fragment-sync/Basic)
 
-These packages provide the basic functionality of Spatialstrates.
+These packages add some basic functionality like menus to toggle XR to Spatialstrates.
 
 
 ### [📦Menu](/fragment-sync/Basic/Components/Menu.wpm)
 
-The 2D menu on the bottom of a spatialstrate. It includes a simple API to add menu groups and entries. See the [Menu API](spatialstrates-api.md#menu) on how to use it.
+The 2D menu at the bottom of a spatialstrate. It includes a simple API to add menu groups and entries. See the [Menu API](spatialstrates-api.md#menu) on how to use it.
 
 
 ### [📦Controller Menu](/fragment-sync/Basic/Components/ControllerMenu.wpm)
@@ -103,7 +106,7 @@ A helper utility that renders 3D icons that can be themed and used in the scene.
 
 ### [📦Text Util](/fragment-sync/Basic/Utils/Text.wpm)
 
-A utility that renders text in the 3D scene. It is a wrapper for the R3F Drei "[Text](https://drei.docs.pmnd.rs/abstractions/text)" component that sets the font to a custom font. It can also be helpful when trying to globally disable text rendering in the scene to investigate its performance impact. (Text rendering is quite expensive.)
+A utility that renders text in the 3D scene. It is a wrapper for the R3F Drei "[Text](https://drei.docs.pmnd.rs/abstractions/text)" component that sets the font to a custom font. It can also be helpful when debugging to globally disable text rendering in the scene to investigate its performance impact. (Text rendering is quite expensive.)
 
 
 ## [Add-Ons](/fragment-sync/Add-Ons)
@@ -136,9 +139,10 @@ The user is not stored between sessions and has to be selected again when starti
 
 The avatar functionality that displays an avatar for each user in the scene. Avatars are generated for the camera of each user and the controllers of users in immersive XR. Different models are used for the desktop users, phone users, and HMD users. Avatars can be toggled on and off using the menu. Toggling them on or off is a global action that affects all users.
 
-Controller and HMD models always show the Meta Quest 3 models. For broader compatibility, more models and a better detection of the user agent should be added.
+Currently, controller and HMD models always show the Meta Quest 3 models. For broader compatibility, more models and a better detection of the user agent should be added.
 
-**Note**: Using avatars impacts the performance of Spatialstrates on the Quest 3 and Quest Pro significantly.
+> [!NOTE]
+> Using avatars impacts the performance of Spatialstrates on the Quest 3 and Quest Pro significantly.
 
 
 ### [📦AI Helpers Util](/fragment-sync/Add-Ons/Utils/AIHelpers.wpm)
@@ -153,9 +157,7 @@ These packages provide the functionality to stream audio and video in Spatialstr
 
 ### [Streaming Components](/fragment-sync/Streaming/Components)
 
-This folder includes the dynamic components for the streaming functionality. Screen streams are rendered in the scene as a [Movable](#movables) object, video streams are placed on top of user's [avatars](#avatar), and audio streams are invisible but transmit the microphone input to other clients.
-
-These components also add menu entries to start and stop each of the stream types.
+This folder includes the dynamic components for the streaming functionality. Screen streams are rendered in the scene as a [Movable](#movables) object, video streams are placed on top of user's [avatars](#avatar), and audio streams are invisible but transmit the microphone input to other clients. These components also add menu entries to start and stop each of the stream types.
 
 
 ### [Streaming Utils](/fragment-sync/Streaming/Utils/)
