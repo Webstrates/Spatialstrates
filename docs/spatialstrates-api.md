@@ -255,7 +255,7 @@ import { Movable } from '#Movable .default';
 import { Text } from '#Text .default';
 
 function MyMovable() {
-    const [myProperty, setMyProperty] = useProperty('coinType');
+    const [myProperty, setMyProperty] = useProperty('myProperty');
 
     const handle = useMemo(() => <Box args={[0.15, 0.15, 0.15]}>
         <meshStandardMaterial color="red" />
