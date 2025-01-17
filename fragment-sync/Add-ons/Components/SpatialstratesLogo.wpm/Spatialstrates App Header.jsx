@@ -13,7 +13,7 @@ export function Main() {
         {showDialog ? <div className="spatialstrates-dialog-modal" onClick={() => setShowDialog(false)}>
             <div className="spatialstrates-dialog" onClick={(e) => e.stopPropagation()}>
                 <h2>Spatialstrates</h2>
-                <p>Version 0.1.0 | <a href="https://github.com/Webstrates/Spatialstrates" target="_blank">GitHub</a></p>
+                <p>Version 0.1.1 | <a href="https://github.com/Webstrates/Spatialstrates" target="_blank">GitHub</a></p>
             </div>
         </div> : null}
     </>;
