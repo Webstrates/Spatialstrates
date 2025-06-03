@@ -1,0 +1,29 @@
+{
+    "name": "Spatialstrates",
+    "short_name": "Spatialstrates",
+    "description": "Cross-Reality Hypermedia in the Web",
+    "id": "webstrates.spatialstrates",
+    "start_url": "./",
+    "scope": "./",
+    "prompt_message": "Add a Home screen icon for easy access to Spatialstrates",
+    "display": "standalone",
+    "background_color": "#222222",
+    "theme_color": "#222222",
+    "icons": [
+        {
+            "src": "spatialstrates-icons.zip/icon_512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        },
+        {
+            "src": "spatialstrates-icons.zip/icon_128.png",
+            "type": "image/png",
+            "sizes": "128x128"
+        },
+        {
+            "src": "spatialstrates-icons.zip/icon_32.png",
+            "type": "image/png",
+            "sizes": "32x32"
+        }
+    ]
+}
