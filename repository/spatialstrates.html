@@ -424,6 +424,22 @@ export function App() {
         &lt;/Varv>
     &lt;/GlobalEventProvider>;
 }
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="Init Manager Concept" auto>const initConcept = async () => {
+    try {
+        const managers = await VarvEngine.lookupInstances('SpaceManager');
+        if (managers.length == 0) {
+            await VarvEngine.getConceptFromType('SpaceManager').create(null, {});
+        }
+    } catch (e) {
+        // Ignore
+    }
+};
+
+VarvEngine.registerEventCallback('engineReloaded', () => {
+    initConcept();
+});
+
+initConcept();
 </CODE-FRAGMENT><CODE-FRAGMENT auto data-type="text/x-scss" name="Core Style">body {
     height: 100vh;
     margin: 0;
