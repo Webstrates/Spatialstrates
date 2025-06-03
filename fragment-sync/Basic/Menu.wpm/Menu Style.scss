@@ -1,0 +1,138 @@
+@mixin heading-font {
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.25px;
+}
+
+.floating-menus {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.floating-menu {
+    z-index: 99999;
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    background: rgba(255, 255, 255, .60) !important;
+    border-radius: 12px;
+    border: 1px solid #cccccc70;
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.025);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    flex: 0 1 192px;
+    min-height: 40px;
+
+    max-height: 40px;
+    overflow: hidden;
+    transition: max-height 500ms ease-in-out;
+
+    &:hover:not(.always-visible) {
+        max-height: initial;
+
+        .title {
+            order: 999;
+        }
+    }
+
+    &.always-visible {
+        max-height: initial;
+    }
+
+    .spacer {
+        border-bottom: 1px solid #63636370;
+        margin: 0 32px;
+    }
+
+    .title {
+        @include heading-font;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        user-select: none;
+        text-align: center;
+        cursor: default;
+        color: #636363dd;
+    }
+
+    button {
+        @include heading-font;
+        min-height: 40px;
+
+        user-select: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        background: #63636390;
+        color: #fff;
+        vertical-align: middle;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+
+        &:hover {
+            background: #848484cc;
+        }
+
+        &:active {
+            background: #606060cc;
+        }
+
+        &.red {
+            background: #d32f2f90 !important;
+
+            &:hover {
+                background: #ff6659cc !important;
+            }
+
+            &:active {
+                background: #9a0007cc !important;
+            }
+        }
+
+        &.green {
+            background: #2e7d3290 !important;
+
+            &:hover {
+                background: #61ad5ecc !important;
+            }
+
+            &:active {
+                background: #005005cc !important;
+            }
+        }
+
+        &[toggled="true"] {
+            background: #FF910090 !important;
+        }
+    }
+
+    .upload-drop-zone {
+        @include heading-font;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        user-select: none;
+        text-align: center;
+        cursor: pointer;
+        background: #ddd;
+        border-radius: 4px;
+
+        &.upload-drop-zone--over {
+            background: #ccc;
+            cursor: copy;
+        }
+    }
+}

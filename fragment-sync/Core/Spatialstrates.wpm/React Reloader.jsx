@@ -17,7 +17,7 @@ async function render() {
         window.cachedAppRoot = createRoot(element);
     }
 
-    let content = await Fragment.one("#Spatialstrates [name='App']").require();
+    let content = await Fragment.one("#Spatialstrates .spatialstrates").require();
     window.cachedAppRoot.render(React.createElement(content.App));
 };
 
@@ -49,5 +49,9 @@ if (VarvEngine) {
         reload();
     });
 }
+
+window.reloadApp = () => {
+    reload();
+};
 
 reload();

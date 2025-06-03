@@ -1,0 +1,46 @@
+@mixin heading-font {
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.25px;
+}
+
+.user-display {
+    position: absolute;
+    top: 80px;
+    left: 10px;
+    width: 282px;
+    padding: 8px;
+    border-radius: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    user-select: none;
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    background: rgba(255, 255, 255, .60);
+    border: 1px solid #cccccc70;
+
+    .user-icon {
+        @include heading-font;
+        height: 22px;
+        line-height: 22px;
+        padding: 0 8px;
+        border-radius: 12px;
+        background: #ddd;
+        -webkit-backdrop-filter: saturate(180%) blur(10px);
+        backdrop-filter: saturate(180%) blur(10px);
+        background: rgba(255, 255, 255, .60);
+        border: 1px solid #cccccc70;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        &.local-user {
+            background: hsl(34, 100%, 73%);
+            order: -1;
+        }
+    }
+}

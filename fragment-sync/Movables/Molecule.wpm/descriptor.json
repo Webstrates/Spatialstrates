@@ -1,0 +1,8 @@
+{
+    "description": "A component to display PDB molecules.",
+    "dependencies": [
+        "#Menu"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

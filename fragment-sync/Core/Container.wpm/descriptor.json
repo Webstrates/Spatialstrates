@@ -1,0 +1,8 @@
+{
+    "description": "The container element for Spatialstrates' spatial transclusion.",
+    "dependencies": [
+        "#Spatialstrates"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

@@ -1,0 +1,69 @@
+@import url("https://esm.sh/tldraw@3.7.0/tldraw.css");
+
+.tldraw-canvas {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 99900;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 80px;
+    border-bottom: 4px solid hsl(204, 16%, 85%);
+
+    &.color-red {
+        border-color: hsl(0, 60%, 85%);
+    }
+    &.color-green {
+        border-color: hsl(120, 60%, 85%);
+    }
+    &.color-blue {
+        border-color: hsl(204, 60%, 85%);
+    }
+    &.color-yellow {
+        border-color: hsl(60, 60%, 85%);
+    }
+    &.color-purple {
+        border-color: hsl(270, 60%, 85%);
+    }
+    &.color-orange {
+        border-color: hsl(30, 60%, 85%);
+    }
+    &.color-pink {
+        border-color: hsl(310, 60%, 85%);
+    }
+
+    &.color-red .tl-background {
+        background-color: hsl(0, 25%, 96%);
+    }
+    &.color-green .tl-background {
+        background-color: hsl(120, 25%, 96%);
+    }
+    &.color-blue .tl-background {
+        background-color: hsl(204, 25%, 96%);
+    }
+    &.color-yellow .tl-background {
+        background-color: hsl(60, 25%, 96%);
+    }
+    &.color-purple .tl-background {
+        background-color: hsl(270, 25%, 96%);
+    }
+    &.color-orange .tl-background {
+        background-color: hsl(30, 25%, 96%);
+    }
+    &.color-pink .tl-background {
+        background-color: hsl(310, 25%, 96%);
+    }
+
+    /* FIXME: This only hides buttons, tools, shortcuts, and so on are still working */
+    .tlui-button__tool[data-value="draw"],
+    .tlui-button__tool[data-value="eraser"],
+    .tlui-button__tool[data-value="text"],
+    .tlui-button__tool[data-value="arrow"],
+    .tlui-button__tool[data-value="note"],
+    .tlui-button__tool[data-value="asset"],
+    .tlui-button__tool[data-value="rectangle"],
+    .tlui-button__tool.tlui-toolbar__overflow {
+        display: none;
+    }
+}

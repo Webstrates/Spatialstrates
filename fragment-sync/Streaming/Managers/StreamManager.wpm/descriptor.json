@@ -1,0 +1,6 @@
+{
+    "description": "A generic stream sharing class for Webstrate servers with stream signaling support.",
+    "dependencies": [],
+    "assets": [],
+    "version": "0.2.0"
+}

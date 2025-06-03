@@ -1,0 +1,67 @@
+.molecule-shape {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    gap: 8px;
+    overflow: hidden;
+
+    .molecule-shape-url {
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+
+        input {
+            pointer-events: all;
+        }
+    }
+
+    .molecule-shape-note {
+        font-size: 14px;
+        text-align: left;
+        color: #666;
+        padding: 4px 8px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+
+        textarea {
+            pointer-events: all;
+            height: 50px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px;
+            resize: none;
+        }
+    }
+
+    .molecule-shape-statistics {
+        width: 100%;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        padding: 4px;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            th {
+                padding: 4px;
+                text-align: center;
+                font-weight: bold;
+            }
+        }
+        tbody {
+            th, td {
+                padding: 4px;
+                text-align: center;
+                border-top: 1px solid #ddd;
+            }
+        }
+    }
+}

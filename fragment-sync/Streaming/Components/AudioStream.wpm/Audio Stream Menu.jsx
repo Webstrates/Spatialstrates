@@ -1,6 +1,7 @@
 import React from 'react';
+
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
-import { addItem, ControllerMenuButton } from '#ControllerMenu .default';
+import { addControllerSubMenu, addItemToControllerSubMenu, ControllerMenuSpacer, ControllerMenuButton } from '#ControllerMenu .default';
 
 
 
@@ -14,5 +15,7 @@ addItemToSubMenu('media-sharing', 'share-audio', <MenuButton onClick={window.sha
 addItemToSubMenu('media-sharing', 'stop-audio', <MenuButton onClick={window.stopSharingMyAudio}>Stop Audio</MenuButton>, 600);
 addItemToSubMenu('media-sharing', 'spacer3', <MenuSpacer />, 700);
 
-addItem('share-audio', <ControllerMenuButton position={[0.12, 0.06, 0]} name={'Start Audio'} callback={window.shareMyAudio} />);
-addItem('stop-audio', <ControllerMenuButton position={[0.12, 0, 0]} name={'Stop Audio'} callback={window.stopSharingMyAudio} />);
+addControllerSubMenu('media-sharing', 500, false);
+addItemToControllerSubMenu('media-sharing', 'share-audio', <ControllerMenuButton onClick={window.shareMyAudio}>Share Audio</ControllerMenuButton>, 500);
+addItemToControllerSubMenu('media-sharing', 'stop-audio', <ControllerMenuButton onClick={window.stopSharingMyAudio}>Stop Audio</ControllerMenuButton>, 600);
+addItemToControllerSubMenu('media-sharing', 'spacer3', <ControllerMenuSpacer />, 700);

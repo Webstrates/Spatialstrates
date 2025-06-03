@@ -1,0 +1,69 @@
+{
+    "concepts": {
+        "SpaceManager": {
+            "schema": {
+                "placeholder": "string",
+                "locationHash": "Space",
+                "currentView": { "string": {
+                    "enum": [ "3D", "2D" ],
+                    "default": "3D"
+                }},
+                "showBoundary": "boolean",
+                "showProjectionPlane": "boolean",
+                "depthSensing": "boolean"
+            },
+            "mappings": {
+                "locationHash": [ "memory", "location", "cauldron"],
+                "currentView": [ "memory", "cauldron" ],
+                "showBoundary": [ "memory", "cauldron" ],
+                "showProjectionPlane": [ "memory", "cauldron" ],
+                "depthSensing": [ "memory", "cauldron" ]
+            }
+        },
+        "Space": {
+            "schema": {
+                "name": "string",
+                "color": "string",
+                "movables": { "array": "Movable" },
+                "boundaryOrigin": { "array": {
+                    "items": "number",
+                    "default": [ 0, 1.5, 0 ]
+                }},
+                "boundarySize": { "array": {
+                    "items": "number",
+                    "default": [ 0.5, 0.5, 0.5 ]
+                }},
+                "projectionPlane": { "array": {
+                    "items": "number",
+                    "default": [ 0, 1.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 ]
+                }}
+            }
+        },
+        "Movable": {
+            "schema": {
+                "position": { "array": {
+                    "items": "number",
+                    "default": [ 0, 1.5, 0 ]
+                }},
+                "rotation": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "space": "Space",
+                "selected": "boolean",
+                "hovered": "boolean",
+                "beingDragged": "boolean"
+            },
+            "mappings": {
+                "selected": [ "memory", "cauldron" ],
+                "hovered": [ "memory", "cauldron" ],
+                "beingDragged": [ "memory", "cauldron" ]
+            }
+        }
+    },
+    "dataStores": {
+         "location": {
+            "type":"location"
+        }
+    }
+}

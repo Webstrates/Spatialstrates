@@ -1,0 +1,11 @@
+{
+    "description": "Calibration widget for immersive XR.",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Icon"
+    ],
+    "assets": [
+        "calibration_point.glb"
+    ],
+    "version": "0.2.0"
+}

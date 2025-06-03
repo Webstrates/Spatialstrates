@@ -1,9 +1,0 @@
-{
-    "description": "A simple user manager component",
-    "dependencies": [
-        "#Spatialstrates",
-        "webstrate-components-repos MaterialDesignOutlinedIcons"
-    ],
-    "assets": [],
-    "version": "0.1.0"
-}

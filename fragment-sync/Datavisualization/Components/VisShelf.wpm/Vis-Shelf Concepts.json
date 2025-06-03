@@ -1,0 +1,15 @@
+ {
+    "concepts": {
+        "VisShelf": {
+            "schema": {
+                "type": { "string": {
+                    "enums": [ "spec", "dataset", "piece" ],
+                    "default": "spec"
+                }}
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

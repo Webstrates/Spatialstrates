@@ -1,0 +1,8 @@
+{
+    "description": "A simple controller menu for immersive XR.",
+    "dependencies": [
+        "#Spatialstrates"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

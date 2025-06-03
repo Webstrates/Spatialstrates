@@ -1,0 +1,70 @@
+.container-shape {
+    background-color: hsl(0, 0%, 95%);
+    box-shadow: rgba(100, 100, 111, 0.4) 0px 0px 4px 0px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+
+    .container-title {
+        font-size: 32px;
+        opacity: 0.3;
+        text-align: center;
+    }
+
+    .container-menu {
+        width: 100%;
+        font-size: 16px;
+        max-width: 256px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+
+        input,
+        select,
+        button {
+            flex: 1 1 auto;
+            font-size: 14px;
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+
+            span {
+                flex: 0 0 auto;
+            }
+        }
+    }
+
+    &.color-red {
+        background-color: hsl(0, 40%, 90%);
+    }
+    &.color-green {
+        background-color: hsl(120, 40%, 90%);
+    }
+    &.color-blue {
+        background-color: hsl(204, 40%, 90%);
+    }
+    &.color-yellow {
+        background-color: hsl(60, 40%, 90%);
+    }
+    &.color-purple {
+        background-color: hsl(270, 40%, 90%);
+    }
+    &.color-orange {
+        background-color: hsl(30, 40%, 90%);
+    }
+    &.color-pink {
+        background-color: hsl(310, 40%, 90%);
+    }
+    &.nested {
+        background-color: hsl(0, 0%, 86%);
+    }
+}

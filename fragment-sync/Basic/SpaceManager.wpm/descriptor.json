@@ -1,0 +1,10 @@
+{
+    "description": "A manager for creating and managing spaces with Spatialstrates.",
+    "dependencies": [
+        "#Dialog",
+        "#ControllerMenu",
+        "#AIHelpers"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

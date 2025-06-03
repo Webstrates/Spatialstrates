@@ -1,0 +1,10 @@
+{
+    "description": "Visualization components to render Vega-Lite in scenes.",
+    "dependencies": [
+        "#VisModule",
+        "#Icon",
+        "#Optomancy"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

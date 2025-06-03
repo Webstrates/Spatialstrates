@@ -1,7 +1,15 @@
 body {
-    margin: 0;
-    font-family: Inter, sans-serif;
     height: 100vh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: hsl(204, 16%, 94%);
+
+    button,
+    input,
+    textarea,
+    select {
+        font-family: 'Inter', sans-serif;
+    }
 }
 
 #cauldron-edit-button {
@@ -45,7 +53,7 @@ body {
     z-index: 1000;
 }
 
-.spatial-strates-stats {
+.spatialstrates-stats {
     top: 48px !important;
     right: 12px !important;
     left: auto !important;

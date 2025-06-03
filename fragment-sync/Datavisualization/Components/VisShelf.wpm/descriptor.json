@@ -1,0 +1,14 @@
+{
+    "description": "A bookshelf component to instantiate groups and pieces.",
+    "dependencies": [
+        "#Visualization",
+        "#VisModule",
+        "#Icon",
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [
+        "bookshelf.glb"
+    ],
+    "version": "0.2.0"
+}

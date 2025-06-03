@@ -1,0 +1,10 @@
+{
+    "description": "A simple user manager component.",
+    "dependencies": [
+        "webstrate-components-repos MaterialDesignOutlinedIcons",
+        "#Spatialstrates",
+        "#Dialog"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

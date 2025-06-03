@@ -1,9 +1,0 @@
-{
-    "description": "A simple image component",
-    "dependencies": [
-        "#Movable",
-        "#Menu"
-    ],
-    "assets": [],
-    "version": "0.1.0"
-}

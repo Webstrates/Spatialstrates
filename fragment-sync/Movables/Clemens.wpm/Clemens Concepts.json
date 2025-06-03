@@ -1,0 +1,12 @@
+{
+    "concepts": {
+        "Clemens": {
+            "schema": {
+                "placeholder": "string"
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

@@ -1,8 +1,0 @@
-{
-    "description": "Stream manager for screen share streams",
-    "dependencies": [
-        "#StreamManager"
-    ],
-    "assets": [],
-    "version": "0.1.0"
-}

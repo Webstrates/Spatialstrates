@@ -1,0 +1,83 @@
+{
+    "concepts": {
+        "AvatarManager": {
+            "schema": {
+                "enabled": "boolean"
+            }
+        },
+        "Avatar": {
+            "schema": {
+                "type": {
+                    "string":{
+                        "default": "camera",
+                        "enum": [ "camera", "controllerLeft", "controllerRight", "handLeft", "handRight", "cursor" ]
+                    }
+                },
+                "userAgent": "string",
+                "inputSourceProfile": "string",
+                "client": "string",
+                "clientVideoStream": { "array": {
+                    "items": "VideoStream",
+                    "derive": {
+                        "concepts": [ "VideoStream" ],
+                        "properties": [ "client" ],
+                        "transform": [
+                            { "get": { "property": "client", "as": "client" }},
+                            { "select": {
+                                "concept": "VideoStream",
+                                "where": { "property": "client", "equals": "$client" },
+                                "keepContext": true
+                            }}
+                        ]
+                    }
+                }},
+                "clientAudioStream": { "array": {
+                    "items": "AudioStream",
+                    "derive": {
+                        "concepts": [ "AudioStream" ],
+                        "properties": [ "client" ],
+                        "transform": [
+                            { "get": { "property": "client", "as": "client" }},
+                            { "select": {
+                                "concept": "AudioStream",
+                                "where": { "property": "client", "equals": "$client" },
+                                "keepContext": true
+                            }}
+                        ]
+                    }
+                }},
+                "userName": "string",
+                "isMine": "boolean",
+                "position": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "rotation": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "remoteControlled": "boolean",
+                "remoteControllingClient": "string",
+                "space": "Space",
+                "view": "string",
+                "otherSpace": "Space",
+                "otherSpaceRelativePosition": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "otherSpaceRelativeRotation": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "active": "boolean"
+            },
+            "defaultMappings": [ "signaling", "memory", "cauldron" ],
+            "mappings": {
+                "isMine": [ "memory", "cauldron" ]
+            }
+        }
+    },
+    "dataStores": {
+        "signaling": { "type": "signaling" }
+    }
+}

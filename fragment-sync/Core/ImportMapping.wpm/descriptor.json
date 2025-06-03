@@ -1,8 +1,8 @@
 {
-    "description": "Import map for Spatialstrates",
+    "description": "Import map for Spatialstrates.",
     "dependencies": [],
     "assets": [
         "use-gesture-fix.zip"
     ],
-    "version": "0.1.1"
+    "version": "0.2.0"
 }

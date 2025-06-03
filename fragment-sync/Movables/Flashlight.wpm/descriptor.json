@@ -1,0 +1,9 @@
+{
+    "description": "A flashlight that illuminates the scene elements.",
+    "dependencies": [
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

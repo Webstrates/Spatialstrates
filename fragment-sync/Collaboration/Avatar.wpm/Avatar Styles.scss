@@ -1,0 +1,64 @@
+@mixin heading-font {
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.25px;
+}
+
+.avatar-shape {
+    padding: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+
+    .user-name {
+        @include heading-font;
+        color: #000;
+        font-size: 8px;
+        text-overflow: ellipsis;
+    }
+
+    .icon {
+        font-family: 'Material Icons';
+        font-size: 32px;
+        height: 32px;
+        line-height: 32px;
+        color: #222;
+
+        &.type-camera:before {
+            content: 'photo_camera';
+        }
+
+        &.type-controllerLeft {
+            transform: rotate(-60deg);
+
+            &:before {
+                content: 'sports_esports';
+            }
+
+        }
+
+        &.type-controllerRight {
+            transform: rotate(60deg);
+
+            &:before {
+                content: 'sports_esports';
+            }
+
+        }
+
+        &.type-handLeft {
+            transform: scaleX(-1);
+
+            &:before {
+                content: 'back_hand';
+            }
+        }
+
+        &.type-handRight:before {
+            content: 'back_hand';
+        }
+    }
+}

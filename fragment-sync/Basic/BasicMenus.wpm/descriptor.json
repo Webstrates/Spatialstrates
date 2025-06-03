@@ -1,0 +1,10 @@
+{
+    "description": "Basic menu entries to move the camera and toggle XR.",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

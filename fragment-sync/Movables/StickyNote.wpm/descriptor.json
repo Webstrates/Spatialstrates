@@ -1,0 +1,14 @@
+{
+    "description": "A simple sticky note component.",
+    "dependencies": [
+        "#Icon",
+        "#AIHelpers",
+        "#Menu",
+        "#ControllerMenu",
+        "#Text"
+    ],
+    "assets": [
+        "microphone.glb"
+    ],
+    "version": "0.2.0"
+}

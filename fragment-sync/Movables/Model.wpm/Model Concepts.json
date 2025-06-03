@@ -1,0 +1,18 @@
+{
+    "concepts": {
+        "Model": {
+            "schema": {
+                "url": "string",
+                "scale": { "number": {
+                    "default": 0.001
+                }},
+                "upright": { "boolean": {
+                    "default": true
+                }}
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

@@ -1,9 +1,0 @@
-{
-    "description": "A screenshot function that creates images in Spatialstrates",
-    "dependencies": [
-        "#Image",
-        "#Menu"
-    ],
-    "assets": [],
-    "version": "0.1.0"
-}

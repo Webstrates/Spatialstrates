@@ -1,0 +1,13 @@
+{
+    "description": "Spatialstrates logo with version information.",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Dialog"
+    ],
+    "assets": [
+        "favicon.ico",
+        "manifest.json",
+        "spatialstrates-icons.zip"
+    ],
+    "version": "0.2.0"
+}

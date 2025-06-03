@@ -1,0 +1,10 @@
+{
+    "description": "Displays which users are in the current space.",
+    "dependencies": [
+        "varv-repos varv-signaling",
+        "#Spatialstrates",
+        "#UserManager"
+    ],
+    "assets": [],
+    "version": "0.2.0"
+}

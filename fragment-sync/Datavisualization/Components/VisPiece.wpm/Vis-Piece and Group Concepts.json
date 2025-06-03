@@ -1,0 +1,46 @@
+{
+    "concepts": {
+        "VisMovable": {
+            "schema": {
+                "disabled": "boolean",
+                "locked": "boolean",
+                "group": { "VisGroup": { "default": "" }},
+                "dropHighlight": "boolean"
+            },
+            "mappings": {
+                "dropHighlight": [ "memory", "cauldron" ]
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        },
+        "VisPiece": {
+            "schema": {
+                "path": "string",
+                "content": "string",
+                "editMode": "boolean",
+                "editModeAxis": "boolean",
+                "showDataset": "boolean"
+            },
+            "extensions": {
+                "inject": [ "Movable", "VisMovable" ]
+            }
+        },
+        "VisGroup": {
+            "schema": {
+                "name": { "string": { "default": "New Group" }},
+                "pieces": { "array": "VisMovable" },
+                "showVisualization": "boolean",
+                "showSpec": "boolean",
+                "force2DVisualization": "boolean",
+                "paginationStartIndex": "number",
+                "editorPiece": "VisPiece",
+                "proximityAuthoring": "boolean",
+                "proximityPieces": { "array": "VisMovable" }
+            },
+            "extensions": {
+                "inject": [ "Movable", "VisMovable" ]
+            }
+        }
+    }
+}

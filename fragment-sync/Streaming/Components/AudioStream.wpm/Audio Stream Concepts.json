@@ -2,8 +2,7 @@
     "concepts": {
         "AudioStream": {
             "schema": {
-                "client": "string",
-                "muted": "boolean"
+                "client": "string"
             }
         }
     }

@@ -1,0 +1,15 @@
+{
+  "description": "The VisPiece and VisGroup components for DashSpace.",
+  "dependencies": [
+    "#Container",
+    "#VisModule",
+    "#Icon",
+    "#AIHelpers"
+  ],
+  "assets": [
+    "components_dataset.glb",
+    "components_snippets.glb",
+    "components_specs.glb"
+  ],
+  "version": "0.2.0"
+}

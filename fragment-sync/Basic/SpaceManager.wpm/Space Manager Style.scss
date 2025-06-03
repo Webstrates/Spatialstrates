@@ -1,0 +1,212 @@
+@mixin heading-font {
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.25px;
+}
+
+.space-view-toggle,
+.space-manager-button {
+    @include heading-font;
+    height: 24px;
+    line-height: 24px;
+    border-radius: 4px;
+    padding: 0 8px;
+    background: #ddd;
+    position: fixed;
+    top: 12px;
+    left: 180px;
+    z-index: 99999;
+    cursor: pointer;
+    user-select: none;
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    background: rgba(255, 255, 255, .60);
+    border: 1px solid #cccccc70;
+}
+
+.space-tabs {
+    position: fixed;
+    top: 6px;
+    left: 324px;
+    right: 190px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    z-index: 99999;
+
+    border-radius: 4px;
+    background: #ddd;
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    background: rgba(255, 255, 255, .60);
+    border: 1px solid #cccccc70;
+    padding: 6px;
+
+    .space-tab {
+        @include heading-font;
+        height: 24px;
+        line-height: 24px;
+        padding: 0 8px;
+        cursor: pointer;
+        border-radius: 4px;
+        background: #ddd;
+        -webkit-backdrop-filter: saturate(180%) blur(10px);
+        backdrop-filter: saturate(180%) blur(10px);
+        background: rgba(255, 255, 255, .60);
+        border: 1px solid #cccccc70;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        user-select: none;
+
+        &[local="true"] {
+            background: hsl(34, 100%, 73%);
+        }
+
+        &[color]:before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            margin-right: 6px;
+            border: 1px solid #444;
+        }
+        &[color=""]:before {
+            display: none;
+        }
+        &[color="red"]:before {
+            background: hsl(0, 80%, 60%);
+        }
+        &[color="green"]:before {
+            background: hsl(120, 80%, 60%);
+        }
+        &[color="blue"]:before {
+            background: hsl(204, 80%, 60%);
+        }
+        &[color="yellow"]:before {
+            background: hsl(60, 80%, 60%);
+        }
+        &[color="purple"]:before {
+            background: hsl(270, 80%, 60%);
+        }
+        &[color="orange"]:before {
+            background: hsl(30, 80%, 60%);
+        }
+        &[color="pink"]:before {
+            background: hsl(310, 80%, 60%);
+        }
+    }
+}
+
+.space-view-toggle {
+    top: 44px;
+}
+
+.space-manager {
+    .space-headline {
+        font-size: 24px;
+        font-weight: 700;
+        cursor: default;
+        user-select: none;
+    }
+
+    .space-subtitle {
+        font-size: 16px;
+        font-weight: 500;
+        cursor: default;
+        user-select: none;
+    }
+
+    .space-menu {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 8px;
+        min-height: 32px;
+        padding: 8px;
+        border-radius: 4px;
+        background: #ddd;
+    }
+
+    .space-list {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        background: #ddd;
+    }
+
+    .space {
+        height: 32px;
+        cursor: pointer;
+        border-radius: 20px;
+        background: #eeeeee;
+        user-select: none;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 8px;
+        align-items: center;
+
+        &[color] .space-name:before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            margin-right: 6px;
+            border: 1px solid #444;
+        }
+        &[color=""] .space-name:before {
+            display: none;
+        }
+        &[color="red"] .space-name:before {
+            background: hsl(0, 80%, 60%);
+        }
+        &[color="green"] .space-name:before {
+            background: hsl(120, 80%, 60%);
+        }
+        &[color="blue"] .space-name:before {
+            background: hsl(204, 80%, 60%);
+        }
+        &[color="yellow"] .space-name:before {
+            background: hsl(60, 80%, 60%);
+        }
+        &[color="purple"] .space-name:before {
+            background: hsl(270, 80%, 60%);
+        }
+        &[color="orange"] .space-name:before {
+            background: hsl(30, 80%, 60%);
+        }
+        &[color="pink"] .space-name:before {
+            background: hsl(310, 80%, 60%);
+        }
+
+        .space-name {
+            padding-left: 8px;
+        }
+
+        .delete-icon {
+            font-size: 20px;
+            text-align: center;
+            line-height: 32px;
+            cursor: pointer;
+            background: #d32f2f;
+            color: #fff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    .space[local="true"] {
+        background: #FFAB40;
+    }
+}

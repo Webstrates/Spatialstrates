@@ -1,0 +1,8 @@
+{
+  "description": "Adds the Optomancy library for 3D visualizations.",
+  "dependencies": [],
+  "assets": [
+    "optomancy.zip"
+  ],
+  "version": "0.2.0"
+}

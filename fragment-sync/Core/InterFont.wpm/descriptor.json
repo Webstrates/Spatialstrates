@@ -1,0 +1,8 @@
+{
+    "description": "Adds the Inter font.",
+    "dependencies": [],
+    "assets": [
+        "inter-variable.zip"
+    ],
+    "version": "0.2.0"
+}

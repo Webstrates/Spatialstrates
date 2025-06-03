@@ -1,0 +1,20 @@
+{
+    "concepts": {
+        "Flashlight": {
+            "schema": {
+                "color": { "string": {
+                    "default": "white"
+                }},
+                "intensity": { "number": {
+                    "default": 5
+                }},
+                "angle": { "number": {
+                    "default": 0.39269908169872414
+                }}
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}
