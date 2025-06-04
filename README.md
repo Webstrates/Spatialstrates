@@ -11,18 +11,18 @@ Spatialstrates can run on any Webstrates server. To setup your own Webstrates se
 
 To create an instance of Spatialstrates use the prototype ZIP file using the [HTTP API](https://webstrates.github.io/userguide/http-api.html) of Webstrates. The following link creates a copy on the public [demo.webstrates.net](https://demo.webstrates.net/) server:
 
-> https://demo.webstrates.net/new?prototypeUrl=https://github.com/Webstrates/Spatialstrates/raw/main/prototypes/shallow-spatialstrate.zip
+> https://demo.webstrates.net/new?prototypeUrl=https://github.com/Webstrates/Spatialstrates/raw/main/prototypes/spatialstrate.zip
 
 To create a copy on your own server replace the server address with your server:
 
 ```
-https://your-webstrates-server.com/new?prototypeUrl=https://github.com/Webstrates/Spatialstrates/raw/main/prototypes/shallow-spatialstrate.zip
+https://your-webstrates-server.com/new?prototypeUrl=https://github.com/Webstrates/Spatialstrates/raw/main/prototypes/spatialstrate.zip
 ```
 
 To overcome potential CORS issues, you can use a CDN:
 
 ```
-https://your-webstrates-server.com/new?prototypeUrl=https://cdn.jsdelivr.net/gh/Webstrates/Spatialstrates@master/prototypes/shallow-spatialstrate.zip
+https://your-webstrates-server.com/new?prototypeUrl=https://cdn.jsdelivr.net/gh/Webstrates/Spatialstrates@master/prototypes/spatialstrate.zip
 ```
 
 
