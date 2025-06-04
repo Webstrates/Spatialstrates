@@ -4,8 +4,7 @@
         "#Icon",
         "#AIHelpers",
         "#Menu",
-        "#ControllerMenu",
-        "#Text"
+        "#ControllerMenu"
     ],
     "assets": [
         "microphone.glb"

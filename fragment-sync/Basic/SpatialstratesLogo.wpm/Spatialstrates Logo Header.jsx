@@ -10,6 +10,7 @@ export function Main() {
 
     return <>
         <div className="spatialstrates-title" onClick={() => setVisible(!visible)}>
+            <img src="spatialstrates-icons.zip/icon_128.png" />
             <h1>Spatialstrates</h1>
         </div>
 
