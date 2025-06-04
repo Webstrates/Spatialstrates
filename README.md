@@ -1,4 +1,10 @@
-# Spatialstrates
+<p align="center">
+    <img src="./docs/logo.svg" width="128" />
+</p>
+
+<h1 align="center">Spatialstrates</h1>
+<h3 align="center">Cross-Reality Collaboration through Spatial Hypermedia</h3>
+<br/>
 
 ## About
 
