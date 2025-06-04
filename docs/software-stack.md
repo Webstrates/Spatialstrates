@@ -20,3 +20,5 @@ Spatialstrates is built using the following technologies:
 | **[React](https://react.dev/)**                                             | View and state management, which includes hooks for Varv state and actions. |
 | **[React Three Fiber](https://github.com/pmndrs/react-three-fiber/)** (R3F) | Rendering of the 3D scene using React components.                           |
 | **[R3F XR](https://github.com/pmndrs/xr/)**                                 | A WebXR wrapper for R3F.                                                    |
+| **[Three.js](https://threejs.org/)**                                       | 3D scene rendering engine.                                                        |
+| **[tldraw](https://www.tldraw.dev/)**                                           | 2D canvas rendering engine.                                   |
