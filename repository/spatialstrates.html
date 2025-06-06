@@ -1,7 +1,11 @@
 <!doctype html>
-<html data-protected="all">
-    <body style="cursor: default;">
-        <code-folder name="Core"><wpm-package id="ImportMapping" name="ImportMapping"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+<html data-protected="all"><body style="cursor: default;">
+
+
+
+
+
+<CODE-FOLDER name="Code"><CODE-FOLDER name="Core"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="ImportMapping" name="ImportMapping"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Import map for Spatialstrates.",
     "dependencies": [],
     "assets": [
@@ -9,7 +13,7 @@
     ],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><script name="Import Mapping" type="importmap" class="import-map" id>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><SCRIPT name="Import Mapping" type="importmap" class="import-map" id>{
     "imports": {
         "three": "https://esm.sh/v135/three@0.173.0?dev=&target=es2024&external=*",
         "three/": "https://esm.sh/v135/three@0.173.0&dev&target=es2024&external=*/",
@@ -101,7 +105,7 @@
         "rdkit": "https://esm.sh/v135/@rdkit/rdkit@2024.3.5-1.0.0?dev=&target=es2024&external=*"
     }
 }
-</script><code-fragment data-type="application/json" name="Import Mapping JSON Copy">{
+</SCRIPT><CODE-FRAGMENT data-type="application/json" name="Import Mapping JSON Copy">{
     "imports": {
         "three": "https://esm.sh/v135/three@0.173.0?dev=&target=es2024&external=*",
         "three/": "https://esm.sh/v135/three@0.173.0&dev&target=es2024&external=*/",
@@ -193,12 +197,12 @@
         "rdkit": "https://esm.sh/v135/@rdkit/rdkit@2024.3.5-1.0.0?dev=&target=es2024&external=*"
     }
 }
-</code-fragment><code-fragment data-type="text/javascript" name="MyWebstrates Import Mapping" auto>if (webstrate.importMap) {
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="MyWebstrates Import Mapping" auto>if (webstrate.importMap) {
     const scriptElement = document.querySelector('#ImportMapping .import-map');
     webstrate.importMap.create();
     webstrate.importMap.content = JSON.parse(scriptElement.innerHTML)
 }
-</code-fragment></wpm-package><WPM-PACKAGE id="InterFont" name="InterFont"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="InterFont" name="InterFont"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Adds the Inter font.",
     "dependencies": [],
     "assets": [
@@ -237,7 +241,7 @@
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Spatialstrates Concepts" auto>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Spatialstrates Concepts" auto>{
     "concepts": {
         "SpaceManager": {
             "schema": {
@@ -297,6 +301,22 @@
                 "selected": [ "memory", "cauldron" ],
                 "hovered": [ "memory", "cauldron" ],
                 "beingDragged": [ "memory", "cauldron" ]
+            }
+        },
+        "Container": {
+            "schema": {
+                "containedSpace": "Space",
+                "clippingMode": { "string": {
+                    "enum": [ "hide", "show", "fade" ],
+                    "default": "hide"
+                }},
+                "collaborationLevel": { "string": {
+                    "enum": [ "close", "loose", "none" ],
+                    "default": "close"
+                }}
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
             }
         }
     },
@@ -362,7 +382,7 @@ window.reloadApp = () => {
     reload();
 };
 
-reload();
+render();
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Spatialstrates" class="spatialstrates">import React from 'react';
 const { useMemo, useEffect, useRef } = React;
 import { Varv, useProperty } from '#VarvReact';
@@ -399,19 +419,20 @@ function SpaceView() {
         }
     }, [currentSpace, setCurrentSpace]);
 
-    // Load shape utils here to cache them between switching views
+    // Load shape utils and movables here to cache them between switching views
     const shapeUtils = useDynamicModules('.dynamic-shape-component');
+    const movableSceneComponents = useDynamicModules('.dynamic-movable-scene-component');
 
     const view = useMemo(() => {
         switch (currentView) {
             case '3D':
-                return &lt;SceneView />;
+                return &lt;SceneView movableSceneComponents={movableSceneComponents} />;
             case '2D':
                 return &lt;CanvasView shapeUtils={shapeUtils} />;
             default:
                 return null;
         }
-    }, [currentView, shapeUtils]);
+    }, [currentView, shapeUtils, movableSceneComponents]);
 
     return currentSpace ? view : null;
 }
@@ -424,7 +445,7 @@ export function App() {
         &lt;/Varv>
     &lt;/GlobalEventProvider>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="Init Manager Concept" auto>const initConcept = async () => {
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" id name="Init Manager Concept" class auto>const initConcept = async () => {
     try {
         const managers = await VarvEngine.lookupInstances('SpaceManager');
         if (managers.length == 0) {
@@ -955,51 +976,10 @@ export function ProjectionPlanePreview({ positionOverride, scaleOverride }) {
     &lt;/> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="scene-movables" name="Scene Movables">import React from 'react';
-const { useState, useContext, createContext, useMemo, useEffect } = React;
+const { useState, useEffect } = React;
 import { useProperty } from '#VarvReact';
 
-import { Main as StickyNote } from '#StickyNote .default';
-import { Main as Image } from '#Image .default';
-import { Main as Trashcan } from '#Trashcan .default';
-import { Main as Flashlight } from '#Flashlight .default';
-import { Main as Model } from '#Model .default';
-import { Main as Molecule } from '#Molecule .default';
 
-import { Main as ScreenStream } from '#ScreenStream .default';
-
-import { Main as VisPiece } from '#VisPiece .vis-piece';
-import { Main as VisGroup } from '#VisPiece .vis-group';
-import { Main as VisShelf } from '#VisShelf .default';
-
-
-
-if (!window.SceneMovablesContext) window.SceneMovablesContext = createContext();
-
-// One central location to import all custom space components with exception of containers
-export const SceneMovablesProvider = ({ children }) => {
-    const value = useMemo(() => &lt;>
-        &lt;StickyNote />
-        &lt;Image />
-        &lt;Trashcan />
-        &lt;Flashlight />
-        &lt;Model />
-        &lt;Molecule />
-
-        &lt;ScreenStream />
-
-        &lt;VisPiece />
-        &lt;VisGroup />
-        &lt;VisShelf />
-    &lt;/>, []);
-
-    return (
-        &lt;SceneMovablesContext.Provider value={value}>
-            {children}
-        &lt;/SceneMovablesContext.Provider>
-    );
-};
-
-export const useSceneMovables = () => useContext(SceneMovablesContext);
 
 // TODO: This clears the existing scope but instead should extend it
 function MovableVarvScope({ uuid, children }) {
@@ -1045,8 +1025,8 @@ import { CustomCamera } from '#Spatialstrates .scene-view .camera';
 import { BasicSceneEnvironment } from '#Spatialstrates .scene-view .basic-environment';
 import { BoundaryPreview } from '#Spatialstrates .scene-view .boundary-preview';
 import { ProjectionPlanePreview } from '#Spatialstrates .scene-view .projection-plane-preview';
-
-import { SceneMovablesProvider, useSceneMovables, SpaceMovables } from '#Spatialstrates .scene-movables';
+import { SpaceMovables } from '#Spatialstrates .scene-movables';
+import { Container } from '#Spatialstrates .container';
 
 
 
@@ -1054,7 +1034,7 @@ if (!window.moduleDeviceManager) {
     window.moduleDeviceManager = {};
 }
 
-function Scene() {
+function Scene({ movableSceneComponents }) {
     // The Quest renders in lower resolution by default, this increases the resolution
     // https://discourse.threejs.org/t/webxr-quality-problems/24603/2
     const { gl } = useThree();
@@ -1084,8 +1064,6 @@ function Scene() {
         window.moduleDeviceManager.handLeft = handLeft;
     }, [handLeft]);
 
-    const sceneComponents = useSceneMovables();
-
     return &lt;>
         {/* Basic Lighting */}
         &lt;Environment preset="city" />
@@ -1109,13 +1087,16 @@ function Scene() {
             &lt;BoundaryPreview />
             &lt;ProjectionPlanePreview />
             &lt;SpaceMovables>
-                {sceneComponents}
+                {movableSceneComponents.map((Component, index) => (
+                    &lt;Component key={index} />
+                ))}
+                &lt;Container movableSceneComponents={movableSceneComponents} />
             &lt;/SpaceMovables>
         &lt;/Varv>
     &lt;/>;
 }
 
-export function SceneView() {
+export function SceneView({ movableSceneComponents }) {
     const [depthSensing] = useProperty('depthSensing');
 
     // https://github.com/pmndrs/xr/blob/1793fe3a4ecf07a30ea98ff2585811d3100d6b51/packages/xr/src/init.ts#L54
@@ -1141,9 +1122,7 @@ export function SceneView() {
             shadows
             style={{ touchAction: 'none' }}>
             &lt;XR store={store}>
-                &lt;SceneMovablesProvider>
-                    &lt;Scene />
-                &lt;/SceneMovablesProvider>
+                &lt;Scene movableSceneComponents={movableSceneComponents} />
             &lt;/XR>
         &lt;/Canvas>
     &lt;/>;
@@ -2639,15 +2618,7 @@ export const cloneSelectedMovable = async () => {
         }
     }
 };
-</CODE-FRAGMENT></CODE-FOLDER></WPM-PACKAGE><WPM-PACKAGE name="Container" id="Container"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
-    "description": "The container element for Spatialstrates' spatial transclusion.",
-    "dependencies": [
-        "#Spatialstrates"
-    ],
-    "assets": [],
-    "version": "0.2.0"
-}
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" auto name="Container Concepts">{
+</CODE-FRAGMENT></CODE-FOLDER><CODE-FOLDER name="Container"><CODE-FRAGMENT data-type="text/varv" name="Container Concepts">{
     "concepts": {
         "Container": {
             "schema": {
@@ -2667,22 +2638,20 @@ export const cloneSelectedMovable = async () => {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Component" class="default dynamic-scene-component">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Component" class="container">import React from 'react';
 const { useState, useMemo, useEffect, useCallback } = React;
 import { MeshStandardMaterial, Vector3, Matrix4, Box3, Euler } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
+import { Defaults, Card, Button, List, ListItem, Input } from '@react-three/uikit-apfel';
 import { Varv, useProperty } from '#VarvReact';
 
 import { useGlobalEvents } from '#Spatialstrates .global-events';
 import { Text } from '#Spatialstrates .text';
-import { useSceneMovables, SpaceMovables } from '#Spatialstrates .scene-movables';
 import { BoundingBox, BoundaryResizer } from '#Spatialstrates .scene-helpers';
 import { ProjectionPlanePreview } from '#Spatialstrates .projection-plane-preview';
-import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Container .container-helpers';
+import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { Movable, useTransform } from '#Spatialstrates .movable';
-
-import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
-import { Defaults, Card, Button, Checkbox, List, ListItem, Input } from '@react-three/uikit-apfel';
 import { transcribeAudio } from '#AIHelpers .default';
 
 
@@ -2962,7 +2931,7 @@ function ContainerDummy() {
     &lt;/> : null;
 }
 
-function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
+function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform, movableSceneComponents }) {
     const [innerSpaceUUID] = useProperty('concept::uuid');
     const [boundarySize] = useProperty('boundarySize');
     const [boundaryOrigin] = useProperty('boundaryOrigin');
@@ -3081,7 +3050,6 @@ function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
         return () => unsubscribe();
     }, [subscribeEvent, onDragEnd]);
 
-    const sceneComponents = useSceneMovables();
     return &lt;>
         {/* FIXME: Fix this, caused by the &lt;SpaceMovables> component that clears the Varv scope */}
         &lt;Varv concept="SpaceManager">
@@ -3090,7 +3058,9 @@ function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
         &lt;group position={Array.isArray(boundaryOrigin) ? [-boundaryOrigin[0], -boundaryOrigin[1], -boundaryOrigin[2]] : [0, 0, 0]}>
             &lt;Varv property="movables">
                 &lt;ClippedMovablesFilter clippingMode={clippingMode}>
-                    {sceneComponents}
+                    {movableSceneComponents.map((Component, index) => (
+                        &lt;Component key={index} />
+                    ))}
                     &lt;ContainerDummy />
                 &lt;/ClippedMovablesFilter>
             &lt;/Varv>
@@ -3098,7 +3068,7 @@ function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
     &lt;/>;
 }
 
-function Container() {
+function ContainerFiltered({ movableSceneComponents }) {
     const [containerUUID] = useProperty('concept::uuid');
     const [selected] = useProperty('selected');
     const [hovered] = useProperty('hovered');
@@ -3126,8 +3096,8 @@ function Container() {
 
     const containerMemo = useMemo(() => &lt;Varv property="containedSpace">
         &lt;ContainerSizeAndNameForwarder setSizeContainer={setSize} setNameContainer={setName} setColorContainer={setColor} />
-        &lt;ContainedSpace containerUUID={containerUUID} outerSpaceUUID={space} containerTransform={transform} />
-    &lt;/Varv>, [containerUUID, space, transform]);
+        &lt;ContainedSpace containerUUID={containerUUID} outerSpaceUUID={space} containerTransform={transform} movableSceneComponents={movableSceneComponents} />
+    &lt;/Varv>, [containerUUID, space, transform, movableSceneComponents]);
 
     return &lt;Movable handle={handle} upright={true}>
         {Array.isArray(size) ? &lt;>
@@ -3147,17 +3117,9 @@ function Container() {
     &lt;/Movable>;
 }
 
-function FilterContainers() {
+export function Container({ movableSceneComponents }) {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Container' ? &lt;Container /> : null;
-}
-
-export function Main() {
-    return &lt;Varv property="locationHash">
-        &lt;SpaceMovables>
-            &lt;FilterContainers />
-        &lt;/SpaceMovables>
-    &lt;/Varv>
+    return conceptType === 'Container' ? &lt;ContainerFiltered movableSceneComponents={movableSceneComponents} /> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Shape" class="dynamic-shape-component">import React from 'react';
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
@@ -3166,7 +3128,7 @@ import { Varv, useProperty } from '#VarvReact';
 
 import { projectToScene, CANVAS_SCALE, shapeToConceptId } from '#Spatialstrates .projection-helpers';
 import { MovableCanvasController } from '#Spatialstrates .movable-canvas-controller';
-import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Container .container-helpers';
+import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
 
 
@@ -3670,13 +3632,13 @@ export const moveMovableToNewSpace = async (elementUUID, newSpaceUUID = '') => {
         background-color: hsl(0, 0%, 86%);
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></code-folder><CODE-FOLDER name="Helpers"><WPM-PACKAGE name="Icon" id="Icon"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></CODE-FOLDER></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Helpers"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE name="Icon" id="Icon"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A helper function for themed icons using custom 3D models.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Icon Component" class="default">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Icon Component" class="default">import React from 'react';
 import { Clone } from '@react-three/drei';
 
 
@@ -3720,7 +3682,7 @@ export function Icon(props) {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Dialog Component" class="default">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Dialog Component" class="default">import React from 'react';
 
 
 
@@ -3867,7 +3829,7 @@ export function Dialog({ children, className, visible, setVisible }) {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="AI Helpers" class="default">export const recordAudio = (duration) => {
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="AI Helpers" class="default">export const recordAudio = (duration) => {
     return new Promise((resolve, reject) => {
         let chunks = [];
 
@@ -3953,7 +3915,7 @@ export const sendGPTPrompt = async (body) => {
 };
 
 export const getGPTContent = (gptData) => gptData.choices[0].message.content;
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><code-folder name="Basic" id><WPM-PACKAGE id="Menu" name="Menu"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Basic" id><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="Menu" name="Menu"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple menu GUI for Spatialstrates.",
     "dependencies": [
         "#Spatialstrates"
@@ -3961,7 +3923,7 @@ export const getGPTContent = (gptData) => gptData.choices[0].message.content;
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Menu" class="default dynamic-gui-component">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Menu" class="default dynamic-gui-component">import React from 'react';
 const { useState, useEffect } = React;
 
 
@@ -4214,7 +4176,7 @@ export function Main() {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Controller Menu" id class="default dynamic-scene-component">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Controller Menu" id class="default dynamic-scene-component">import React from 'react';
 const { useState, useEffect, useMemo, useRef } = React;
 import { Color } from 'three';
 import { createPortal, useFrame } from '@react-three/fiber';
@@ -5385,7 +5347,7 @@ export function Main() {
         &lt;CalibrationPoint />
     &lt;/IfInSessionMode>;
 }
-</CODE-FRAGMENT></WPM-PACKAGE></code-folder><code-folder name="Collaboration"><WPM-PACKAGE id="UserManager" name="UserManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Collaboration"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="UserManager" name="UserManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple user manager component.",
     "dependencies": [
         "webstrate-components-repos MaterialDesignOutlinedIcons",
@@ -6887,13 +6849,13 @@ initConcept();
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></code-folder><code-folder name="Streaming" id><code-folder name="Managers"><wpm-package name="StreamManager" id="StreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Streaming" id><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FOLDER name="Managers"><WPM-PACKAGE name="StreamManager" id="StreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A generic stream sharing class for Webstrate servers with stream signaling support.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/javascript+babel" name="Stream Manager" id class="default">const DEBUG = false;
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Stream Manager" id class="default">const DEBUG = false;
 
 
 
@@ -7037,7 +6999,7 @@ export const doIfClicked = (callback) => {
 export const addCleanupConceptType = (type) => {
     window.moduleStreamManager.cleanupConceptTypes.push(type);
 };
-</code-fragment></wpm-package><wpm-package id="ScreenStreamManager" name="ScreenStreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="ScreenStreamManager" name="ScreenStreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Stream manager for screen share streams.",
     "dependencies": [
         "#StreamManager"
@@ -7045,7 +7007,7 @@ export const addCleanupConceptType = (type) => {
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/javascript+babel" name="Screen Stream Manager" id class="default">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Manager" id class="default">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
 import { createMovable } from '#Spatialstrates .movable-helpers';
 
 
@@ -7119,7 +7081,7 @@ if (!window.moduleScreenStreamManager) {
 }
 
 export const streamShare = window.moduleScreenStreamManager.streamShare;
-</code-fragment></wpm-package><wpm-package id="VideoStreamManager" name="VideoStreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="VideoStreamManager" name="VideoStreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Stream manager for camera video streams.",
     "dependencies": [
         "#StreamManager"
@@ -7127,7 +7089,7 @@ export const streamShare = window.moduleScreenStreamManager.streamShare;
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/javascript+babel" name="Video Stream Manager" id class="default">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Video Stream Manager" id class="default">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
 
 
 
@@ -7196,7 +7158,7 @@ if (!window.moduleVideoStreamManager) {
 }
 
 export const streamShare = window.moduleVideoStreamManager.streamShare;
-</code-fragment></wpm-package><wpm-package id="AudioStreamManager" name="AudioStreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="AudioStreamManager" name="AudioStreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Stream manager for audio streams.",
     "dependencies": [
         "#StreamManager"
@@ -7204,7 +7166,7 @@ export const streamShare = window.moduleVideoStreamManager.streamShare;
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/javascript+babel" name="Audio Stream Manager" id class="default">import { StreamShare, addCleanupConceptType } from '#StreamManager .default';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Audio Stream Manager" id class="default">import { StreamShare, addCleanupConceptType } from '#StreamManager .default';
 
 
 
@@ -7275,7 +7237,7 @@ if (!window.moduleAudioStreamManager) {
 
 
 export const streamShare = window.moduleAudioStreamManager.streamShare;
-</code-fragment></wpm-package></code-folder><code-folder name="Components"><wpm-package id="ScreenStream" name="ScreenStream"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Components"><WPM-PACKAGE id="ScreenStream" name="ScreenStream"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Stream component for screen streams.",
     "dependencies": [
         "#StreamManager",
@@ -7285,7 +7247,7 @@ export const streamShare = window.moduleAudioStreamManager.streamShare;
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/varv" name="Screen Stream Concepts" auto>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Screen Stream Concepts" auto>{
     "concepts": {
         "ScreenStream": {
             "schema": {
@@ -7297,7 +7259,7 @@ export const streamShare = window.moduleAudioStreamManager.streamShare;
         }
     }
 }
-</code-fragment><code-fragment data-type="text/javascript+babel" name="Screen Stream Component" class="default dynamic-space-scene-component">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useState, useEffect, useMemo } = React;
 import { MeshStandardMaterial, LinearMipmapLinearFilter, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -7386,7 +7348,7 @@ export function Main() {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'ScreenStream' ? &lt;ScreenStream /> : null;
 }
-</code-fragment><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Shape" class="dynamic-shape-component">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Shape" class="dynamic-shape-component">import React from 'react';
 const { useEffect, useRef } = React;
 import { useEditor, HTMLContainer } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -7468,7 +7430,7 @@ class ScreenStreamShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = ScreenStreamShapeUtil;
-</CODE-FRAGMENT><code-fragment data-type="text/javascript+babel" name="Screen Stream Menu" auto>import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Menu" auto>import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
 
@@ -7483,7 +7445,7 @@ addSubMenu('media-sharing', 500, false);
 addItemToSubMenu('media-sharing', 'share-screen', &lt;MenuButton onClick={window.shareMyScreen}>Share Screenshare&lt;/MenuButton>, 100);
 addItemToSubMenu('media-sharing', 'stop-screen', &lt;MenuButton onClick={window.stopSharingMyScreen}>Stop Screenshare&lt;/MenuButton>, 200);
 addItemToSubMenu('media-sharing', 'spacer1', &lt;MenuSpacer />, 250);
-</code-fragment></wpm-package><wpm-package id="VideoStream" name="VideoStream"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="VideoStream" name="VideoStream"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Stream component for video streams.",
     "dependencies": [
         "#StreamManager",
@@ -7493,7 +7455,7 @@ addItemToSubMenu('media-sharing', 'spacer1', &lt;MenuSpacer />, 250);
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/varv" name="Video Stream Concepts" auto>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Video Stream Concepts" auto>{
     "concepts": {
         "VideoStream": {
             "schema": {
@@ -7501,7 +7463,7 @@ addItemToSubMenu('media-sharing', 'spacer1', &lt;MenuSpacer />, 250);
             }
         }
     }
-}</code-fragment><code-fragment data-type="text/javascript+babel" name="Video Stream Component" class="default dynamic-space-scene-component">import React from 'react';
+}</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Video Stream Component" class="default">import React from 'react';
 const { useState, useEffect, useMemo } = React;
 import { MeshStandardMaterial, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -7557,7 +7519,7 @@ export function VideoStream({ client }) {
         &lt;/Plane>
     &lt;/Billboard>;
 }
-</code-fragment><code-fragment data-type="text/javascript+babel" name="Video Stream Menu" auto>import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Video Stream Menu" auto>import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
 
@@ -7572,7 +7534,7 @@ addSubMenu('media-sharing', 500, false);
 addItemToSubMenu('media-sharing', 'share-video', &lt;MenuButton onClick={window.shareMyVideo}>Share Video&lt;/MenuButton>, 300);
 addItemToSubMenu('media-sharing', 'stop-video', &lt;MenuButton onClick={window.stopSharingMyVideo}>Stop Video&lt;/MenuButton>, 400);
 addItemToSubMenu('media-sharing', 'spacer2', &lt;MenuSpacer />, 450);
-</code-fragment></wpm-package><wpm-package id="AudioStream" name="AudioStream"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="AudioStream" name="AudioStream"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Stream component for audio streams.",
     "dependencies": [
         "#AudioStreamManager",
@@ -7582,7 +7544,7 @@ addItemToSubMenu('media-sharing', 'spacer2', &lt;MenuSpacer />, 450);
     "assets": [],
     "version": "0.2.0"
 }
-</wpm-descriptor></code-fragment><code-fragment data-type="text/varv" name="Audio Stream Concepts" auto>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Audio Stream Concepts" auto>{
     "concepts": {
         "AudioStream": {
             "schema": {
@@ -7591,7 +7553,7 @@ addItemToSubMenu('media-sharing', 'spacer2', &lt;MenuSpacer />, 450);
         }
     }
 }
-</code-fragment><code-fragment data-type="text/javascript+babel" name="Audio Stream Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Audio Stream Component" class="default">import React from 'react';
 const { useEffect, useRef } = React;
 // import { PositionalAudio } from '@react-three/drei';
 // import { ErrorBoundary } from 'react-error-boundary';
@@ -7677,7 +7639,7 @@ export function AudioStream({ client }) {
         &lt;AudioSplitter client={client} />
     &lt;/Varv>;
 }
-</code-fragment><code-fragment data-type="text/javascript+babel" name="Audio Stream Menu" auto>import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Audio Stream Menu" auto>import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
 import { addControllerSubMenu, addItemToControllerSubMenu, ControllerMenuSpacer, ControllerMenuButton } from '#ControllerMenu .default';
@@ -7698,7 +7660,7 @@ addControllerSubMenu('media-sharing', 500, false);
 addItemToControllerSubMenu('media-sharing', 'share-audio', &lt;ControllerMenuButton onClick={window.shareMyAudio}>Share Audio&lt;/ControllerMenuButton>, 500);
 addItemToControllerSubMenu('media-sharing', 'stop-audio', &lt;ControllerMenuButton onClick={window.stopSharingMyAudio}>Stop Audio&lt;/ControllerMenuButton>, 600);
 addItemToControllerSubMenu('media-sharing', 'spacer3', &lt;ControllerMenuSpacer />, 700);
-</code-fragment></wpm-package></code-folder></code-folder><code-folder name="Movables" id><WPM-PACKAGE id="StickyNote" name="StickyNote" class><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER><CODE-FOLDER name="Movables" id><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="StickyNote" name="StickyNote" class><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple sticky note component.",
     "dependencies": [
         "#Icon",
@@ -7726,7 +7688,7 @@ addItemToControllerSubMenu('media-sharing', 'spacer3', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useState, useMemo, useRef } = React;
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -8079,7 +8041,7 @@ export const Main = StickyNoteShapeUtil;
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Image Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Image Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useRef, useState, useEffect, useMemo } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
@@ -8352,7 +8314,7 @@ if (!window.moduleImageUploader) {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useEffect, useCallback } = React;
 import { Vector3 } from 'three';
 import { useGLTF } from '@react-three/drei';
@@ -8540,7 +8502,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Model Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Model Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useMemo, useState } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { Box3 } from 'three';
@@ -8783,7 +8745,7 @@ if (!window.moduleModelUploader) {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Flashlight Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Flashlight Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useRef, useMemo } = React;
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -9035,7 +8997,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Molecule Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Molecule Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useMemo } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import * as THREE from 'three';
@@ -9466,7 +9428,114 @@ if (!window.moduleMoleculeUploader) {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></code-folder><CODE-FOLDER name="Datavisualization"><CODE-FOLDER name="Modules"><WPM-PACKAGE id="VisModule" name="VisModule"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE name="Clemens" id="Clemens"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+    "description": "The infamous Clemensseract component.",
+    "dependencies": [
+        "#Menu",
+        "#ControllerMenu"
+    ],
+    "assets": [
+        "clemens.jpg"
+    ],
+    "version": "0.2.0"
+}
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Clemens Concepts" auto>{
+    "concepts": {
+        "Clemens": {
+            "schema": {
+                "placeholder": "string"
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Clemens Component" class="default dynamic-movable-scene-component">import React from 'react';
+const { useMemo } = React;
+import { TextureLoader } from 'three';
+import { useLoader } from '@react-three/fiber';
+import { useProperty } from '#VarvReact';
+
+import { Movable } from '#Spatialstrates .movable';
+
+
+
+function Clemens() {
+    const texture = useLoader(TextureLoader, 'clemens.jpg');
+    const handle = useMemo(() => (
+        &lt;mesh>
+            &lt;boxGeometry args={[0.3, 0.3, 0.3]} />
+            &lt;meshStandardMaterial map={texture} />
+        &lt;/mesh>
+    ), [texture]);
+
+    return &lt;Movable handle={handle} upright={false} />;
+}
+
+export function Main() {
+    const [conceptType] = useProperty('concept::name');
+    return conceptType === 'Clemens' ? &lt;Clemens /> : null;
+}
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Clemens Shape" class="dynamic-shape-component">import React from 'react';
+import { HTMLContainer, } from 'tldraw';
+
+import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
+import { CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
+
+
+
+function ClemensShape({ shape }) {
+    return &lt;HTMLContainer className="clemens-shape" style={{
+        transform: 'translate(-50%, -50%)',
+        width: shape.props.w + 'px',
+        height: shape.props.h + 'px'
+    }}>
+        &lt;img src="clemens.jpg"
+            style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+            }} />
+    &lt;/HTMLContainer>;
+}
+
+class ClemensShapeUtil extends MovableShapeUtil {
+    static type = 'Clemens';
+
+    getDefaultProps() {
+        return Object.assign(super.getDefaultProps(), {
+            w: CANVAS_SCALE * 0.3,
+            h: CANVAS_SCALE * 0.3
+        });
+    }
+
+    component(shape) {
+        return &lt;MovableVarvScope shape={shape}>
+            &lt;ClemensShape shape={shape} />
+        &lt;/MovableVarvScope>;
+    }
+}
+
+export const Main = ClemensShapeUtil;
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Clemens Menu" auto>import React from 'react';
+
+import { createMovable } from '#Spatialstrates .movable-helpers';
+import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
+import { addControllerSubMenu, addItemToControllerSubMenu, ControllerMenuTitle, ControllerMenuSpacer, ControllerMenuButton } from '#ControllerMenu .default';
+
+
+
+addSubMenu('movables', 100, false);
+addItemToSubMenu('movables', 'title', &lt;MenuTitle title="Menu" />, 0);
+addItemToSubMenu('movables', 'add-clemens', &lt;MenuButton onClick={() => createMovable('Clemens')}>New Clemens&lt;/MenuButton>, 390);
+addItemToSubMenu('movables', 'spacer-items', &lt;MenuSpacer />, 400);
+
+addControllerSubMenu('movables', 100, false);
+addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
+addItemToControllerSubMenu('movables', 'add-clemens', &lt;ControllerMenuButton onClick={() => createMovable('Clemens')}>New Clemens&lt;/ControllerMenuButton>, 390);
+addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Datavisualization"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FOLDER name="Modules"><WPM-PACKAGE id="VisModule" name="VisModule"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Adds general classes for datavisualization.",
     "dependencies": [
         "#Menu"
@@ -10962,7 +11031,7 @@ export function OptomancyVisualization({ mergedSpec }) {
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Visualization Styles" auto></CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="VisPiece" name="VisPiece"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
   "description": "The VisPiece and VisGroup components for DashSpace.",
   "dependencies": [
-    "#Container",
+    "#Spatialstrates",
     "#VisModule",
     "#Icon",
     "#AIHelpers"
@@ -11020,7 +11089,7 @@ export function OptomancyVisualization({ mergedSpec }) {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Vis-Piece Component" class="vis-piece">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Vis-Piece Component" class="vis-piece dynamic-movable-scene-component">import React from 'react';
 let { useState, useEffect, useMemo, useCallback } = React;
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { Sphere, useGLTF } from '@react-three/drei';
@@ -11319,7 +11388,7 @@ export function Main() {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'VisPiece' ? &lt;VisPiece /> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="vis-group" name="Vis-Group Component">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="vis-group dynamic-movable-scene-component" name="Vis-Group Component">import React from 'react';
 let { useState, useEffect, useRef, useMemo } = React;
 import { MeshStandardMaterial, Vector3 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -11334,7 +11403,7 @@ import { deselectMovables } from '#Spatialstrates .movable-helpers';
 import { getDeviceFromInputEvent } from '#Spatialstrates .device-helpers';
 import { useGlobalEvents } from '#Spatialstrates .global-events';
 import { getCurrentSpaceUUID } from '#Spatialstrates .projection-helpers';
-import { moveMovableToNewSpace } from '#Container .container-helpers';
+import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { Icon } from '#Icon .default';
 
 import { composeSpecFromGroup, isPieceOverwritten } from '#VisModule .vis-composer';
@@ -12212,7 +12281,7 @@ import { useGlobalEvents } from '#Spatialstrates .global-events';
 import { getCurrentSpaceUUID, CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
 import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
 import { deselectMovables } from '#Spatialstrates .movable-helpers';
-import { moveMovableToNewSpace } from '#Container .container-helpers';
+import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 
 import { isPieceOverwritten } from '#VisModule .vis-composer';
 import { getVisComponentById } from '#VisModule .vis-component-manager';
@@ -13105,7 +13174,7 @@ import { useProperty } from '#VarvReact';
 import { Text } from '#Spatialstrates .text';
 import { getSpaceManagerUUID, projectToCanvas } from '#Spatialstrates .projection-helpers';
 import { createMovable } from '#Spatialstrates .movable-helpers';
-import { moveMovableToNewSpace } from '#Container .container-helpers';
+import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { transcribeAudio, sendGPTPrompt, getGPTContent } from '#AIHelpers .default';
 import { Icon, SELECTED_COLOR_PRIMARY, SELECTED_COLOR_SECONDARY, HOVERED_SELECTED_COLOR_PRIMARY, HOVERED_SELECTED_COLOR_SECONDARY } from '#Icon .default';
 
@@ -14178,7 +14247,7 @@ export function useUpdateProximityAuthoringOnSpaceChange() {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Shelf Component" class="default">import React from 'react';
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Shelf Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 import { Color, Object3D, Matrix4, MeshStandardMaterial, InstancedMesh } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -14839,4 +14908,4 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER></body></html>
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER></CODE-FOLDER></body></html>
