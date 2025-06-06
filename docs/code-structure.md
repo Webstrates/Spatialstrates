@@ -1,6 +1,6 @@
 # Code Structure
 
-> [!WARNING] Outdated Documentation
+> [!WARNING]
 > This documentation is outdated and will be updated in the future. The code structure has changed significantly since this was written, so please refer to the code itself for the most up-to-date information.
 
 The code of Spatialstrates is modular and organized into the structure below. The functionality is structured into five main folders which each include multiple WPM ([Webstrates Package Manager](https://codestrates.projects.cavi.au.dk/docs/guide/webstrates-package-manager/)) packages.
