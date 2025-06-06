@@ -2001,7 +2001,7 @@ html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:be
                     </SCRIPT>
 
 
-                </WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Meta Elements"><VARV-DATA></VARV-DATA><VARV-SIGNALING></VARV-SIGNALING><SCREEN-SIGNALING></SCREEN-SIGNALING><VIDEO-SIGNALING></VIDEO-SIGNALING><AUDIO-SIGNALING></AUDIO-SIGNALING></CODE-FOLDER><CODE-FOLDER name="Code"><CODE-FOLDER name="Core"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="ImportMapping" name="ImportMapping"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+                </WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Meta Elements"><VARV-DATA></VARV-DATA><VARV-SIGNALING></VARV-SIGNALING><SCREEN-SIGNALING></SCREEN-SIGNALING><VIDEO-SIGNALING></VIDEO-SIGNALING><AUDIO-SIGNALING></AUDIO-SIGNALING></CODE-FOLDER><WPM-PACKAGE id="ImportMapping" name="ImportMapping"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Import map for Spatialstrates.",
     "dependencies": [],
     "assets": [
@@ -2009,7 +2009,14 @@ html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:be
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><SCRIPT name="Import Mapping" type="importmap" class="import-map" id>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Import Mapping
+
+This package includes the import mapping for Spatialstrates. It uses [esm.sh](https://esm.sh) as its package repostitory. It is recommended to fix versions of packages to avoid potential breaking changes with future updates.
+
+## `@use-gesture` Fix
+
+The `@use-gesture` package is imported from esm.sh has a bug that correct trackpad gestures in tldraw running it in Webstrates. Hence, we added a fixed version as an asset that fixes the bug for now.
+</CODE-FRAGMENT><SCRIPT name="Import Mapping" type="importmap" class="import-map" id>{
     "imports": {
         "three": "https://esm.sh/v135/three@0.173.0?dev=&target=es2024&external=*",
         "three/": "https://esm.sh/v135/three@0.173.0&dev&target=es2024&external=*/",
@@ -2198,7 +2205,10 @@ html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:be
     webstrate.importMap.create();
     webstrate.importMap.content = JSON.parse(scriptElement.innerHTML)
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="InterFont" name="InterFont"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE><CODE-FOLDER name="Code"><CODE-FOLDER name="Core"><CODE-FRAGMENT data-type="text/markdown" name="README"># Core
+
+The packages in the Core folder provide the basic functionality of the Spatialstrates platform.
+</CODE-FRAGMENT><WPM-PACKAGE id="InterFont" name="InterFont"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Adds the Inter font.",
     "dependencies": [],
     "assets": [
@@ -2237,7 +2247,111 @@ html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:be
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Spatialstrates Concepts" auto>{
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Spatialstrates
+
+The `Spatialstrates` package provides the core functionality for the Spatialstrates application. It bootstraps the React root of the application and reloads the application when fragments inside the package are modified. It provides a series of helpers functions.
+
+
+## Global Events
+
+The Global Events API can be used to send events between components within Spatialstrates. Events have a custom name and can carry data.
+
+### Example
+
+```js
+import { useGlobalEvents } from '#Spatialstrates .global-events';
+
+function MyComponent() {
+    const { triggerEvent, subscribeEvent } = useGlobalEvents();
+
+    const handleClick = () => {
+        triggerEvent('myCustomEvent', { data: 'Hello World' });
+    };
+
+    useEffect(() => {
+        const unsubscribe = subscribeEvent('myCustomEvent', (event) => {
+            console.log('Received event:', event.data);
+        });
+
+        return () => { unsubscribe(); };
+    }, [subscribeEvent]);
+}
+```
+
+
+## Custom Text Component
+
+Spatialstrates provides a `&lt;Text>` component that wraps the Drei [`&lt;Text>`](https://drei.docs.pmnd.rs/abstractions/text) component. It changes the font used to the Inter font, which is the default font used in Spatialstrates. All other props from the Drei `&lt;Text>` component are supported.
+
+### Import
+
+```js
+import { Text } from '#Spatialstrates .text';
+```
+
+
+## Projection Helpers
+
+The Projection Helpers API provides helper functions when using the 2D canvas view. It provides the scale used to convert between 2D and 3D coordinates, as well as a function to convert 2D coordinates to 3D coordinates (undocumented).
+
+### Import
+
+```js
+import { CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
+```
+
+
+## Movable Component
+
+The Movable Component API provides a `&lt;Movable>` component that can be used to create movable objects in the Spatialstrates application. It also provides a `useTransform` hook that can be used to transform the position, rotation, and scale of the movable object.
+
+### Import
+
+```js
+import { Movable, useTransform } from '#Spatialstrates .movable';
+```
+
+
+## Movable Shape
+
+The Movable Shape provides helper functions for creating movables in the 2D canvas view. All movable shape utils need to extend the `MovableShapeUtil` class. The `MovableVarvScope` component creates a Varv scrope within the shape to access properties of the movable.
+
+### Import
+
+```js
+import {
+    MovableShapeUtil,
+    MovableVarvScope
+} from '#Spatialstrates .movable-shape';
+```
+
+
+## Movable Helpers
+
+The Movable Helpers API provides helper functions to create and manipulate movable objects in the Spatialstrates application. It includes functions to create a movable, deselect all movables, and to delete or clone the selected movable(s).
+
+### Import
+
+```js
+import {
+    createMovable,
+    deselectMovables,
+    deleteSelectedMovable,
+    cloneSelectedMovable
+} from '#Spatialstrates .movable-helpers';
+```
+
+
+## Container Helpers
+
+The Container Helpers API provides helper functions to move a movable from one space into another.
+
+### Import
+
+```js
+import { moveMovableToContainer } from '#Spatialstrates .container-helpers';
+```
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Spatialstrates Concepts" auto>{
     "concepts": {
         "SpaceManager": {
             "schema": {
@@ -2441,6 +2555,24 @@ export function App() {
         &lt;/Varv>
     &lt;/GlobalEventProvider>;
 }
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Space Helpers" class="space-helpers">export const getSpaceManagerUUID = async () => {
+    const spaceManagerUUIDs = await VarvEngine.getAllUUIDsFromType('SpaceManager');
+    if (spaceManagerUUIDs.length === 0) {
+        console.log('No space manager found');
+        return false;
+    }
+    return spaceManagerUUIDs[0];
+};
+
+export const getCurrentSpaceUUID = async () => {
+    const spaceManagerUUID = await getSpaceManagerUUID();
+    const spaceUUID = await VarvEngine.getConceptFromType('SpaceManager').getPropertyValue(spaceManagerUUID, 'locationHash');
+    if (!spaceUUID) {
+        console.log('No space found');
+        return false;
+    }
+    return spaceUUID;
+};
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" id name="Init Manager Concept" class auto>const initConcept = async () => {
     try {
         const managers = await VarvEngine.lookupInstances('SpaceManager');
@@ -2861,12 +2993,10 @@ export function BasicSceneEnvironment() {
     &lt;/>;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Boundary Preview" class="boundary-preview">import React from 'react';
-const { useEffect, useState, useMemo, useRef, useCallback } = React;
-import { BackSide, MeshStandardMaterial, BoxGeometry, Vector3, Matrix4, Euler, PlaneGeometry } from 'three';
+const { useMemo, useCallback } = React;
+import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { useFrame } from '@react-three/fiber';
-import { useXRInputSourceEvent } from '@react-three/xr';
-import { Varv, useProperty } from '#VarvReact';
+import { useProperty } from '#VarvReact';
 
 import { BoundaryResizer, BoundingBox, DragUpdater } from '#Spatialstrates .scene-helpers';
 
@@ -3856,6 +3986,8 @@ export function CanvasView({ shapeUtils }) {
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="projection-helpers" name="Projection Helpers">import { Vector3 } from 'three';
 import { PCA } from 'ml-pca';
 
+import { getSpaceManagerUUID, getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
+
 
 
 export const CANVAS_SCALE = 500;
@@ -3920,26 +4052,6 @@ export const updatePointFromCanvas = (oldPoint3D, newPoint2D, projectionPlane) =
         .add(zAxis.clone().multiplyScalar(pointToOrigin.dot(zAxis)));
 
     return newPoint.toArray();
-};
-
-
-export const getSpaceManagerUUID = async () => {
-    const spaceManagerUUIDs = await VarvEngine.getAllUUIDsFromType('SpaceManager');
-    if (spaceManagerUUIDs.length === 0) {
-        console.log('No space manager found');
-        return false;
-    }
-    return spaceManagerUUIDs[0];
-};
-
-export const getCurrentSpaceUUID = async () => {
-    const spaceManagerUUID = await getSpaceManagerUUID();
-    const spaceUUID = await VarvEngine.getConceptFromType('SpaceManager').getPropertyValue(spaceManagerUUID, 'locationHash');
-    if (!spaceUUID) {
-        console.log('No space found');
-        return false;
-    }
-    return spaceUUID;
 };
 
 export const computeProjectionPlaneUsingPCA = async (spaceUUIDParam, movableUUIDsParam) => {
@@ -4489,7 +4601,8 @@ export const Main = MovableShapeUtil;
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Movable Helpers" class="movable-helpers">import { Vector3 } from 'three';
 
 import { devicePositionWithOffset, deviceRotation } from '#Spatialstrates .device-helpers';
-import { getSpaceManagerUUID, getCurrentSpaceUUID, updatePointFromCanvas, CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
+import { getSpaceManagerUUID, getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
+import { updatePointFromCanvas, CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
 
 
 
@@ -5628,13 +5741,16 @@ export const moveMovableToNewSpace = async (elementUUID, newSpaceUUID = '') => {
         background-color: hsl(0, 0%, 86%);
     }
 }
-</CODE-FRAGMENT></CODE-FOLDER></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Helpers"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE name="Icon" id="Icon"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></CODE-FOLDER></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Helpers"><CODE-FRAGMENT data-type="text/markdown" name="README"># Helpers
+
+The Helpers folder provides some helper components that are used in various parts of Spatialstrates. The Icon component requires custom GLB model files and is not recommended to be used outside of the provided components.
+</CODE-FRAGMENT><WPM-PACKAGE name="Icon" id="Icon"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A helper function for themed icons using custom 3D models.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Icon Component" class="default">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Icon Component" class="default">import React from 'react';
 import { Clone } from '@react-three/drei';
 
 
@@ -5678,7 +5794,17 @@ export function Icon(props) {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Dialog Component" class="default">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Dialog
+
+Provides a simple dialog box that can be used to display modal dialogs.
+
+
+## Import
+
+```js
+import { Dialog } from '#Dialog .default';
+```
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Dialog Component" class="default">import React from 'react';
 
 
 
@@ -5825,7 +5951,22 @@ export function Dialog({ children, className, visible, setVisible }) {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="AI Helpers" class="default">export const recordAudio = (duration) => {
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># AI Helpers
+
+The AI Helpers API provides a set of utilities to interact with the OpenAI API. It provides functions for recording audio, transcribing audio to text, and generating text responses using the OpenAI API.
+
+
+## Import
+
+```js
+import {
+    recordAudio,
+    transcribeAudio,
+    sendGPTPrompt,
+    getGPTContent
+} from '#AIHelpers .default';
+```
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="AI Helpers" class="default">export const recordAudio = (duration) => {
     return new Promise((resolve, reject) => {
         let chunks = [];
 
@@ -5911,7 +6052,10 @@ export const sendGPTPrompt = async (body) => {
 };
 
 export const getGPTContent = (gptData) => gptData.choices[0].message.content;
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Basic" id><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="Menu" name="Menu"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Basic" id><CODE-FRAGMENT data-type="text/markdown" name="README"># Basic
+
+The packages in the Basic folder provide basic but optional features for Spatialstrates. For instance, it adds a GUI and controller menu for desktop and immersive devices, and adds a manager to create, modify, delete, and navigate spaces.
+</CODE-FRAGMENT><WPM-PACKAGE id="Menu" name="Menu"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple menu GUI for Spatialstrates.",
     "dependencies": [
         "#Spatialstrates"
@@ -5919,7 +6063,77 @@ export const getGPTContent = (gptData) => gptData.choices[0].message.content;
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Menu" class="default dynamic-gui-component">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Menu
+
+The menu includes a small API to create submenus and entries. All components are imported from `'#Menu .default'`.
+
+
+## Methods
+
+### `addSubMenu`
+
+Adds a submenu to the menu.
+
+| Parameter       | Description                                                                     |
+| --------------- | ------------------------------------------------------------------------------- |
+| `id`            | The id of the submenu.                                                          |
+| `weight`        | The weight of the submenu. Higher weights are further on the right side.        |
+| `alwaysVisible` | Whether the submenu should always be expanded. If not, it will expand on hover. |
+
+
+### `addItemToSubMenu`
+
+Adds a menu entry to a submenu.
+
+| Parameter   | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
+| `subMenuId` | The id of the submenu.                                                     |
+| `id`        | The id of the menu entry.                                                  |
+| `element`   | The DOM element to render in the menu entry.                               |
+| `weight`    | The weight of the menu entry. Higher weights are further down in the menu. |
+
+
+## Components
+
+### `&lt;MenuTitle>`
+
+A component to render a title in a submenu. Each submenu should only have one title.
+
+| Parameter | Description               |
+| --------- | ------------------------- |
+| `title`   | The title of the submenu. |
+
+
+### `&lt;MenuSpacer>`
+
+A component to render a spacer in a submenu.
+
+
+### `&lt;MenuButton>`
+
+A component to render a button in a submenu.
+
+| Parameter   | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `onClick`   | The function to call when the button is clicked. |
+| `toggled`   | Whether the button is toggled on or not.         |
+| `children`  | The content of the button.                       |
+| `className` | The class name of the button.                    |
+
+
+## Example
+
+This shows how to create a new sub menu with a title and a button:
+
+```javascript
+import React from 'react';
+import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
+
+addSubMenu('my-sub-menu', 200, true);
+addItemToSubMenu('my-sub-menu', 'my-title', &lt;MenuTitle title="My Sub Menu" />);
+addItemToSubMenu('my-sub-menu', 'my-button', &lt;MenuButton onClick={() => console.log('Button clicked')}>My Button&lt;/MenuButton>);
+```
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Menu" class="default dynamic-gui-component">import React from 'react';
 const { useState, useEffect } = React;
 
 
@@ -6172,7 +6386,76 @@ export function Main() {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Controller Menu" id class="default dynamic-scene-component">import React from 'react';
+</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Controller Menu
+
+The menu includes a small API to create submenus and entries. All components are imported from `'#ControllerMenu .default'`.
+
+
+## Methods
+
+### `addControllerSubMenu`
+
+Adds a submenu to the menu.
+
+| Parameter       | Description                                                                     |
+| --------------- | ------------------------------------------------------------------------------- |
+| `id`            | The id of the submenu.                                                          |
+| `weight`        | The weight of the submenu. Higher weights are further on the right side.        |
+| `alwaysVisible` | Whether the submenu should always be expanded. If not, it will expand on hover. |
+
+
+### `addItemToControllerSubMenu`
+
+Adds a menu entry to a submenu.
+
+| Parameter   | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
+| `subMenuId` | The id of the submenu.                                                     |
+| `id`        | The id of the menu entry.                                                  |
+| `element`   | The element to render in the menu entry.                               |
+| `weight`    | The weight of the menu entry. Higher weights are further down in the menu. |
+
+
+## Components
+
+### `&lt;ControllerMenuTitle>`
+
+A component to render a title in a submenu. Each submenu should only have one title.
+
+| Parameter | Description               |
+| --------- | ------------------------- |
+| `title`   | The title of the submenu. |
+
+
+### `&lt;ControllerMenuSpacer>`
+
+A component to render a spacer in a submenu.
+
+
+### `&lt;ControllerMenuButton>`
+
+A component to render a button in a submenu.
+
+| Parameter   | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `onClick`   | The function to call when the button is clicked. |
+| `toggled`   | Whether the button is toggled on or not.         |
+| `children`  | The content of the button.                       |
+
+
+## Example
+
+This shows how to create a new sub menu with a title and a button:
+
+```javascript
+import React from 'react';
+import { addControllerSubMenu, addItemToControllerSubMenu, ControllerMenuTitle, ControllerMenuSpacer, ControllerMenuButton } from '#Menu .default';
+
+addControllerSubMenu('my-sub-menu', 200, true);
+addItemToControllerSubMenu('my-sub-menu', 'my-title', &lt;ControllerMenuTitle title="My Sub Menu" />);
+addItemToControllerSubMenu('my-sub-menu', 'my-button', &lt;ControllerMenuButton onClick={() => console.log('Button clicked')}>My Button&lt;/ControllerMenuButton>);
+```
+</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Controller Menu" id class="default dynamic-scene-component">import React from 'react';
 const { useState, useEffect, useMemo, useRef } = React;
 import { Color } from 'three';
 import { createPortal, useFrame } from '@react-three/fiber';
@@ -7343,7 +7626,10 @@ export function Main() {
         &lt;CalibrationPoint />
     &lt;/IfInSessionMode>;
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Collaboration"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="UserManager" name="UserManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Collaboration"><CODE-FRAGMENT data-type="text/markdown" name="README"># Collaboration
+
+The Collaboration folder contains packages that enable collaboration. The User Manager allows users to create a user name that is used by the User Display and Avatar components. The former displays the a list of all users that are currently in the same space as oneself. Avatars enable awareness of others in the same space—both in 2D, 3D, or across the two. Avatars can be toggled in the menu, as they may impact performance.
+</CODE-FRAGMENT><WPM-PACKAGE id="UserManager" name="UserManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple user manager component.",
     "dependencies": [
         "webstrate-components-repos MaterialDesignOutlinedIcons",
@@ -8845,7 +9131,10 @@ initConcept();
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Streaming" id><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FOLDER name="Managers"><WPM-PACKAGE name="StreamManager" id="StreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Streaming" id><CODE-FRAGMENT data-type="text/markdown" name="README"># Streaming
+
+The Streaming folder contains packages that enable audio, camera, and screen sharing through WebRTC in Spatialstrates. To use audio and camera streaming, the Avatar component needs to be activated. Screen shares appear as movables in the scene or canvas.
+</CODE-FRAGMENT><CODE-FOLDER name="Managers"><WPM-PACKAGE name="StreamManager" id="StreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A generic stream sharing class for Webstrate servers with stream signaling support.",
     "dependencies": [],
     "assets": [],
@@ -9656,7 +9945,10 @@ addControllerSubMenu('media-sharing', 500, false);
 addItemToControllerSubMenu('media-sharing', 'share-audio', &lt;ControllerMenuButton onClick={window.shareMyAudio}>Share Audio&lt;/ControllerMenuButton>, 500);
 addItemToControllerSubMenu('media-sharing', 'stop-audio', &lt;ControllerMenuButton onClick={window.stopSharingMyAudio}>Stop Audio&lt;/ControllerMenuButton>, 600);
 addItemToControllerSubMenu('media-sharing', 'spacer3', &lt;ControllerMenuSpacer />, 700);
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER><CODE-FOLDER name="Movables" id><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><WPM-PACKAGE id="StickyNote" name="StickyNote" class><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER><CODE-FOLDER name="Movables" id><CODE-FRAGMENT data-type="text/markdown" name="README"># Movables
+
+The Movables folder contains all movable types provided by Spatialstrates. These can be extended by the user at runtime.
+</CODE-FRAGMENT><WPM-PACKAGE id="StickyNote" name="StickyNote" class><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "A simple sticky note component.",
     "dependencies": [
         "#Icon",
@@ -11424,7 +11716,10 @@ if (!window.moduleMoleculeUploader) {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Datavisualization"><CODE-FRAGMENT data-type="text/markdown" name="README"></CODE-FRAGMENT><CODE-FOLDER name="Modules"><WPM-PACKAGE id="VisModule" name="VisModule"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Datavisualization"><CODE-FRAGMENT data-type="text/markdown" name="README"># Datavisualization
+
+The Datavisualization folder contains packages that provide the visual authoring capabilities for Vega-Lite visualizations from DashSpace.
+</CODE-FRAGMENT><CODE-FOLDER name="Modules"><WPM-PACKAGE id="VisModule" name="VisModule"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
     "description": "Adds general classes for datavisualization.",
     "dependencies": [
         "#Menu"
@@ -13291,7 +13586,7 @@ import { Text } from '#Spatialstrates .text';
 import { deselectMovables } from '#Spatialstrates .movable-helpers';
 import { getDeviceFromInputEvent } from '#Spatialstrates .device-helpers';
 import { useGlobalEvents } from '#Spatialstrates .global-events';
-import { getCurrentSpaceUUID } from '#Spatialstrates .projection-helpers';
+import { getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
 import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { Icon } from '#Icon .default';
 
@@ -15061,7 +15356,8 @@ import { stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
 
 import { Text } from '#Spatialstrates .text';
-import { getSpaceManagerUUID, projectToCanvas } from '#Spatialstrates .projection-helpers';
+import { getSpaceManagerUUID } from '#Spatialstrates .space-helpers';
+import { projectToCanvas } from '#Spatialstrates .projection-helpers';
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { transcribeAudio, sendGPTPrompt, getGPTContent } from '#AIHelpers .default';
