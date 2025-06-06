@@ -12,7 +12,7 @@ import { Text } from '#Spatialstrates .text';
 import { deselectMovables } from '#Spatialstrates .movable-helpers';
 import { getDeviceFromInputEvent } from '#Spatialstrates .device-helpers';
 import { useGlobalEvents } from '#Spatialstrates .global-events';
-import { getCurrentSpaceUUID } from '#Spatialstrates .projection-helpers';
+import { getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
 import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { Icon } from '#Icon .default';
 

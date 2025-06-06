@@ -8,7 +8,8 @@ import { stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
 
 import { Text } from '#Spatialstrates .text';
-import { getSpaceManagerUUID, projectToCanvas } from '#Spatialstrates .projection-helpers';
+import { getSpaceManagerUUID } from '#Spatialstrates .space-helpers';
+import { projectToCanvas } from '#Spatialstrates .projection-helpers';
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { transcribeAudio, sendGPTPrompt, getGPTContent } from '#AIHelpers .default';

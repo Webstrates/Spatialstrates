@@ -1,10 +1,8 @@
 import React from 'react';
-const { useEffect, useState, useMemo, useRef, useCallback } = React;
-import { BackSide, MeshStandardMaterial, BoxGeometry, Vector3, Matrix4, Euler, PlaneGeometry } from 'three';
+const { useMemo, useCallback } = React;
+import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { useFrame } from '@react-three/fiber';
-import { useXRInputSourceEvent } from '@react-three/xr';
-import { Varv, useProperty } from '#VarvReact';
+import { useProperty } from '#VarvReact';
 
 import { BoundaryResizer, BoundingBox, DragUpdater } from '#Spatialstrates .scene-helpers';
 

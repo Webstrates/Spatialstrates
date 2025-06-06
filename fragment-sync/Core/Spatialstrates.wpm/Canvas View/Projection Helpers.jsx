@@ -1,6 +1,8 @@
 import { Vector3 } from 'three';
 import { PCA } from 'ml-pca';
 
+import { getSpaceManagerUUID, getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
+
 
 
 export const CANVAS_SCALE = 500;
@@ -65,26 +67,6 @@ export const updatePointFromCanvas = (oldPoint3D, newPoint2D, projectionPlane) =
         .add(zAxis.clone().multiplyScalar(pointToOrigin.dot(zAxis)));
 
     return newPoint.toArray();
-};
-
-
-export const getSpaceManagerUUID = async () => {
-    const spaceManagerUUIDs = await VarvEngine.getAllUUIDsFromType('SpaceManager');
-    if (spaceManagerUUIDs.length === 0) {
-        console.log('No space manager found');
-        return false;
-    }
-    return spaceManagerUUIDs[0];
-};
-
-export const getCurrentSpaceUUID = async () => {
-    const spaceManagerUUID = await getSpaceManagerUUID();
-    const spaceUUID = await VarvEngine.getConceptFromType('SpaceManager').getPropertyValue(spaceManagerUUID, 'locationHash');
-    if (!spaceUUID) {
-        console.log('No space found');
-        return false;
-    }
-    return spaceUUID;
 };
 
 export const computeProjectionPlaneUsingPCA = async (spaceUUIDParam, movableUUIDsParam) => {

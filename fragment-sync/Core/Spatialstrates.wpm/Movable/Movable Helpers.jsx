@@ -1,7 +1,8 @@
 import { Vector3 } from 'three';
 
 import { devicePositionWithOffset, deviceRotation } from '#Spatialstrates .device-helpers';
-import { getSpaceManagerUUID, getCurrentSpaceUUID, updatePointFromCanvas, CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
+import { getSpaceManagerUUID, getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
+import { updatePointFromCanvas, CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
 
 
 
