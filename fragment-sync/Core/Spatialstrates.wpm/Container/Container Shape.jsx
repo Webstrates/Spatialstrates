@@ -5,7 +5,7 @@ import { Varv, useProperty } from '#VarvReact';
 
 import { projectToScene, CANVAS_SCALE, shapeToConceptId } from '#Spatialstrates .projection-helpers';
 import { MovableCanvasController } from '#Spatialstrates .movable-canvas-controller';
-import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Container .container-helpers';
+import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
 
 

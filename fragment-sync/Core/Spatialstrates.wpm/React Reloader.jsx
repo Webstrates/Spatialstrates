@@ -54,4 +54,4 @@ window.reloadApp = () => {
     reload();
 };
 
-reload();
+render();

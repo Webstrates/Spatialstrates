@@ -1,7 +1,7 @@
 {
   "description": "The VisPiece and VisGroup components for DashSpace.",
   "dependencies": [
-    "#Container",
+    "#Spatialstrates",
     "#VisModule",
     "#Icon",
     "#AIHelpers"

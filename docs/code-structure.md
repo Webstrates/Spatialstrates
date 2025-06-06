@@ -1,5 +1,8 @@
 # Code Structure
 
+> [!WARNING] Outdated Documentation
+> This documentation is outdated and will be updated in the future. The code structure has changed significantly since this was written, so please refer to the code itself for the most up-to-date information.
+
 The code of Spatialstrates is modular and organized into the structure below. The functionality is structured into five main folders which each include multiple WPM ([Webstrates Package Manager](https://codestrates.projects.cavi.au.dk/docs/guide/webstrates-package-manager/)) packages.
 
 Each package defines their own dependencies, and the WPM GUI in Cauldron can be used to define which packages should be loaded. For instance, if the WebRTC streaming features are not required, one can simply tick off the `StreamingBundle` package in the WPM GUI to avoid loading it.

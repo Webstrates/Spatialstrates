@@ -2,18 +2,16 @@ import React from 'react';
 const { useState, useMemo, useEffect, useCallback } = React;
 import { MeshStandardMaterial, Vector3, Matrix4, Box3, Euler } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
+import { Defaults, Card, Button, List, ListItem, Input } from '@react-three/uikit-apfel';
 import { Varv, useProperty } from '#VarvReact';
 
 import { useGlobalEvents } from '#Spatialstrates .global-events';
 import { Text } from '#Spatialstrates .text';
-import { useSceneMovables, SpaceMovables } from '#Spatialstrates .scene-movables';
 import { BoundingBox, BoundaryResizer } from '#Spatialstrates .scene-helpers';
 import { ProjectionPlanePreview } from '#Spatialstrates .projection-plane-preview';
-import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Container .container-helpers';
+import { ClippedMovablesFilter, moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 import { Movable, useTransform } from '#Spatialstrates .movable';
-
-import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
-import { Defaults, Card, Button, Checkbox, List, ListItem, Input } from '@react-three/uikit-apfel';
 import { transcribeAudio } from '#AIHelpers .default';
 
 
@@ -293,7 +291,7 @@ function ContainerDummy() {
     </> : null;
 }
 
-function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
+function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform, movableSceneComponents }) {
     const [innerSpaceUUID] = useProperty('concept::uuid');
     const [boundarySize] = useProperty('boundarySize');
     const [boundaryOrigin] = useProperty('boundaryOrigin');
@@ -412,7 +410,6 @@ function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
         return () => unsubscribe();
     }, [subscribeEvent, onDragEnd]);
 
-    const sceneComponents = useSceneMovables();
     return <>
         {/* FIXME: Fix this, caused by the <SpaceMovables> component that clears the Varv scope */}
         <Varv concept="SpaceManager">
@@ -421,7 +418,9 @@ function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
         <group position={Array.isArray(boundaryOrigin) ? [-boundaryOrigin[0], -boundaryOrigin[1], -boundaryOrigin[2]] : [0, 0, 0]}>
             <Varv property="movables">
                 <ClippedMovablesFilter clippingMode={clippingMode}>
-                    {sceneComponents}
+                    {movableSceneComponents.map((Component, index) => (
+                        <Component key={index} />
+                    ))}
                     <ContainerDummy />
                 </ClippedMovablesFilter>
             </Varv>
@@ -429,7 +428,7 @@ function ContainedSpace({ containerUUID, outerSpaceUUID, containerTransform }) {
     </>;
 }
 
-function Container() {
+function ContainerFiltered({ movableSceneComponents }) {
     const [containerUUID] = useProperty('concept::uuid');
     const [selected] = useProperty('selected');
     const [hovered] = useProperty('hovered');
@@ -457,8 +456,8 @@ function Container() {
 
     const containerMemo = useMemo(() => <Varv property="containedSpace">
         <ContainerSizeAndNameForwarder setSizeContainer={setSize} setNameContainer={setName} setColorContainer={setColor} />
-        <ContainedSpace containerUUID={containerUUID} outerSpaceUUID={space} containerTransform={transform} />
-    </Varv>, [containerUUID, space, transform]);
+        <ContainedSpace containerUUID={containerUUID} outerSpaceUUID={space} containerTransform={transform} movableSceneComponents={movableSceneComponents} />
+    </Varv>, [containerUUID, space, transform, movableSceneComponents]);
 
     return <Movable handle={handle} upright={true}>
         {Array.isArray(size) ? <>
@@ -478,15 +477,7 @@ function Container() {
     </Movable>;
 }
 
-function FilterContainers() {
+export function Container({ movableSceneComponents }) {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Container' ? <Container /> : null;
-}
-
-export function Main() {
-    return <Varv property="locationHash">
-        <SpaceMovables>
-            <FilterContainers />
-        </SpaceMovables>
-    </Varv>
+    return conceptType === 'Container' ? <ContainerFiltered movableSceneComponents={movableSceneComponents} /> : null;
 }

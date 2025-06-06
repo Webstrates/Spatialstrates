@@ -10,8 +10,8 @@ import { CustomCamera } from '#Spatialstrates .scene-view .camera';
 import { BasicSceneEnvironment } from '#Spatialstrates .scene-view .basic-environment';
 import { BoundaryPreview } from '#Spatialstrates .scene-view .boundary-preview';
 import { ProjectionPlanePreview } from '#Spatialstrates .scene-view .projection-plane-preview';
-
-import { SceneMovablesProvider, useSceneMovables, SpaceMovables } from '#Spatialstrates .scene-movables';
+import { SpaceMovables } from '#Spatialstrates .scene-movables';
+import { Container } from '#Spatialstrates .container';
 
 
 
@@ -19,7 +19,7 @@ if (!window.moduleDeviceManager) {
     window.moduleDeviceManager = {};
 }
 
-function Scene() {
+function Scene({ movableSceneComponents }) {
     // The Quest renders in lower resolution by default, this increases the resolution
     // https://discourse.threejs.org/t/webxr-quality-problems/24603/2
     const { gl } = useThree();
@@ -49,8 +49,6 @@ function Scene() {
         window.moduleDeviceManager.handLeft = handLeft;
     }, [handLeft]);
 
-    const sceneComponents = useSceneMovables();
-
     return <>
         {/* Basic Lighting */}
         <Environment preset="city" />
@@ -74,13 +72,16 @@ function Scene() {
             <BoundaryPreview />
             <ProjectionPlanePreview />
             <SpaceMovables>
-                {sceneComponents}
+                {movableSceneComponents.map((Component, index) => (
+                    <Component key={index} />
+                ))}
+                <Container movableSceneComponents={movableSceneComponents} />
             </SpaceMovables>
         </Varv>
     </>;
 }
 
-export function SceneView() {
+export function SceneView({ movableSceneComponents }) {
     const [depthSensing] = useProperty('depthSensing');
 
     // https://github.com/pmndrs/xr/blob/1793fe3a4ecf07a30ea98ff2585811d3100d6b51/packages/xr/src/init.ts#L54
@@ -106,9 +107,7 @@ export function SceneView() {
             shadows
             style={{ touchAction: 'none' }}>
             <XR store={store}>
-                <SceneMovablesProvider>
-                    <Scene />
-                </SceneMovablesProvider>
+                <Scene movableSceneComponents={movableSceneComponents} />
             </XR>
         </Canvas>
     </>;

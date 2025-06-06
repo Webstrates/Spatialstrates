@@ -59,6 +59,22 @@
                 "hovered": [ "memory", "cauldron" ],
                 "beingDragged": [ "memory", "cauldron" ]
             }
+        },
+        "Container": {
+            "schema": {
+                "containedSpace": "Space",
+                "clippingMode": { "string": {
+                    "enum": [ "hide", "show", "fade" ],
+                    "default": "hide"
+                }},
+                "collaborationLevel": { "string": {
+                    "enum": [ "close", "loose", "none" ],
+                    "default": "close"
+                }}
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
         }
     },
     "dataStores": {

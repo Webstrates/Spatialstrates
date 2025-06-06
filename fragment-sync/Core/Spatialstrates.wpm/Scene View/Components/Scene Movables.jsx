@@ -1,51 +1,8 @@
 import React from 'react';
-const { useState, useContext, createContext, useMemo, useEffect } = React;
+const { useState, useEffect } = React;
 import { useProperty } from '#VarvReact';
 
-import { Main as StickyNote } from '#StickyNote .default';
-import { Main as Image } from '#Image .default';
-import { Main as Trashcan } from '#Trashcan .default';
-import { Main as Flashlight } from '#Flashlight .default';
-import { Main as Model } from '#Model .default';
-import { Main as Molecule } from '#Molecule .default';
-import { Main as Clemens } from '#Clemens .default';
 
-import { Main as ScreenStream } from '#ScreenStream .default';
-
-import { Main as VisPiece } from '#VisPiece .vis-piece';
-import { Main as VisGroup } from '#VisPiece .vis-group';
-import { Main as VisShelf } from '#VisShelf .default';
-
-
-
-if (!window.SceneMovablesContext) window.SceneMovablesContext = createContext();
-
-// One central location to import all custom space components with exception of containers
-export const SceneMovablesProvider = ({ children }) => {
-    const value = useMemo(() => <>
-        <StickyNote />
-        <Image />
-        <Trashcan />
-        <Flashlight />
-        <Model />
-        <Molecule />
-        <Clemens />
-
-        <ScreenStream />
-
-        <VisPiece />
-        <VisGroup />
-        <VisShelf />
-    </>, []);
-
-    return (
-        <SceneMovablesContext.Provider value={value}>
-            {children}
-        </SceneMovablesContext.Provider>
-    );
-};
-
-export const useSceneMovables = () => useContext(SceneMovablesContext);
 
 // TODO: This clears the existing scope but instead should extend it
 function MovableVarvScope({ uuid, children }) {

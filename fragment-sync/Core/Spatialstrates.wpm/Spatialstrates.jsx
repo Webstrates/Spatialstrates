@@ -34,19 +34,20 @@ function SpaceView() {
         }
     }, [currentSpace, setCurrentSpace]);
 
-    // Load shape utils here to cache them between switching views
+    // Load shape utils and movables here to cache them between switching views
     const shapeUtils = useDynamicModules('.dynamic-shape-component');
+    const movableSceneComponents = useDynamicModules('.dynamic-movable-scene-component');
 
     const view = useMemo(() => {
         switch (currentView) {
             case '3D':
-                return <SceneView />;
+                return <SceneView movableSceneComponents={movableSceneComponents} />;
             case '2D':
                 return <CanvasView shapeUtils={shapeUtils} />;
             default:
                 return null;
         }
-    }, [currentView, shapeUtils]);
+    }, [currentView, shapeUtils, movableSceneComponents]);
 
     return currentSpace ? view : null;
 }

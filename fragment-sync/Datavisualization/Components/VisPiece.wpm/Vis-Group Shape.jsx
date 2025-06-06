@@ -7,7 +7,7 @@ import { useGlobalEvents } from '#Spatialstrates .global-events';
 import { getCurrentSpaceUUID, CANVAS_SCALE } from '#Spatialstrates .projection-helpers';
 import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
 import { deselectMovables } from '#Spatialstrates .movable-helpers';
-import { moveMovableToNewSpace } from '#Container .container-helpers';
+import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
 
 import { isPieceOverwritten } from '#VisModule .vis-composer';
 import { getVisComponentById } from '#VisModule .vis-component-manager';
