@@ -7982,6 +7982,7 @@ The Movables folder contains all movable types provided by Spatialstrates. These
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useState, useMemo, useRef } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useFrame } from '@react-three/fiber';
@@ -8018,24 +8019,6 @@ frameMaterialHoveredMap.set('yellow', new MeshStandardMaterial({ color: 'hsl(49,
 frameMaterialHoveredMap.set('purple', new MeshStandardMaterial({ color: 'hsl(250, 85%, 70%)', metalness: 0.2, roughness: 0.5 }));
 frameMaterialHoveredMap.set('orange', new MeshStandardMaterial({ color: 'hsl(28, 95%, 70%)', metalness: 0.2, roughness: 0.5 }));
 frameMaterialHoveredMap.set('pink', new MeshStandardMaterial({ color: 'hsl(310, 95%, 70%)', metalness: 0.2, roughness: 0.5 }));
-
-// const frameMaterialSelectedMap = new Map();
-// frameMaterialSelectedMap.set('red', new MeshStandardMaterial({ color: 'hsl(0, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('green', new MeshStandardMaterial({ color: 'hsl(120, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('blue', new MeshStandardMaterial({ color: 'hsl(204, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('yellow', new MeshStandardMaterial({ color: 'hsl(49, 98%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('purple', new MeshStandardMaterial({ color: 'hsl(250, 85%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('orange', new MeshStandardMaterial({ color: 'hsl(28, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('pink', new MeshStandardMaterial({ color: 'hsl(310, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-
-// const frameMaterialHoveredSelectedMap = new Map();
-// frameMaterialHoveredSelectedMap.set('red', new MeshStandardMaterial({ color: 'hsl(0, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('green', new MeshStandardMaterial({ color: 'hsl(120, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('blue', new MeshStandardMaterial({ color: 'hsl(204, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('yellow', new MeshStandardMaterial({ color: 'hsl(49, 98%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('purple', new MeshStandardMaterial({ color: 'hsl(250, 85%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('orange', new MeshStandardMaterial({ color: 'hsl(28, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('pink', new MeshStandardMaterial({ color: 'hsl(310, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
 
 
 
@@ -8129,7 +8112,9 @@ function StickyNote() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'StickyNote' ? &lt;StickyNote /> : null;
+    return conceptType === 'StickyNote' ? &lt;ErrorBoundary fallback={null}>
+        &lt;StickyNote />
+    &lt;/ErrorBoundary> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Menu" auto>import React from 'react';
 
@@ -8398,7 +8383,9 @@ function CustomImage() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Image' ? &lt;CustomImage /> : null;
+    return conceptType === 'Image' ? &lt;ErrorBoundary fallback={null}>
+        &lt;CustomImage />
+    &lt;/ErrorBoundary> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Image Shape" class="dynamic-shape-component">import React from 'react';
 const { useEffect } = React;
@@ -8608,6 +8595,7 @@ if (!window.moduleImageUploader) {
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useEffect, useCallback } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { Vector3 } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useProperty } from '#VarvReact';
@@ -8666,7 +8654,9 @@ function Trashcan() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Trashcan' ? &lt;Trashcan /> : null;
+    return conceptType === 'Trashcan' ? &lt;ErrorBoundary fallback={null}>
+        &lt;Trashcan />
+    &lt;/ErrorBoundary> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Shape" class="dynamic-shape-component">import React from 'react';
 const { useEffect, useCallback } = React;
@@ -8877,7 +8867,9 @@ function CustomModel() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Model' ? &lt;CustomModel /> : null;
+    return conceptType === 'Model' ? &lt;ErrorBoundary fallback={null}>
+        &lt;CustomModel />
+    &lt;/ErrorBoundary> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Model Shape" class="dynamic-shape-component">import React from 'react';
 import { HTMLContainer } from 'tldraw';
@@ -9039,6 +9031,7 @@ if (!window.moduleModelUploader) {
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Flashlight Component" class="default dynamic-movable-scene-component">import React from 'react';
 const { useRef, useMemo } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useFrame } from '@react-three/fiber';
@@ -9212,7 +9205,9 @@ function Flashlight() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Flashlight' ? &lt;Flashlight /> : null;
+    return conceptType === 'Flashlight' ? &lt;ErrorBoundary fallback={null}>
+        &lt;Flashlight />
+    &lt;/ErrorBoundary> : null;
 }
 </CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Flashlight Shape" class="dynamic-shape-component">import React from 'react';
 import { HTMLContainer } from 'tldraw';

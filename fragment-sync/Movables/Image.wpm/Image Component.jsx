@@ -63,5 +63,7 @@ function CustomImage() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Image' ? <CustomImage /> : null;
+    return conceptType === 'Image' ? <ErrorBoundary fallback={null}>
+        <CustomImage />
+    </ErrorBoundary> : null;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 const { useState, useMemo, useRef } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useFrame } from '@react-three/fiber';
@@ -36,24 +37,6 @@ frameMaterialHoveredMap.set('yellow', new MeshStandardMaterial({ color: 'hsl(49,
 frameMaterialHoveredMap.set('purple', new MeshStandardMaterial({ color: 'hsl(250, 85%, 70%)', metalness: 0.2, roughness: 0.5 }));
 frameMaterialHoveredMap.set('orange', new MeshStandardMaterial({ color: 'hsl(28, 95%, 70%)', metalness: 0.2, roughness: 0.5 }));
 frameMaterialHoveredMap.set('pink', new MeshStandardMaterial({ color: 'hsl(310, 95%, 70%)', metalness: 0.2, roughness: 0.5 }));
-
-// const frameMaterialSelectedMap = new Map();
-// frameMaterialSelectedMap.set('red', new MeshStandardMaterial({ color: 'hsl(0, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('green', new MeshStandardMaterial({ color: 'hsl(120, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('blue', new MeshStandardMaterial({ color: 'hsl(204, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('yellow', new MeshStandardMaterial({ color: 'hsl(49, 98%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('purple', new MeshStandardMaterial({ color: 'hsl(250, 85%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('orange', new MeshStandardMaterial({ color: 'hsl(28, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialSelectedMap.set('pink', new MeshStandardMaterial({ color: 'hsl(310, 95%, 65%)', metalness: 0.2, roughness: 0.5 }));
-
-// const frameMaterialHoveredSelectedMap = new Map();
-// frameMaterialHoveredSelectedMap.set('red', new MeshStandardMaterial({ color: 'hsl(0, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('green', new MeshStandardMaterial({ color: 'hsl(120, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('blue', new MeshStandardMaterial({ color: 'hsl(204, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('yellow', new MeshStandardMaterial({ color: 'hsl(49, 98%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('purple', new MeshStandardMaterial({ color: 'hsl(250, 85%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('orange', new MeshStandardMaterial({ color: 'hsl(28, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
-// frameMaterialHoveredSelectedMap.set('pink', new MeshStandardMaterial({ color: 'hsl(310, 95%, 75%)', metalness: 0.2, roughness: 0.5 }));
 
 
 
@@ -147,5 +130,7 @@ function StickyNote() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'StickyNote' ? <StickyNote /> : null;
+    return conceptType === 'StickyNote' ? <ErrorBoundary fallback={null}>
+        <StickyNote />
+    </ErrorBoundary> : null;
 }

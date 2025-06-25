@@ -1,5 +1,6 @@
 import React from 'react';
 const { useEffect, useCallback } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { Vector3 } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useProperty } from '#VarvReact';
@@ -58,5 +59,7 @@ function Trashcan() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Trashcan' ? <Trashcan /> : null;
+    return conceptType === 'Trashcan' ? <ErrorBoundary fallback={null}>
+        <Trashcan />
+    </ErrorBoundary> : null;
 }

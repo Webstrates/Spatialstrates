@@ -81,5 +81,7 @@ function CustomModel() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Model' ? <CustomModel /> : null;
+    return conceptType === 'Model' ? <ErrorBoundary fallback={null}>
+        <CustomModel />
+    </ErrorBoundary> : null;
 }

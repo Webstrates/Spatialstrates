@@ -1,5 +1,6 @@
 import React from 'react';
 const { useRef, useMemo } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useFrame } from '@react-three/fiber';
@@ -173,5 +174,7 @@ function Flashlight() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'Flashlight' ? <Flashlight /> : null;
+    return conceptType === 'Flashlight' ? <ErrorBoundary fallback={null}>
+        <Flashlight />
+    </ErrorBoundary> : null;
 }
