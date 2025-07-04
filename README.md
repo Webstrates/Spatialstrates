@@ -1,5 +1,7 @@
 <p align="center">
-    <img src="./docs/logo.svg" width="128" />
+    <a href="https://demo.webstrates.net/new?prototypeUrl=https://github.com/Webstrates/Spatialstrates/raw/main/prototypes/spatialstrate.zip" title="Create a new Spatialstrate">
+        <img src="./docs/logo.svg" width="128" />
+    </a>
 </p>
 
 <h1 align="center">Spatialstrates</h1>
