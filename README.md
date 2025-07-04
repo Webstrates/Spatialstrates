@@ -44,3 +44,17 @@ Spatialstrates uses the following models from Sketchfab:
 - [Quest 3](https://sketchfab.com/3d-models/quest-3-e5c334a9598c4e85bb182eebf15a2e32) by Redcodi
 - [Action Camera - Low Poly](https://sketchfab.com/3d-models/action-camera-low-poly-b28bfbdfc62644beacf1e3c2c3423477) by xylvnking
 - [Smartphone (Xperia Z Ultra) (School Project)](https://sketchfab.com/3d-models/smartphone-xperia-z-ultra-school-project-18a917d8619441b1ba46da856e43c43f) by Ole Gunnar Isager
+
+
+## Citation
+
+```bibtex
+@article{Spatialstrates2025,
+    author    = {Borowski, Marcel and Grønbœk, Jens Emil and Butcher, Peter W. S. and Ritsos, Panagiotis D. and Klokmose, Clemens N. and Elmqvist, Niklas},
+    title     = {Spatialstrates: Spatial Hypermedia for Unified Collaboration Between Immersive 3D and Desktop 2D},
+    year      = {2025},
+    journal   = {Proceedings of the 38th Annual ACM Symposium on User Interface Software and Technology},
+    publisher = {Association for Computing Machinery},
+    doi       = {TBD}
+}
+```
