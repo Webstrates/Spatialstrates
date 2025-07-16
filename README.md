@@ -53,10 +53,10 @@ Spatialstrates uses the following models from Sketchfab:
 ```bibtex
 @article{Spatialstrates2025,
     author    = {Borowski, Marcel and Grønbœk, Jens Emil and Butcher, Peter W. S. and Ritsos, Panagiotis D. and Klokmose, Clemens N. and Elmqvist, Niklas},
-    title     = {Spatialstrates: Spatial Hypermedia for Unified Collaboration Between Immersive 3D and Desktop 2D},
+    title     = {Spatialstrates: Cross-Reality Collaboration through Spatial Hypermedia},
     year      = {2025},
     journal   = {Proceedings of the 38th Annual ACM Symposium on User Interface Software and Technology},
     publisher = {Association for Computing Machinery},
-    doi       = {TBD}
+    doi       = {10.1145/3746059.3747708}
 }
 ```
