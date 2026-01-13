@@ -18,3 +18,10 @@ The embedded prototype of Spatialstrates embeds the Spatialstrates packages into
 You can use one of the following link to create a new spatialstrate:
 
 > https://demo.webstrates.net/new?prototypeUrl=https://github.com/Webstrates/Spatialstrates/raw/main/prototypes/spatialstrate.zip
+
+
+## Updating the Prototype
+
+To update the prototype download the current Spatialstrates prototype from your Webstrates server as a ZIP package. Unzip the package and replace the `index.html` file with the updated version from the `spatialstrate` folder. Do the same for any new or updated assets.
+
+To clean the `index.html` file from any Webstrates-specific attributes (e.g., `data-auth` and `__wid`), you can use the provided `clean-index-html.sh` script.
