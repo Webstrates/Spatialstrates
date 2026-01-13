@@ -46,7 +46,7 @@ Spatialstrates uses the following models from Sketchfab:
 - [Quest 3](https://sketchfab.com/3d-models/quest-3-e5c334a9598c4e85bb182eebf15a2e32) by Redcodi
 - [Action Camera - Low Poly](https://sketchfab.com/3d-models/action-camera-low-poly-b28bfbdfc62644beacf1e3c2c3423477) by xylvnking
 - [Smartphone (Xperia Z Ultra) (School Project)](https://sketchfab.com/3d-models/smartphone-xperia-z-ultra-school-project-18a917d8619441b1ba46da856e43c43f) by Ole Gunnar Isager
-- [Vision Pro Model](https://sketchfab.com/3d-models/apple-vision-pro-08217e6a596848d0ababd15a1b328de7) by pravinvamp
+- [Apple Vision Pro](https://sketchfab.com/3d-models/apple-vision-pro-08217e6a596848d0ababd15a1b328de7) by pravinvamp
 
 
 ## Citation
