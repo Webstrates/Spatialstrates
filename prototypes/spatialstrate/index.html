@@ -1710,7 +1710,7 @@ if(typeof webstrate  !== "undefined") {
         await WPMBoot.wpmv2_bootloader();
     });
 }
-</script><title>Spatialstrates</title><meta name="viewport" content="width=device-width, initial-scale=1"/><script type="text/json+bootconfig">{
+</script><title>Spatialstrates</title><meta content="width=device-width, initial-scale=1" name="viewport"/><script type="text/json+bootconfig">{
     "creator": "WPMPackageManager",
     "created": 1650368097912,
     "require": [
@@ -1919,17 +1919,17 @@ if(typeof webstrate  !== "undefined") {
         "wpm-repos",
         "spatialstrates-repos"
     ]
-}</script><LINK rel="manifest" href="manifest.json"/><LINK rel="icon" href="favicon.ico"/>
+}</script><link href="manifest.json" rel="manifest"/><link href="favicon.ico" rel="icon"/>
 
 
 
-        <META name="description" content="Cross-Reality Hypermedia in the Web"/></head><body style="cursor: default;">
+        <meta content="Cross-Reality Hypermedia in the Web" name="description"/></head><body style="cursor: default;">
 
 
 
 
 
-<CODE-FOLDER name="WPM"><WPM-PACKAGE data-repository="wpm-repos" id="WPM-loading-skin-simple" style="width: 0px; height: 0px; position: absolute; visibility: hidden;"><SCRIPT id="descriptor-script" type="descriptor">
+<code-folder name="WPM"><wpm-package data-repository="wpm-repos" id="WPM-loading-skin-simple" style="width: 0px; height: 0px; position: absolute; visibility: hidden;"><script id="descriptor-script" type="descriptor">
 {
     "description": "A simple loading skin for the bootloader to avoid seeing improperly rendered HTML while loading",
     "dependencies": [
@@ -1940,7 +1940,7 @@ if(typeof webstrate  !== "undefined") {
     "forceEmbedding": true
 }
 
-</SCRIPT><STYLE id="loading-style">
+</script><style id="loading-style">
 html:not([transient-wpm2-bootloader="loaded"]) > * {
   opacity: 0 !important; }
 
@@ -1983,17 +1983,17 @@ html[transient-wpm2-bootloader="waiting"]:before, html[transient-wpm2-bootloader
 
 html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:before, html[transient-wpm2-bootloader="loading"][transient-wpm2-bootloader="loaded"]:before, html[transient-wpm2-bootloader="initializing"][transient-wpm2-bootloader="loaded"]:before, html[transient-wpm2-bootloader="loaded"][transient-wpm2-bootloader="loaded"]:before {
   animation: wpm-bootloader-done 1s ease-out both; }
-</STYLE></WPM-PACKAGE><WPM-PACKAGE id="WPM-dev" data-repository="wpm-repos"><SCRIPT id="descriptor-script" type="descriptor">
+</style></wpm-package><wpm-package data-repository="wpm-repos" id="WPM-dev"><script id="descriptor-script" type="descriptor">
                     {
                         "dependencies": [
                         ],
                         "forceEmbedding": true
                     }
 
-                    </SCRIPT>
+                    </script>
 
 
-                </WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Meta Elements"><VARV-DATA></VARV-DATA><VARV-SIGNALING></VARV-SIGNALING><SCREEN-SIGNALING></SCREEN-SIGNALING><VIDEO-SIGNALING></VIDEO-SIGNALING><AUDIO-SIGNALING></AUDIO-SIGNALING></CODE-FOLDER><WPM-PACKAGE id="ImportMapping" name="ImportMapping"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+                </wpm-package></code-folder><code-folder name="Meta Elements"><varv-data></varv-data><varv-signaling></varv-signaling><screen-signaling></screen-signaling><video-signaling></video-signaling><audio-signaling></audio-signaling></code-folder><wpm-package id="ImportMapping" name="ImportMapping"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Import map for Spatialstrates.",
     "dependencies": [],
     "assets": [
@@ -2001,14 +2001,14 @@ html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:be
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Import Mapping
+</wpm-descriptor></code-fragment><code-fragment data-type="text/markdown" name="README"># Import Mapping
 
 This package includes the import mapping for Spatialstrates. It uses [esm.sh](https://esm.sh) as its package repostitory. It is recommended to fix versions of packages to avoid potential breaking changes with future updates.
 
 ## `@use-gesture` Fix
 
 The `@use-gesture` package is imported from esm.sh has a bug that correct trackpad gestures in tldraw running it in Webstrates. Hence, we added a fixed version as an asset that fixes the bug for now.
-</CODE-FRAGMENT><SCRIPT name="Import Mapping" type="importmap" class="import-map" id>{
+</code-fragment><script class="import-map" name="Import Mapping" type="importmap">{
     "imports": {
         "three": "https://esm.sh/v135/three@0.173.0?dev=&target=es2024&external=*",
         "three/": "https://esm.sh/v135/three@0.173.0&dev&target=es2024&external=*/",
@@ -2100,7 +2100,7 @@ The `@use-gesture` package is imported from esm.sh has a bug that correct trackp
         "rdkit": "https://esm.sh/v135/@rdkit/rdkit@2024.3.5-1.0.0?dev=&target=es2024&external=*"
     }
 }
-</SCRIPT><CODE-FRAGMENT data-type="application/json" name="Import Mapping JSON Copy">{
+</script><code-fragment data-type="application/json" name="Import Mapping JSON Copy">{
     "imports": {
         "three": "https://esm.sh/v135/three@0.173.0?dev=&target=es2024&external=*",
         "three/": "https://esm.sh/v135/three@0.173.0&dev&target=es2024&external=*/",
@@ -2192,15 +2192,15 @@ The `@use-gesture` package is imported from esm.sh has a bug that correct trackp
         "rdkit": "https://esm.sh/v135/@rdkit/rdkit@2024.3.5-1.0.0?dev=&target=es2024&external=*"
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="MyWebstrates Import Mapping" auto>if (webstrate.importMap) {
+</code-fragment><code-fragment auto data-type="text/javascript" name="MyWebstrates Import Mapping">if (webstrate.importMap) {
     const scriptElement = document.querySelector('#ImportMapping .import-map');
     webstrate.importMap.create();
     webstrate.importMap.content = JSON.parse(scriptElement.innerHTML)
 }
-</CODE-FRAGMENT></WPM-PACKAGE><CODE-FOLDER name="Code"><CODE-FOLDER name="Core"><CODE-FRAGMENT data-type="text/markdown" name="README"># Core
+</code-fragment></wpm-package><code-folder name="Code"><code-folder name="Core"><code-fragment data-type="text/markdown" name="README"># Core
 
 The packages in the Core folder provide the basic functionality of the Spatialstrates platform.
-</CODE-FRAGMENT><WPM-PACKAGE id="InterFont" name="InterFont"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><wpm-package id="InterFont" name="InterFont"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Adds the Inter font.",
     "dependencies": [],
     "assets": [
@@ -2208,7 +2208,7 @@ The packages in the Core folder provide the basic functionality of the Spatialst
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/css" auto name="Inter Font">@font-face {
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/css" name="Inter Font">@font-face {
     font-family: "Inter";
     font-weight: 100 900;
     font-display: swap;
@@ -2227,7 +2227,7 @@ The packages in the Core folder provide the basic functionality of the Spatialst
          url("inter-variable.zip/inter-variable-Italic.woff2") format("woff2");
     src: url("inter-variable.zip/inter-variable-Italic.woff2") format("woff2") tech("variations");
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Spatialstrates" name="Spatialstrates"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Spatialstrates" name="Spatialstrates"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "The Spatialstrates core package and implementation.",
     "dependencies": [
         "varv-repos varv-react",
@@ -2239,7 +2239,7 @@ The packages in the Core folder provide the basic functionality of the Spatialst
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Spatialstrates
+</wpm-descriptor></code-fragment><code-fragment data-type="text/markdown" name="README"># Spatialstrates
 
 The `Spatialstrates` package provides the core functionality for the Spatialstrates application. It bootstraps the React root of the application and reloads the application when fragments inside the package are modified. It provides a series of helpers functions.
 
@@ -2343,7 +2343,7 @@ The Container Helpers API provides helper functions to move a movable from one s
 ```js
 import { moveMovableToContainer } from '#Spatialstrates .container-helpers';
 ```
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Spatialstrates Concepts" auto>{
+</code-fragment><code-fragment auto data-type="text/varv" name="Spatialstrates Concepts">{
     "concepts": {
         "SpaceManager": {
             "schema": {
@@ -2428,7 +2428,7 @@ import { moveMovableToContainer } from '#Spatialstrates .container-helpers';
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT auto data-type="text/javascript+babel" name="React Reloader">import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="React Reloader">import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 
@@ -2485,7 +2485,7 @@ window.reloadApp = () => {
 };
 
 render();
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Spatialstrates" class="spatialstrates">import React from 'react';
+</code-fragment><code-fragment class="spatialstrates" data-type="text/javascript+babel" name="Spatialstrates">import React from 'react';
 const { useMemo, useEffect, useRef } = React;
 import { Varv, useProperty } from '#VarvReact';
 
@@ -2547,7 +2547,7 @@ export function App() {
         &lt;/Varv>
     &lt;/GlobalEventProvider>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Space Helpers" class="space-helpers">export const getSpaceManagerUUID = async () => {
+</code-fragment><code-fragment class="space-helpers" data-type="text/javascript+babel" name="Space Helpers">export const getSpaceManagerUUID = async () => {
     const spaceManagerUUIDs = await VarvEngine.getAllUUIDsFromType('SpaceManager');
     if (spaceManagerUUIDs.length === 0) {
         console.log('No space manager found');
@@ -2565,7 +2565,7 @@ export const getCurrentSpaceUUID = async () => {
     }
     return spaceUUID;
 };
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" id name="Init Manager Concept" class auto>const initConcept = async () => {
+</code-fragment><code-fragment auto data-type="text/javascript" name="Init Manager Concept">const initConcept = async () => {
     try {
         const managers = await VarvEngine.lookupInstances('SpaceManager');
         if (managers.length == 0) {
@@ -2581,7 +2581,7 @@ VarvEngine.registerEventCallback('engineReloaded', () => {
 });
 
 initConcept();
-</CODE-FRAGMENT><CODE-FRAGMENT auto data-type="text/x-scss" name="Core Style">body {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Core Style">body {
     height: 100vh;
     margin: 0;
     font-family: 'Inter', sans-serif;
@@ -2645,7 +2645,7 @@ initConcept();
         border-radius: 3px;
     }
 }
-</CODE-FRAGMENT><CODE-FOLDER id name="Core Components"><CODE-FRAGMENT data-type="text/javascript+babel" class="global-events" name="Global Events">import React from 'react';
+</code-fragment><code-folder name="Core Components"><code-fragment class="global-events" data-type="text/javascript+babel" name="Global Events">import React from 'react';
 const { useRef, useContext, createContext, useCallback, useMemo } = React;
 
 
@@ -2689,7 +2689,7 @@ export const GlobalEventProvider = ({ children }) => {
 
 
 export const useGlobalEvents = () => useContext(GlobalEventContext);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="dynamic-components" name="Dynamic Components">import React from 'react';
+</code-fragment><code-fragment class="dynamic-components" data-type="text/javascript+babel" name="Dynamic Components">import React from 'react';
 const { useEffect, useState, useRef } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -2830,7 +2830,7 @@ export function DynamicComponents({ selector }) {
         return &lt;DynamicComponent fragment={fragment} key={fragment.uuid} />;
     });
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Text Component" class="text">import React from 'react';
+</code-fragment><code-fragment class="text" data-type="text/javascript+babel" name="Text Component">import React from 'react';
 import { Text as TextDrei } from '@react-three/drei';
 
 
@@ -2853,7 +2853,7 @@ export function Text(props) {
         &lt;/TextDrei>
     );
 }
-</CODE-FRAGMENT></CODE-FOLDER><CODE-FOLDER name="Scene View" class="scene-view"><CODE-FOLDER name="Components"><CODE-FRAGMENT data-type="text/javascript+babel" class="camera" name="Camera" id>import React from 'react';
+</code-fragment></code-folder><code-folder class="scene-view" name="Scene View"><code-folder name="Components"><code-fragment class="camera" data-type="text/javascript+babel" name="Camera">import React from 'react';
 const { useRef, useEffect } = React;
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -2949,7 +2949,7 @@ export function CustomCamera() {
 
     return &lt;PointerLockControls ref={controls} selector={'.do-not-use'} onLock={handleOnLock} onUnlock={handleOnUnlock} />;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Basic Environment" class="basic-environment">import React from 'react';
+</code-fragment><code-fragment class="basic-environment" data-type="text/javascript+babel" name="Basic Environment">import React from 'react';
 import { BackSide } from 'three';
 import { Varv, useProperty } from '#VarvReact';
 
@@ -2984,7 +2984,7 @@ export function BasicSceneEnvironment() {
         &lt;/Varv>
     &lt;/>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Boundary Preview" class="boundary-preview">import React from 'react';
+</code-fragment><code-fragment class="boundary-preview" data-type="text/javascript+babel" name="Boundary Preview">import React from 'react';
 const { useMemo, useCallback } = React;
 import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -3025,7 +3025,7 @@ export function BoundaryPreview() {
         &lt;/DragUpdater>
     &lt;/> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Projection Plane Preview" class="projection-plane-preview">import React from 'react';
+</code-fragment><code-fragment class="projection-plane-preview" data-type="text/javascript+babel" name="Projection Plane Preview">import React from 'react';
 const { useMemo, useCallback } = React;
 import { BackSide, MeshStandardMaterial, Vector3, Matrix4, Euler, PlaneGeometry } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -3093,7 +3093,7 @@ export function ProjectionPlanePreview({ positionOverride, scaleOverride }) {
         &lt;/DragUpdater> : null}
     &lt;/> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="scene-movables" name="Scene Movables">import React from 'react';
+</code-fragment><code-fragment class="scene-movables" data-type="text/javascript+babel" name="Scene Movables">import React from 'react';
 const { useState, useEffect } = React;
 import { useProperty } from '#VarvReact';
 
@@ -3131,7 +3131,7 @@ export function SpaceMovables({ children }) {
         &lt;/MovableVarvScope>
     &lt;/group>) : null;
 }
-</CODE-FRAGMENT></CODE-FOLDER><CODE-FRAGMENT data-type="text/javascript+babel" class="scene-view" name="Scene View">import React from 'react';
+</code-fragment></code-folder><code-fragment class="scene-view" data-type="text/javascript+babel" name="Scene View">import React from 'react';
 const { useEffect, useMemo } = React;
 import { Canvas, useThree } from '@react-three/fiber';
 import { XR, createXRStore, IfInSessionMode, useXRInputSourceState } from '@react-three/xr';
@@ -3245,7 +3245,7 @@ export function SceneView({ movableSceneComponents }) {
         &lt;/Canvas>
     &lt;/>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Scene Helpers" class="scene-helpers">import React from 'react';
+</code-fragment><code-fragment class="scene-helpers" data-type="text/javascript+babel" name="Scene Helpers">import React from 'react';
 const { useEffect, useState, useMemo, useRef, useCallback } = React;
 import { MeshStandardMaterial, BoxGeometry, Matrix4 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -3391,7 +3391,7 @@ export function BoundingBox({ position, scale, dummy = false }) {
         &lt;/lineSegments>
     &lt;/group>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="device-helpers" name="Device Helpers">import { Vector3 } from 'three';
+</code-fragment><code-fragment class="device-helpers" data-type="text/javascript+babel" name="Device Helpers">import { Vector3 } from 'three';
 
 
 
@@ -3455,7 +3455,7 @@ export const getDeviceFromInputEvent = (e) => {
         return device;
     }
 };
-</CODE-FRAGMENT></CODE-FOLDER><CODE-FOLDER name="Canvas View" class="canvas-view"><CODE-FOLDER name="Components"><CODE-FRAGMENT data-type="text/javascript+babel" name="Movable Canvas Controller" class="movable-canvas-controller">import React from 'react';
+</code-fragment></code-folder><code-folder class="canvas-view" name="Canvas View"><code-folder name="Components"><code-fragment class="movable-canvas-controller" data-type="text/javascript+babel" name="Movable Canvas Controller">import React from 'react';
 const { useState, useEffect, useRef, useCallback } = React;
 import { useEditor } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -3639,7 +3639,7 @@ export function MovableCanvasController({ parent }) {
         };
     }, [editor, shapeID, projectionPlane, boundaryOrigin]);
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="title-text" name="Title Text">import React from 'react';
+</code-fragment><code-fragment class="title-text" data-type="text/javascript+babel" name="Title Text">import React from 'react';
 const { useEffect } = React;
 import { useEditor } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -3683,7 +3683,7 @@ export function TitleText() {
         };
     }, [editor, name]);
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="boundary-preview" name="Boundary Preview">import React from 'react';
+</code-fragment><code-fragment class="boundary-preview" data-type="text/javascript+babel" name="Boundary Preview">import React from 'react';
 const { useEffect, useRef } = React;
 import { useEditor } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -3796,7 +3796,7 @@ export function BoundaryPreview() {
         };
     }, [editor, boundarySize, boundaryOrigin, setBoundarySize, setBoundaryOrigin, projectionPlane]);
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Drag Detector" class="drag-detector">import React from 'react';
+</code-fragment><code-fragment class="drag-detector" data-type="text/javascript+babel" name="Drag Detector">import React from 'react';
 const { useEffect, useRef } = React;
 import { useEditor } from 'tldraw';
 
@@ -3840,7 +3840,7 @@ export function DragDetector() {
         };
     }, [editor]);
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Selected Hovered Detector" class="selected-hovered-detector">import React from 'react';
+</code-fragment><code-fragment class="selected-hovered-detector" data-type="text/javascript+babel" name="Selected Hovered Detector">import React from 'react';
 const { useEffect } = React;
 import { useEditor } from 'tldraw';
 
@@ -3872,7 +3872,7 @@ export function SelectedHoveredDetector() {
         return () => { editor.off('event', detectSelectionChange); };
     }, [editor]);
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Color Forwarder" class="color-forwarder">import React from 'react';
+</code-fragment><code-fragment class="color-forwarder" data-type="text/javascript+babel" name="Color Forwarder">import React from 'react';
 const { useEffect } = React;
 import { useProperty } from '#VarvReact';
 
@@ -3885,7 +3885,7 @@ export function ColorForwarder({ setColor }) {
         setColor(color);
     }, [color]);
 }
-</CODE-FRAGMENT></CODE-FOLDER><CODE-FRAGMENT data-type="text/javascript+babel" name="Canvas View" class="canvas-view">import React from 'react';
+</code-fragment></code-folder><code-fragment class="canvas-view" data-type="text/javascript+babel" name="Canvas View">import React from 'react';
 const { useState, useMemo } = React;
 import { Tldraw } from 'tldraw';
 import { Varv } from '#VarvReact';
@@ -3975,7 +3975,7 @@ export function CanvasView({ shapeUtils }) {
         {tldraw}
     &lt;/div>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="projection-helpers" name="Projection Helpers">import { Vector3 } from 'three';
+</code-fragment><code-fragment class="projection-helpers" data-type="text/javascript+babel" name="Projection Helpers">import { Vector3 } from 'three';
 import { PCA } from 'ml-pca';
 
 import { getSpaceManagerUUID, getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
@@ -4183,7 +4183,7 @@ export const resetBoundary = async (spaceUUIDParam) => {
     VarvEngine.getConceptFromType('Space').setPropertyValue(spaceUUID, 'boundaryOrigin', [ 0, 1.5, 0 ]);
     VarvEngine.getConceptFromType('Space').setPropertyValue(spaceUUID, 'boundarySize', [ 0.5, 0.5, 0.5 ]);
 };
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="tldraw Styles" auto>@import url("https://esm.sh/tldraw@3.7.0/tldraw.css");
+</code-fragment><code-fragment auto data-type="text/x-scss" name="tldraw Styles">@import url("https://esm.sh/tldraw@3.7.0/tldraw.css");
 
 .tldraw-canvas {
     display: block;
@@ -4252,7 +4252,7 @@ export const resetBoundary = async (spaceUUIDParam) => {
         display: none;
     }
 }
-</CODE-FRAGMENT></CODE-FOLDER><CODE-FOLDER name="Movable"><CODE-FRAGMENT data-type="text/javascript+babel" name="Movable Component" class="movable">import React from 'react';
+</code-fragment></code-folder><code-folder name="Movable"><code-fragment class="movable" data-type="text/javascript+babel" name="Movable Component">import React from 'react';
 const { useRef, useState, useEffect, useCallback, useMemo } = React;
 import { Matrix4 } from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -4502,7 +4502,7 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
         {children}
     &lt;/group>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Movable Shape" class="movable-shape dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="movable-shape dynamic-shape-component" data-type="text/javascript+babel" name="Movable Shape">import React from 'react';
 const { useState, useEffect } = React;
 import { HTMLContainer, Rectangle2d, BaseBoxShapeUtil, T } from 'tldraw';
 
@@ -4590,7 +4590,7 @@ export class MovableShapeUtil extends BaseBoxShapeUtil {
 }
 
 export const Main = MovableShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Movable Helpers" class="movable-helpers">import { Vector3 } from 'three';
+</code-fragment><code-fragment class="movable-helpers" data-type="text/javascript+babel" name="Movable Helpers">import { Vector3 } from 'three';
 
 import { devicePositionWithOffset, deviceRotation } from '#Spatialstrates .device-helpers';
 import { getSpaceManagerUUID, getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
@@ -4719,7 +4719,7 @@ export const cloneSelectedMovable = async () => {
         }
     }
 };
-</CODE-FRAGMENT></CODE-FOLDER><CODE-FOLDER name="Container"><CODE-FRAGMENT data-type="text/varv" name="Container Concepts">{
+</code-fragment></code-folder><code-folder name="Container"><code-fragment data-type="text/varv" name="Container Concepts">{
     "concepts": {
         "Container": {
             "schema": {
@@ -4739,7 +4739,7 @@ export const cloneSelectedMovable = async () => {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Component" class="container">import React from 'react';
+</code-fragment><code-fragment class="container" data-type="text/javascript+babel" name="Container Component">import React from 'react';
 const { useState, useMemo, useEffect, useCallback } = React;
 import { MeshStandardMaterial, Vector3, Matrix4, Box3, Euler } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -5222,7 +5222,7 @@ export function Container({ movableSceneComponents }) {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'Container' ? &lt;ContainerFiltered movableSceneComponents={movableSceneComponents} /> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Container Shape">import React from 'react';
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 import { useEditor, HTMLContainer, stopEventPropagation } from 'tldraw';
 import { Varv, useProperty } from '#VarvReact';
@@ -5615,7 +5615,7 @@ class ContainerShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = ContainerShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Helpers" class="container-helpers">import React from 'react';
+</code-fragment><code-fragment class="container-helpers" data-type="text/javascript+babel" name="Container Helpers">import React from 'react';
 const { useMemo } = React;
 import { Vector3, Box3 } from 'three';
 import { useProperty } from '#VarvReact';
@@ -5663,7 +5663,7 @@ export const moveMovableToNewSpace = async (elementUUID, newSpaceUUID = '') => {
     if (oldSpaceUUID) spaceConcept.setPropertyValue(oldSpaceUUID, 'movables', (await spaceConcept.getPropertyValue(oldSpaceUUID, 'movables')).filter(movable => movable !== elementUUID));
     if (newSpaceUUID) spaceConcept.setPropertyValue(newSpaceUUID, 'movables', [...(await spaceConcept.getPropertyValue(newSpaceUUID, 'movables')), elementUUID]);
 };
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Container Style" auto>.container-shape {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Container Style">.container-shape {
     background-color: hsl(0, 0%, 95%);
     box-shadow: rgba(100, 100, 111, 0.4) 0px 0px 4px 0px;
     border-radius: 8px;
@@ -5733,16 +5733,16 @@ export const moveMovableToNewSpace = async (elementUUID, newSpaceUUID = '') => {
         background-color: hsl(0, 0%, 86%);
     }
 }
-</CODE-FRAGMENT></CODE-FOLDER></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Helpers"><CODE-FRAGMENT data-type="text/markdown" name="README"># Helpers
+</code-fragment></code-folder></wpm-package></code-folder><code-folder name="Helpers"><code-fragment data-type="text/markdown" name="README"># Helpers
 
 The Helpers folder provides some helper components that are used in various parts of Spatialstrates. The Icon component requires custom GLB model files and is not recommended to be used outside of the provided components.
-</CODE-FRAGMENT><WPM-PACKAGE name="Icon" id="Icon"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><wpm-package id="Icon" name="Icon"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A helper function for themed icons using custom 3D models.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Icon Component" class="default">import React from 'react';
+</wpm-descriptor></code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Icon Component">import React from 'react';
 import { Clone } from '@react-three/drei';
 
 
@@ -5780,13 +5780,13 @@ export function Icon(props) {
         &lt;Clone object={model ? model.scene : null} deep={'materialsOnly'} />
     &lt;/group>;
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Dialog" name="Dialog"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Dialog" name="Dialog"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple modal dialog for displaying menus.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Dialog
+</wpm-descriptor></code-fragment><code-fragment data-type="text/markdown" name="README"># Dialog
 
 Provides a simple dialog box that can be used to display modal dialogs.
 
@@ -5796,7 +5796,7 @@ Provides a simple dialog box that can be used to display modal dialogs.
 ```js
 import { Dialog } from '#Dialog .default';
 ```
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Dialog Component" class="default">import React from 'react';
+</code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Dialog Component">import React from 'react';
 
 
 
@@ -5807,7 +5807,7 @@ export function Dialog({ children, className, visible, setVisible }) {
         &lt;/div>
     &lt;/div> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Dialog Style" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Dialog Style">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -5937,13 +5937,13 @@ export function Dialog({ children, className, visible, setVisible }) {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE name="AIHelpers" id="AIHelpers"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="AIHelpers" name="AIHelpers"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Helper functions to call the OpenAI API.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># AI Helpers
+</wpm-descriptor></code-fragment><code-fragment data-type="text/markdown" name="README"># AI Helpers
 
 The AI Helpers API provides a set of utilities to interact with the OpenAI API. It provides functions for recording audio, transcribing audio to text, and generating text responses using the OpenAI API.
 
@@ -5958,7 +5958,7 @@ import {
     getGPTContent
 } from '#AIHelpers .default';
 ```
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="AI Helpers" class="default">export const recordAudio = (duration) => {
+</code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="AI Helpers">export const recordAudio = (duration) => {
     return new Promise((resolve, reject) => {
         let chunks = [];
 
@@ -6044,10 +6044,10 @@ export const sendGPTPrompt = async (body) => {
 };
 
 export const getGPTContent = (gptData) => gptData.choices[0].message.content;
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Basic" id><CODE-FRAGMENT data-type="text/markdown" name="README"># Basic
+</code-fragment></wpm-package></code-folder><code-folder name="Basic"><code-fragment data-type="text/markdown" name="README"># Basic
 
 The packages in the Basic folder provide basic but optional features for Spatialstrates. For instance, it adds a GUI and controller menu for desktop and immersive devices, and adds a manager to create, modify, delete, and navigate spaces.
-</CODE-FRAGMENT><WPM-PACKAGE id="Menu" name="Menu"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><wpm-package id="Menu" name="Menu"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple menu GUI for Spatialstrates.",
     "dependencies": [
         "#Spatialstrates"
@@ -6055,7 +6055,7 @@ The packages in the Basic folder provide basic but optional features for Spatial
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Menu
+</wpm-descriptor></code-fragment><code-fragment data-type="text/markdown" name="README"># Menu
 
 The menu includes a small API to create submenus and entries. All components are imported from `'#Menu .default'`.
 
@@ -6125,7 +6125,7 @@ addSubMenu('my-sub-menu', 200, true);
 addItemToSubMenu('my-sub-menu', 'my-title', &lt;MenuTitle title="My Sub Menu" />);
 addItemToSubMenu('my-sub-menu', 'my-button', &lt;MenuButton onClick={() => console.log('Button clicked')}>My Button&lt;/MenuButton>);
 ```
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Menu" class="default dynamic-gui-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-gui-component" data-type="text/javascript+babel" name="Menu">import React from 'react';
 const { useState, useEffect } = React;
 
 
@@ -6232,7 +6232,7 @@ function Menu() {
 export function Main() {
     return &lt;Menu />;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Menu Style" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Menu Style">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -6370,7 +6370,7 @@ export function Main() {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="ControllerMenu" name="ControllerMenu"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="ControllerMenu" name="ControllerMenu"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple controller menu for immersive XR.",
     "dependencies": [
         "#Spatialstrates"
@@ -6378,7 +6378,7 @@ export function Main() {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/markdown" name="README"># Controller Menu
+</wpm-descriptor></code-fragment><code-fragment data-type="text/markdown" name="README"># Controller Menu
 
 The menu includes a small API to create submenus and entries. All components are imported from `'#ControllerMenu .default'`.
 
@@ -6447,7 +6447,7 @@ addControllerSubMenu('my-sub-menu', 200, true);
 addItemToControllerSubMenu('my-sub-menu', 'my-title', &lt;ControllerMenuTitle title="My Sub Menu" />);
 addItemToControllerSubMenu('my-sub-menu', 'my-button', &lt;ControllerMenuButton onClick={() => console.log('Button clicked')}>My Button&lt;/ControllerMenuButton>);
 ```
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Controller Menu" id class="default dynamic-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-scene-component" data-type="text/javascript+babel" name="Controller Menu">import React from 'react';
 const { useState, useEffect, useMemo, useRef } = React;
 import { Color } from 'three';
 import { createPortal, useFrame } from '@react-three/fiber';
@@ -6677,7 +6677,7 @@ function ControllerMenu() {
 export function Main() {
     return &lt;ControllerMenu />;
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="BasicMenus" name="BasicMenus"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="BasicMenus" name="BasicMenus"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Basic menu entries to move the camera and toggle XR.",
     "dependencies": [
         "#Spatialstrates",
@@ -6687,7 +6687,7 @@ export function Main() {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="XR Menu" class auto>import React from 'react';
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/javascript+babel" name="XR Menu">import React from 'react';
 import { Varv, useProperty } from '#VarvReact';
 
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -6815,7 +6815,7 @@ addItemToSubMenu('camera', 'title', &lt;Varv concept="SpaceManager">
 addSubMenu('media-sharing', 500, false);
 addItemToSubMenu('media-sharing', 'title', &lt;MenuTitle title="Media Sharing" />, 0);
 addItemToSubMenu('media-sharing', 'share-link', &lt;MenuButton onClick={shareLink}>Send to Quest&lt;/MenuButton>, 1000);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" auto name="Projection Plane Menu">import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Projection Plane Menu">import React from 'react';
 import { Varv, useProperty } from '#VarvReact';
 
 import { computeProjectionPlaneUsingPCA, resetProjectionPlane, resetBoundary } from '#Spatialstrates .projection-helpers';
@@ -6867,7 +6867,7 @@ addItemToControllerSubMenu('projection-plane', 'compute-using-pca', &lt;Controll
 addItemToControllerSubMenu('projection-plane', 'spacer-2', &lt;ControllerMenuSpacer />, 500);
 addItemToControllerSubMenu('projection-plane', 'reset-projection-plane', &lt;ControllerMenuButton onClick={() => resetProjectionPlane()}>Reset Projection Plane&lt;/ControllerMenuButton>, 600);
 addItemToControllerSubMenu('projection-plane', 'reset-boundary', &lt;ControllerMenuButton onClick={() => resetBoundary()}>Reset Boundary&lt;/ControllerMenuButton>, 700);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Movable Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Movable Menu">import React from 'react';
 
 import { deselectMovables, deleteSelectedMovable, cloneSelectedMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -6888,7 +6888,7 @@ addItemToControllerSubMenu('movables', 'clone', &lt;ControllerMenuButton onClick
 addItemToControllerSubMenu('movables', 'delete', &lt;ControllerMenuButton className="red" onClick={deleteSelectedMovable}>Delete&lt;/ControllerMenuButton>, 500);
 addItemToControllerSubMenu('movables', 'spacer1', &lt;ControllerMenuSpacer />, 550);
 addItemToControllerSubMenu('movables', 'deselect', &lt;ControllerMenuButton onClick={deselectMovables}>Deselect Objects&lt;/ControllerMenuButton>, 700);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Container Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Container Menu">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -6905,7 +6905,7 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-container', &lt;ControllerMenuButton onClick={() => createMovable('Container')}>New Container&lt;/ControllerMenuButton>, 200);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 500);
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE name="SpaceManager" id="SpaceManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="SpaceManager" name="SpaceManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A manager for creating and managing spaces with Spatialstrates.",
     "dependencies": [
         "#Dialog",
@@ -6915,7 +6915,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Space Manager" class="dynamic-gui-component">import React from 'react';
+</wpm-descriptor></code-fragment><code-fragment class="dynamic-gui-component" data-type="text/javascript+babel" name="Space Manager">import React from 'react';
 const { useState } = React;
 import { Varv, useProperty } from '#VarvReact';
 
@@ -7062,7 +7062,7 @@ export function Main() {
         &lt;SpaceManager />
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Space Manager Controller Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Space Manager Controller Menu">import React from 'react';
 const { useEffect, useState, useRef, useCallback } = React;
 import { Varv, useProperty } from '#VarvReact';
 
@@ -7191,7 +7191,7 @@ addItemToControllerSubMenu('currentSpace', 'spaces-color-changer', &lt;Varv conc
         &lt;SpaceColorChanger />
     &lt;/Varv>
 &lt;/Varv>, 300);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Space Manager Style" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Space Manager Style">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -7403,7 +7403,7 @@ addItemToControllerSubMenu('currentSpace', 'spaces-color-changer', &lt;Varv conc
         background: #FFAB40;
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="SpatialstratesLogo" name="SpatialstratesLogo"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="SpatialstratesLogo" name="SpatialstratesLogo"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Spatialstrates logo with version information.",
     "dependencies": [
         "#Spatialstrates",
@@ -7416,7 +7416,7 @@ addItemToControllerSubMenu('currentSpace', 'spaces-color-changer', &lt;Varv conc
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Spatialstrates Logo Header" class="dynamic-gui-component">import React from 'react';
+</wpm-descriptor></code-fragment><code-fragment class="dynamic-gui-component" data-type="text/javascript+babel" name="Spatialstrates Logo Header">import React from 'react';
 const { useState } = React;
 
 import { Dialog } from '#Dialog .default';
@@ -7438,7 +7438,7 @@ export function Main() {
         &lt;/Dialog>
     &lt;/>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="Update Head Content" auto>let manifestLink = document.head.querySelector('link[rel="manifest"]');
+</code-fragment><code-fragment auto data-type="text/javascript" name="Update Head Content">let manifestLink = document.head.querySelector('link[rel="manifest"]');
 if (!manifestLink) {
     manifestLink = document.createElement('link');
     manifestLink.setAttribute('rel', 'manifest');
@@ -7459,7 +7459,7 @@ if (!iconLink) {
 
 // Always update the icon so that it shows in Chromium-based browsers
 iconLink.setAttribute('href', 'favicon.ico');
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Spatialstrates Logo Style" auto>.spatialstrates-title {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Spatialstrates Logo Style">.spatialstrates-title {
     position: fixed;
     top: 12px;
     left: 12px;
@@ -7497,7 +7497,7 @@ iconLink.setAttribute('href', 'favicon.ico');
         padding-right: 4px;
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="CalibrationPoint" name="CalibrationPoint"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="CalibrationPoint" name="CalibrationPoint"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Calibration widget for immersive XR.",
     "dependencies": [
         "#Spatialstrates",
@@ -7508,7 +7508,7 @@ iconLink.setAttribute('href', 'favicon.ico');
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Calibration Point" id class="default dynamic-scene-component">import React from 'react';
+</wpm-descriptor></code-fragment><code-fragment class="default dynamic-scene-component" data-type="text/javascript+babel" name="Calibration Point">import React from 'react';
 const { useRef } = React;
 import { Matrix4 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -7618,10 +7618,10 @@ export function Main() {
         &lt;CalibrationPoint />
     &lt;/IfInSessionMode>;
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Collaboration"><CODE-FRAGMENT data-type="text/markdown" name="README"># Collaboration
+</code-fragment></wpm-package></code-folder><code-folder name="Collaboration"><code-fragment data-type="text/markdown" name="README"># Collaboration
 
 The Collaboration folder contains packages that enable collaboration. The User Manager allows users to create a user name that is used by the User Display and Avatar components. The former displays the a list of all users that are currently in the same space as oneself. Avatars enable awareness of others in the same space—both in 2D, 3D, or across the two. Avatars can be toggled in the menu, as they may impact performance.
-</CODE-FRAGMENT><WPM-PACKAGE id="UserManager" name="UserManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><wpm-package id="UserManager" name="UserManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple user manager component.",
     "dependencies": [
         "webstrate-components-repos MaterialDesignOutlinedIcons",
@@ -7631,7 +7631,7 @@ The Collaboration folder contains packages that enable collaboration. The User M
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="User Manager Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="User Manager Concepts">{
     "concepts": {
         "UserManager": {
             "schema": {
@@ -7649,7 +7649,7 @@ The Collaboration folder contains packages that enable collaboration. The User M
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="User Manager Component" id class="dynamic-gui-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-gui-component" data-type="text/javascript+babel" name="User Manager Component">import React from 'react';
 const { useState, useEffect } = React;
 import { Varv, useProperty } from '#VarvReact';
 
@@ -7739,7 +7739,7 @@ export function Main() {
         &lt;UserManager />
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="Init Manager Concept" auto>const initConcept = async () => {
+</code-fragment><code-fragment auto data-type="text/javascript" name="Init Manager Concept">const initConcept = async () => {
     try {
         const managers = await VarvEngine.lookupInstances('UserManager');
         if (managers.length == 0) {
@@ -7755,7 +7755,7 @@ VarvEngine.registerEventCallback('engineReloaded', () => {
 });
 
 initConcept();
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="User Manager Style" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="User Manager Style">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -7841,7 +7841,7 @@ initConcept();
         background: #FFAB40;
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="UserDisplay" name="UserDisplay"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="UserDisplay" name="UserDisplay"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Displays which users are in the current space.",
     "dependencies": [
         "varv-repos varv-signaling",
@@ -7851,7 +7851,7 @@ initConcept();
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="User Display Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="User Display Concepts">{
     "concepts": {
         "User": {
             "schema": {
@@ -7866,7 +7866,7 @@ initConcept();
         "signaling": { "type": "signaling" }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="User Display GUI" class="dynamic-gui-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-gui-component" data-type="text/javascript+babel" name="User Display GUI">import React from 'react';
 const { useState, useEffect } = React;
 import { Varv, useProperty } from '#VarvReact';
 
@@ -7916,7 +7916,7 @@ export function Main() {
         &lt;/Varv>
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="User Display Style" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="User Display Style">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -7962,7 +7962,7 @@ export function Main() {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Avatar" name="Avatar"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Avatar" name="Avatar"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Awareness avatars for remote users.",
     "dependencies": [
         "varv-repos varv-signaling",
@@ -7975,7 +7975,7 @@ export function Main() {
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Avatar Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Avatar Concepts">{
     "concepts": {
         "AvatarManager": {
             "schema": {
@@ -8058,7 +8058,7 @@ export function Main() {
         "signaling": { "type": "signaling" }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Avatar Component" class="dynamic-scene-component" id>import React from 'react';
+</code-fragment><code-fragment class="dynamic-scene-component" data-type="text/javascript+babel" name="Avatar Component">import React from 'react';
 let { useState, useEffect } = React;
 import { Cone, Gltf, useGLTF, Box, Billboard } from '@react-three/drei';
 import { Varv, useProperty } from '#VarvReact';
@@ -8329,7 +8329,7 @@ export function Main() {
         &lt;Avatars />
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Avatar Canvas Controller" class="dynamic-canvas-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-canvas-component" data-type="text/javascript+babel" name="Avatar Canvas Controller">import React from 'react';
 const { useState, useEffect, useRef, useCallback } = React;
 import { useEditor } from 'tldraw';
 import { Varv, useProperty } from '#VarvReact';
@@ -8480,7 +8480,7 @@ export function Main() {
         &lt;/Varv>
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Avatar Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Avatar Shape">import React from 'react';
 import { HTMLContainer, Rectangle2d, BaseBoxShapeUtil, T } from 'tldraw';
 import { Varv, useProperty } from '#VarvReact';
 
@@ -8630,7 +8630,7 @@ export class AvatarShapeUtil extends BaseBoxShapeUtil {
 }
 
 export const Main = AvatarShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Avatar Transmitter Scene" id class="dynamic-scene-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-scene-component" data-type="text/javascript+babel" name="Avatar Transmitter Scene">import React from 'react';
 let { useEffect, useRef, useState, useMemo } = React;
 import { Vector3, Quaternion, Euler } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -8844,7 +8844,7 @@ export function Main() {
         &lt;AvatarTransmitters />
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Avatar Transmitter Canvas" id class="dynamic-canvas-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-canvas-component" data-type="text/javascript+babel" name="Avatar Transmitter Canvas">import React from 'react';
 let { useEffect, useRef, useState, useMemo } = React;
 import { Vector3, Matrix4, Euler } from 'three';
 import { useEditor } from 'tldraw';
@@ -9015,7 +9015,7 @@ export function Main() {
         &lt;AvatarTransmitters />
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Avatar Menu" class auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Avatar Menu">import React from 'react';
 import { Varv, useProperty } from '#VarvReact';
 
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -9043,7 +9043,7 @@ addItemToControllerSubMenu('media-sharing', 'title', &lt;ControllerMenuTitle tit
 addItemToControllerSubMenu('media-sharing', 'avatars', &lt;Varv concept="AvatarManager">
     &lt;AvatarToggleControllerButton />
 &lt;/Varv>, 750);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript" name="Init Manager Concept" auto>const initConcept = async () => {
+</code-fragment><code-fragment auto data-type="text/javascript" name="Init Manager Concept">const initConcept = async () => {
     try {
         const managers = await VarvEngine.lookupInstances('AvatarManager');
         if (managers.length == 0) {
@@ -9059,7 +9059,7 @@ VarvEngine.registerEventCallback('engineReloaded', () => {
 });
 
 initConcept();
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Avatar Styles" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Avatar Styles">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -9123,16 +9123,16 @@ initConcept();
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Streaming" id><CODE-FRAGMENT data-type="text/markdown" name="README"># Streaming
+</code-fragment></wpm-package></code-folder><code-folder name="Streaming"><code-fragment data-type="text/markdown" name="README"># Streaming
 
 The Streaming folder contains packages that enable audio, camera, and screen sharing through WebRTC in Spatialstrates. To use audio and camera streaming, the Avatar component needs to be activated. Screen shares appear as movables in the scene or canvas.
-</CODE-FRAGMENT><CODE-FOLDER name="Managers"><WPM-PACKAGE name="StreamManager" id="StreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><code-folder name="Managers"><wpm-package id="StreamManager" name="StreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A generic stream sharing class for Webstrate servers with stream signaling support.",
     "dependencies": [],
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Stream Manager" id class="default">const DEBUG = false;
+</wpm-descriptor></code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Stream Manager">const DEBUG = false;
 
 
 
@@ -9276,7 +9276,7 @@ export const doIfClicked = (callback) => {
 export const addCleanupConceptType = (type) => {
     window.moduleStreamManager.cleanupConceptTypes.push(type);
 };
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="ScreenStreamManager" name="ScreenStreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="ScreenStreamManager" name="ScreenStreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Stream manager for screen share streams.",
     "dependencies": [
         "#StreamManager"
@@ -9284,7 +9284,7 @@ export const addCleanupConceptType = (type) => {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Manager" id class="default">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
+</wpm-descriptor></code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Screen Stream Manager">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
 import { createMovable } from '#Spatialstrates .movable-helpers';
 
 
@@ -9358,7 +9358,7 @@ if (!window.moduleScreenStreamManager) {
 }
 
 export const streamShare = window.moduleScreenStreamManager.streamShare;
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="VideoStreamManager" name="VideoStreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="VideoStreamManager" name="VideoStreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Stream manager for camera video streams.",
     "dependencies": [
         "#StreamManager"
@@ -9366,7 +9366,7 @@ export const streamShare = window.moduleScreenStreamManager.streamShare;
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Video Stream Manager" id class="default">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
+</wpm-descriptor></code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Video Stream Manager">import { doIfClicked, StreamShare, addCleanupConceptType } from '#StreamManager .default';
 
 
 
@@ -9435,7 +9435,7 @@ if (!window.moduleVideoStreamManager) {
 }
 
 export const streamShare = window.moduleVideoStreamManager.streamShare;
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="AudioStreamManager" name="AudioStreamManager"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="AudioStreamManager" name="AudioStreamManager"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Stream manager for audio streams.",
     "dependencies": [
         "#StreamManager"
@@ -9443,7 +9443,7 @@ export const streamShare = window.moduleVideoStreamManager.streamShare;
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Audio Stream Manager" id class="default">import { StreamShare, addCleanupConceptType } from '#StreamManager .default';
+</wpm-descriptor></code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Audio Stream Manager">import { StreamShare, addCleanupConceptType } from '#StreamManager .default';
 
 
 
@@ -9514,7 +9514,7 @@ if (!window.moduleAudioStreamManager) {
 
 
 export const streamShare = window.moduleAudioStreamManager.streamShare;
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Components"><WPM-PACKAGE id="ScreenStream" name="ScreenStream"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package></code-folder><code-folder name="Components"><wpm-package id="ScreenStream" name="ScreenStream"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Stream component for screen streams.",
     "dependencies": [
         "#StreamManager",
@@ -9524,7 +9524,7 @@ export const streamShare = window.moduleAudioStreamManager.streamShare;
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Screen Stream Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Screen Stream Concepts">{
     "concepts": {
         "ScreenStream": {
             "schema": {
@@ -9536,7 +9536,7 @@ export const streamShare = window.moduleAudioStreamManager.streamShare;
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Screen Stream Component">import React from 'react';
 const { useState, useEffect, useMemo } = React;
 import { MeshStandardMaterial, LinearMipmapLinearFilter, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -9625,7 +9625,7 @@ export function Main() {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'ScreenStream' ? &lt;ScreenStream /> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Screen Stream Shape">import React from 'react';
 const { useEffect, useRef } = React;
 import { useEditor, HTMLContainer } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -9707,7 +9707,7 @@ class ScreenStreamShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = ScreenStreamShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Screen Stream Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Screen Stream Menu">import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
 
@@ -9722,7 +9722,7 @@ addSubMenu('media-sharing', 500, false);
 addItemToSubMenu('media-sharing', 'share-screen', &lt;MenuButton onClick={window.shareMyScreen}>Share Screenshare&lt;/MenuButton>, 100);
 addItemToSubMenu('media-sharing', 'stop-screen', &lt;MenuButton onClick={window.stopSharingMyScreen}>Stop Screenshare&lt;/MenuButton>, 200);
 addItemToSubMenu('media-sharing', 'spacer1', &lt;MenuSpacer />, 250);
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="VideoStream" name="VideoStream"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="VideoStream" name="VideoStream"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Stream component for video streams.",
     "dependencies": [
         "#StreamManager",
@@ -9732,7 +9732,7 @@ addItemToSubMenu('media-sharing', 'spacer1', &lt;MenuSpacer />, 250);
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Video Stream Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Video Stream Concepts">{
     "concepts": {
         "VideoStream": {
             "schema": {
@@ -9740,7 +9740,7 @@ addItemToSubMenu('media-sharing', 'spacer1', &lt;MenuSpacer />, 250);
             }
         }
     }
-}</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Video Stream Component" class="default">import React from 'react';
+}</code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Video Stream Component">import React from 'react';
 const { useState, useEffect, useMemo } = React;
 import { MeshStandardMaterial, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -9796,7 +9796,7 @@ export function VideoStream({ client }) {
         &lt;/Plane>
     &lt;/Billboard>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Video Stream Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Video Stream Menu">import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
 
@@ -9811,7 +9811,7 @@ addSubMenu('media-sharing', 500, false);
 addItemToSubMenu('media-sharing', 'share-video', &lt;MenuButton onClick={window.shareMyVideo}>Share Video&lt;/MenuButton>, 300);
 addItemToSubMenu('media-sharing', 'stop-video', &lt;MenuButton onClick={window.stopSharingMyVideo}>Stop Video&lt;/MenuButton>, 400);
 addItemToSubMenu('media-sharing', 'spacer2', &lt;MenuSpacer />, 450);
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="AudioStream" name="AudioStream"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="AudioStream" name="AudioStream"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Stream component for audio streams.",
     "dependencies": [
         "#AudioStreamManager",
@@ -9821,7 +9821,7 @@ addItemToSubMenu('media-sharing', 'spacer2', &lt;MenuSpacer />, 450);
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Audio Stream Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Audio Stream Concepts">{
     "concepts": {
         "AudioStream": {
             "schema": {
@@ -9830,7 +9830,7 @@ addItemToSubMenu('media-sharing', 'spacer2', &lt;MenuSpacer />, 450);
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Audio Stream Component" class="default">import React from 'react';
+</code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Audio Stream Component">import React from 'react';
 const { useEffect, useRef } = React;
 // import { PositionalAudio } from '@react-three/drei';
 // import { ErrorBoundary } from 'react-error-boundary';
@@ -9916,7 +9916,7 @@ export function AudioStream({ client }) {
         &lt;AudioSplitter client={client} />
     &lt;/Varv>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Audio Stream Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Audio Stream Menu">import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuSpacer, MenuButton } from '#Menu .default';
 import { addControllerSubMenu, addItemToControllerSubMenu, ControllerMenuSpacer, ControllerMenuButton } from '#ControllerMenu .default';
@@ -9937,10 +9937,10 @@ addControllerSubMenu('media-sharing', 500, false);
 addItemToControllerSubMenu('media-sharing', 'share-audio', &lt;ControllerMenuButton onClick={window.shareMyAudio}>Share Audio&lt;/ControllerMenuButton>, 500);
 addItemToControllerSubMenu('media-sharing', 'stop-audio', &lt;ControllerMenuButton onClick={window.stopSharingMyAudio}>Stop Audio&lt;/ControllerMenuButton>, 600);
 addItemToControllerSubMenu('media-sharing', 'spacer3', &lt;ControllerMenuSpacer />, 700);
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER><CODE-FOLDER name="Movables" id><CODE-FRAGMENT data-type="text/markdown" name="README"># Movables
+</code-fragment></wpm-package></code-folder></code-folder><code-folder name="Movables"><code-fragment data-type="text/markdown" name="README"># Movables
 
 The Movables folder contains all movable types provided by Spatialstrates. These can be extended by the user at runtime.
-</CODE-FRAGMENT><WPM-PACKAGE id="StickyNote" name="StickyNote" class><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><wpm-package id="StickyNote" name="StickyNote"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple sticky note component.",
     "dependencies": [
         "#Icon",
@@ -9953,7 +9953,7 @@ The Movables folder contains all movable types provided by Spatialstrates. These
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Sticky Note Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Sticky Note Concepts">{
     "concepts": {
         "StickyNote": {
             "schema": {
@@ -9968,7 +9968,7 @@ The Movables folder contains all movable types provided by Spatialstrates. These
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Sticky Note Component">import React from 'react';
 const { useState, useMemo, useRef } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
@@ -10104,7 +10104,7 @@ export function Main() {
         &lt;StickyNote />
     &lt;/ErrorBoundary> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Sticky Note Menu">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -10121,7 +10121,7 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-sticky-note', &lt;ControllerMenuButton onClick={() => createMovable('StickyNote')}>New Sticky Note&lt;/ControllerMenuButton>, 200);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Sticky Note Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Sticky Note Shape">import React from 'react';
 const { useEffect, useRef } = React;
 import { HTMLContainer, stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -10219,7 +10219,7 @@ class StickyNoteShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = StickyNoteShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Sticky Note Style" auto>.sticky-note-shape {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Sticky Note Style">.sticky-note-shape {
     .sticky-note-color-selectors {
         cursor: pointer;
         pointer-events: all;
@@ -10286,7 +10286,7 @@ export const Main = StickyNoteShapeUtil;
         background-color: hsl(310, 95%, 60%);
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Image" name="Image"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Image" name="Image"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple image component.",
     "dependencies": [
         "#Menu"
@@ -10294,7 +10294,7 @@ export const Main = StickyNoteShapeUtil;
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Image Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Image Concepts">{
     "concepts": {
         "Image": {
             "schema": {
@@ -10306,7 +10306,7 @@ export const Main = StickyNoteShapeUtil;
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Image Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Image Component">import React from 'react';
 const { useRef, useState, useEffect, useMemo } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
@@ -10375,7 +10375,7 @@ export function Main() {
         &lt;CustomImage />
     &lt;/ErrorBoundary> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Image Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Image Shape">import React from 'react';
 const { useEffect } = React;
 import { useEditor, HTMLContainer, stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -10458,7 +10458,7 @@ class ImageShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = ImageShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Image Uploader and Menu" id class auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Image Uploader and Menu">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuButton, MenuSpacer } from '#Menu .default';
@@ -10557,7 +10557,7 @@ if (!window.moduleImageUploader) {
         }
     });
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Trashcan" name="Trashcan"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Trashcan" name="Trashcan"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A trashcan component that can be used to delete movables.",
     "dependencies": [
         "#Icon",
@@ -10569,7 +10569,7 @@ if (!window.moduleImageUploader) {
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Trashcan Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Trashcan Concepts">{
     "concepts": {
         "Trashcan": {
             "schema": {
@@ -10581,7 +10581,7 @@ if (!window.moduleImageUploader) {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Trashcan Component">import React from 'react';
 const { useEffect, useCallback } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { Vector3 } from 'three';
@@ -10646,7 +10646,7 @@ export function Main() {
         &lt;Trashcan />
     &lt;/ErrorBoundary> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Trashcan Shape">import React from 'react';
 const { useEffect, useCallback } = React;
 import { Vector2 } from 'three';
 import { HTMLContainer } from 'tldraw';
@@ -10729,7 +10729,7 @@ class TrashcanShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = TrashcanShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Trashcan Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Trashcan Menu">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -10746,7 +10746,7 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-trashcan', &lt;ControllerMenuButton onClick={() => createMovable('Trashcan')}>New Trashcan&lt;/ControllerMenuButton>, 100);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Model" name="Model"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Model" name="Model"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A simple scalable 3D model component.",
     "dependencies": [
         "#Menu"
@@ -10754,7 +10754,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Model Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Model Concepts">{
     "concepts": {
         "Model": {
             "schema": {
@@ -10772,7 +10772,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Model Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Model Component">import React from 'react';
 const { useMemo, useState } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { Box3 } from 'three';
@@ -10859,7 +10859,7 @@ export function Main() {
         &lt;CustomModel />
     &lt;/ErrorBoundary> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Model Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Model Shape">import React from 'react';
 import { HTMLContainer } from 'tldraw';
 
 import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
@@ -10893,7 +10893,7 @@ class ModelShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = ModelShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Model Uploader" id class auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Model Uploader">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle } from '#Menu .default';
@@ -10988,7 +10988,7 @@ if (!window.moduleModelUploader) {
         }
     });
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Flashlight" name="Flashlight"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Flashlight" name="Flashlight"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A flashlight that illuminates the scene elements.",
     "dependencies": [
         "#Menu",
@@ -10997,7 +10997,7 @@ if (!window.moduleModelUploader) {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Flashlight Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Flashlight Concepts">{
     "concepts": {
         "Flashlight": {
             "schema": {
@@ -11017,7 +11017,7 @@ if (!window.moduleModelUploader) {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Flashlight Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Flashlight Component">import React from 'react';
 const { useRef, useMemo } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial } from 'three';
@@ -11197,7 +11197,7 @@ export function Main() {
         &lt;Flashlight />
     &lt;/ErrorBoundary> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Flashlight Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Flashlight Shape">import React from 'react';
 import { HTMLContainer } from 'tldraw';
 
 import { MovableShapeUtil, MovableVarvScope } from '#Spatialstrates .movable-shape';
@@ -11231,7 +11231,7 @@ class FlashlightShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = FlashlightShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Flashlight Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Flashlight Menu">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -11248,7 +11248,7 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-flashlight-note', &lt;ControllerMenuButton onClick={() => createMovable('Flashlight')}>New Flashlight&lt;/ControllerMenuButton>, 350);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="Molecule" name="Molecule"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Molecule" name="Molecule"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A component to display PDB molecules.",
     "dependencies": [
         "#Menu"
@@ -11256,7 +11256,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Molecule Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Molecule Concepts">{
     "concepts": {
         "Molecule": {
             "schema": {
@@ -11272,7 +11272,7 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Molecule Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Molecule Component">import React from 'react';
 const { useMemo } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import * as THREE from 'three';
@@ -11445,7 +11445,7 @@ export function Main() {
         &lt;Molecule />
     &lt;/ErrorBoundary> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Molecule Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Molecule Shape">import React from 'react';
 const { useState, useEffect } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 import { PDBLoader } from 'three/addons/loaders/PDBLoader.js';
@@ -11541,7 +11541,7 @@ class MoleculeShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = MoleculeShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Molecule Uploader" id class auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Molecule Uploader">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle } from '#Menu .default';
@@ -11636,7 +11636,7 @@ if (!window.moduleMoleculeUploader) {
         }
     });
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Molecule Styles" auto>.molecule-shape {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Molecule Styles">.molecule-shape {
     background-color: #fff;
     border: 1px solid #eee;
     border-radius: 4px;
@@ -11703,10 +11703,10 @@ if (!window.moduleMoleculeUploader) {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Datavisualization"><CODE-FRAGMENT data-type="text/markdown" name="README"># Datavisualization
+</code-fragment></wpm-package></code-folder><code-folder name="Datavisualization"><code-fragment data-type="text/markdown" name="README"># Datavisualization
 
 The Datavisualization folder contains packages that provide the visual authoring capabilities for Vega-Lite visualizations from DashSpace.
-</CODE-FRAGMENT><CODE-FOLDER name="Modules"><WPM-PACKAGE id="VisModule" name="VisModule"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><code-folder name="Modules"><wpm-package id="VisModule" name="VisModule"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Adds general classes for datavisualization.",
     "dependencies": [
         "#Menu"
@@ -11714,7 +11714,7 @@ The Datavisualization folder contains packages that provide the visual authoring
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Helpers" id class="vis-helpers">export const SPEC_COMPONENT_TYPE = 'spec';
+</wpm-descriptor></code-fragment><code-fragment class="vis-helpers" data-type="text/javascript+babel" name="Vis-Helpers">export const SPEC_COMPONENT_TYPE = 'spec';
 export const DATASET_COMPONENT_TYPE = 'dataset';
 export const UNKNOWN_COMPONENT_TYPE = 'unknown';
 
@@ -11847,7 +11847,7 @@ export const getDefaultVisPiecesLibrary = () => {
 
     return library;
 };
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Component Manager" id class="vis-component-manager">import {
+</code-fragment><code-fragment class="vis-component-manager" data-type="text/javascript+babel" name="Vis-Component Manager">import {
     SPEC_COMPONENT_TYPE,
     DATASET_COMPONENT_TYPE,
     UNKNOWN_COMPONENT_TYPE,
@@ -12106,7 +12106,7 @@ export const addVisComponentAddedListener = visComponentManager.addVisComponentA
 export const removeVisComponentAddedListener = visComponentManager.removeVisComponentAddedListener.bind(visComponentManager);
 export const addVisComponentRemovedListener = visComponentManager.addVisComponentRemovedListener.bind(visComponentManager);
 export const removeVisComponentRemovedListener = visComponentManager.removeVisComponentRemovedListener.bind(visComponentManager);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Composer" id class="vis-composer">import * as mergeModule from 'lodash.mergewith';
+</code-fragment><code-fragment class="vis-composer" data-type="text/javascript+babel" name="Vis-Composer">import * as mergeModule from 'lodash.mergewith';
 const deepMerge = mergeModule.default;
 
 // https://lodash.com/docs/4.17.15#mergeWith
@@ -12474,7 +12474,7 @@ const recursivelyDecomposeSpec = (spec, path = '') => {
 
     return pieces;
 };
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Uploader" id auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Vis-Uploader">import React from 'react';
 
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer } from '#Menu .default';
 import { SPEC_COMPONENT_TYPE, DATASET_COMPONENT_TYPE } from '#VisModule .vis-helpers';
@@ -12590,7 +12590,7 @@ if (!window.moduleVisComponentUploader) {
         }
     });
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE name="Optomancy" id="Optomancy"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="Optomancy" name="Optomancy"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
   "description": "Adds the Optomancy library for 3D visualizations.",
   "dependencies": [],
   "assets": [
@@ -12598,7 +12598,7 @@ if (!window.moduleVisComponentUploader) {
   ],
   "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER><CODE-FOLDER name="Components"><WPM-PACKAGE id="Visualization" class name="Visualization"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</wpm-descriptor></code-fragment></wpm-package></code-folder><code-folder name="Components"><wpm-package id="Visualization" name="Visualization"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Visualization components to render Vega-Lite in scenes.",
     "dependencies": [
         "#VisModule",
@@ -12608,7 +12608,7 @@ if (!window.moduleVisComponentUploader) {
     "assets": [],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="default" name="Visualization">import React from 'react';
+</wpm-descriptor></code-fragment><code-fragment class="default" data-type="text/javascript+babel" name="Visualization">import React from 'react';
 const { useMemo } = React;
 
 import { VegaLite2DVisualization } from '#Visualization .vega-lite-2d';
@@ -12641,7 +12641,7 @@ export function Visualization({ mergedSpec }) {
 
     return visualization;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vega-Lite 2D Visualization" id class="vega-lite-2d">import React from 'react';
+</code-fragment><code-fragment class="vega-lite-2d" data-type="text/javascript+babel" name="Vega-Lite 2D Visualization">import React from 'react';
 const { useState, useEffect, useRef, useCallback, useMemo } = React;
 import { MeshStandardMaterial, LinearMipmapLinearFilter, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -12728,7 +12728,7 @@ export function VegaLite2DVisualization({ mergedSpec }) {
         &lt;/Plane>
     &lt;/>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vega-Lite 2D Visualization Canvas" id class="vega-lite-2d-canvas">import React from 'react';
+</code-fragment><code-fragment class="vega-lite-2d-canvas" data-type="text/javascript+babel" name="Vega-Lite 2D Visualization Canvas">import React from 'react';
 const { useState, useEffect } = React;
 import { Vega } from 'react-vega';
 
@@ -12764,7 +12764,7 @@ export function VegaLite2DVisualizationCanvas({ mergedSpec }) {
 
     return &lt;Vega actions={false} spec={finalSpec} />;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vega-Lite 25D Visualization" id class="vega-lite-25d">import React from 'react';
+</code-fragment><code-fragment class="vega-lite-25d" data-type="text/javascript+babel" name="Vega-Lite 25D Visualization">import React from 'react';
 const { useState, useEffect, useRef } = React;
 import { Color, Vector3, Object3D, MeshStandardMaterial, BoxGeometry } from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
@@ -13137,7 +13137,7 @@ export function VegaLite25DVisualization({ mergedSpec }) {
         &lt;/mesh> : null : textMeshes}
     &lt;/group>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Optomancy Visualization" id class="optomancy">import React from 'react';
+</code-fragment><code-fragment class="optomancy" data-type="text/javascript+babel" name="Optomancy Visualization">import React from 'react';
 let { useState, useEffect, useRef, useMemo } = React;
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -13199,7 +13199,7 @@ export function OptomancyVisualization({ mergedSpec }) {
         &lt;/group>
     &lt;/ErrorBoundary>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Visualization Styles" auto></CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE id="VisPiece" name="VisPiece"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Visualization Styles"></code-fragment></wpm-package><wpm-package id="VisPiece" name="VisPiece"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
   "description": "The VisPiece and VisGroup components for DashSpace.",
   "dependencies": [
     "#Spatialstrates",
@@ -13214,7 +13214,7 @@ export function OptomancyVisualization({ mergedSpec }) {
   ],
   "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Vis-Piece and Group Concepts" auto>{
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Vis-Piece and Group Concepts">{
     "concepts": {
         "VisMovable": {
             "schema": {
@@ -13260,7 +13260,7 @@ export function OptomancyVisualization({ mergedSpec }) {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" id name="Vis-Piece Component" class="vis-piece dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="vis-piece dynamic-movable-scene-component" data-type="text/javascript+babel" name="Vis-Piece Component">import React from 'react';
 let { useState, useEffect, useMemo, useCallback } = React;
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { Sphere, useGLTF } from '@react-three/drei';
@@ -13559,7 +13559,7 @@ export function Main() {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'VisPiece' ? &lt;VisPiece /> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="vis-group dynamic-movable-scene-component" name="Vis-Group Component">import React from 'react';
+</code-fragment><code-fragment class="vis-group dynamic-movable-scene-component" data-type="text/javascript+babel" name="Vis-Group Component">import React from 'react';
 let { useState, useEffect, useRef, useMemo } = React;
 import { MeshStandardMaterial, Vector3 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -14159,7 +14159,7 @@ export function Main() {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'VisGroup' ? &lt;VisGroup /> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Piece Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Vis-Piece Shape">import React from 'react';
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 import { HTMLContainer, stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -14443,7 +14443,7 @@ class VisPieceShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = VisPieceShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Group Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Vis-Group Shape">import React from 'react';
 const { useState, useEffect, useRef, useMemo } = React;
 import { useEditor, HTMLContainer, stopEventPropagation } from 'tldraw';
 import { Varv, useProperty } from '#VarvReact';
@@ -14891,7 +14891,7 @@ class VisGroupShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = VisGroupShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="vis-editors-scene" name="Vis-Editors Scene">import React from 'react';
+</code-fragment><code-fragment class="vis-editors-scene" data-type="text/javascript+babel" name="Vis-Editors Scene">import React from 'react';
 let { useState, useEffect, useMemo } = React;
 import { SphereGeometry, MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -15136,7 +15136,7 @@ export function AxisEditor() {
         })}
     &lt;/>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="vis-editors-canvas" name="Vis-Editors Canvas">import React from 'react';
+</code-fragment><code-fragment class="vis-editors-canvas" data-type="text/javascript+babel" name="Vis-Editors Canvas">import React from 'react';
 let { useState, useEffect, useMemo } = React;
 import { stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -15333,7 +15333,7 @@ export function AxisEditor() {
         })}
     &lt;/>;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" class="vis-helpers" name="Vis-Helpers">import React from 'react';
+</code-fragment><code-fragment class="vis-helpers" data-type="text/javascript+babel" name="Vis-Helpers">import React from 'react';
 let { useState, useEffect, useMemo } = React;
 import { useGLTF, Outlines } from '@react-three/drei';
 import { MeshStandardMaterial, Vector3, Vector2 } from 'three';
@@ -15973,7 +15973,7 @@ export function useUpdateProximityAuthoringOnSpaceChange() {
         onDraggingUpdateProximityAuthoring(conceptUUID);
     }, [conceptUUID, space]);
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Vis-Piece Styles" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Vis-Piece Styles">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -16390,7 +16390,7 @@ export function useUpdateProximityAuthoringOnSpaceChange() {
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE><WPM-PACKAGE name="VisShelf" id="VisShelf"><CODE-FRAGMENT data-type="wpm/descriptor"><WPM-DESCRIPTOR>{
+</code-fragment></wpm-package><wpm-package id="VisShelf" name="VisShelf"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "A bookshelf component to instantiate groups and pieces.",
     "dependencies": [
         "#Visualization",
@@ -16404,7 +16404,7 @@ export function useUpdateProximityAuthoringOnSpaceChange() {
     ],
     "version": "0.2.0"
 }
-</WPM-DESCRIPTOR></CODE-FRAGMENT><CODE-FRAGMENT data-type="text/varv" name="Vis-Shelf Concepts" auto> {
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/varv" name="Vis-Shelf Concepts"> {
     "concepts": {
         "VisShelf": {
             "schema": {
@@ -16419,7 +16419,7 @@ export function useUpdateProximityAuthoringOnSpaceChange() {
         }
     }
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Shelf Component" class="default dynamic-movable-scene-component">import React from 'react';
+</code-fragment><code-fragment class="default dynamic-movable-scene-component" data-type="text/javascript+babel" name="Vis-Shelf Component">import React from 'react';
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 import { Color, Object3D, Matrix4, MeshStandardMaterial, InstancedMesh } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -16757,7 +16757,7 @@ export function Main() {
     const [conceptType] = useProperty('concept::name');
     return conceptType === 'VisShelf' ? &lt;VisShelf /> : null;
 }
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Shelf Shape" class="dynamic-shape-component">import React from 'react';
+</code-fragment><code-fragment class="dynamic-shape-component" data-type="text/javascript+babel" name="Vis-Shelf Shape">import React from 'react';
 const { useState, useEffect, useMemo, useCallback } = React;
 import { HTMLContainer, stopEventPropagation } from 'tldraw';
 import { useProperty } from '#VarvReact';
@@ -16985,7 +16985,7 @@ class VisShelfShapeUtil extends MovableShapeUtil {
 }
 
 export const Main = VisShelfShapeUtil;
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/javascript+babel" name="Vis-Shelf Menu" auto>import React from 'react';
+</code-fragment><code-fragment auto data-type="text/javascript+babel" name="Vis-Shelf Menu">import React from 'react';
 
 import { createMovable } from '#Spatialstrates .movable-helpers';
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -17002,7 +17002,7 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-vis-shelf', &lt;ControllerMenuButton onClick={() => createMovable('VisShelf')}>New Bookshelf&lt;/ControllerMenuButton>, 300);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
-</CODE-FRAGMENT><CODE-FRAGMENT data-type="text/x-scss" name="Vis-Shelf Styles" auto>@mixin heading-font {
+</code-fragment><code-fragment auto data-type="text/x-scss" name="Vis-Shelf Styles">@mixin heading-font {
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.25px;
@@ -17080,4 +17080,4 @@ addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer 
         }
     }
 }
-</CODE-FRAGMENT></WPM-PACKAGE></CODE-FOLDER></CODE-FOLDER></CODE-FOLDER><CODE-FOLDER id="vis-component-container" name="Vis-Components" class><CODE-FOLDER name="Specs" id class="spec-container"></CODE-FOLDER><CODE-FOLDER name="Datasets" id class="dataset-container"></CODE-FOLDER></CODE-FOLDER></body></html>
+</code-fragment></wpm-package></code-folder></code-folder></code-folder><code-folder id="vis-component-container" name="Vis-Components"><code-folder class="spec-container" name="Specs"></code-folder><code-folder class="dataset-container" name="Datasets"></code-folder></code-folder></body></html>
