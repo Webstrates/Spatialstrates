@@ -1,0 +1,9 @@
+{
+    "description": "A scalable 3D model component.",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Menu"
+    ],
+    "assets": [],
+    "version": "0.3.0"
+}

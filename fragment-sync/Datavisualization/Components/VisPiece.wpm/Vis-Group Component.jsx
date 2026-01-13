@@ -1,16 +1,16 @@
 import React from 'react';
 let { useState, useEffect, useRef, useMemo } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { MeshStandardMaterial, Vector3 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useThree } from '@react-three/fiber';
 import { Sphere, Line, useGLTF } from '@react-three/drei';
-import { Root, Container, Text as UIText } from "@react-three/uikit";
+import { Container, Text as UIText } from "@react-three/uikit";
 import { Varv, useProperty } from '#VarvReact';
 
 import { Movable } from '#Spatialstrates .movable';
 import { Text } from '#Spatialstrates .text';
 import { deselectMovables } from '#Spatialstrates .movable-helpers';
-import { getDeviceFromInputEvent } from '#Spatialstrates .device-helpers';
 import { useGlobalEvents } from '#Spatialstrates .global-events';
 import { getCurrentSpaceUUID } from '#Spatialstrates .space-helpers';
 import { moveMovableToNewSpace } from '#Spatialstrates .container-helpers';
@@ -104,7 +104,7 @@ function VisMovableDummy({ position, updateOverwritten, setUpdateOverwritten, gr
     const { triggerEvent } = useGlobalEvents();
     const { camera } = useThree();
 
-    const selectStartHandler = async (device, e) => {
+    const selectStartHandler = async (e) => {
         if (e) e.stopPropagation();
 
         const visPieceConcept = VarvEngine.getConceptFromType('VisPiece');
@@ -147,10 +147,7 @@ function VisMovableDummy({ position, updateOverwritten, setUpdateOverwritten, gr
         <group position={position}>
             <group onPointerOver={hoverCallback}
                 onPointerOut={blurCallback}
-                onPointerDown={(e) => {
-                    const device = getDeviceFromInputEvent(e);
-                    selectStartHandler(device, e);
-                }}
+                onPointerDown={selectStartHandler}
                 ref={meshRef} position={[-0.4 * SHELF_WIDTH, 0, 0]} scale={0.25}
                 autoUpdateMatrix={false}>
                 {icon}
@@ -376,11 +373,11 @@ function VisGroupViewSpec({ position }) {
             autoUpdateMatrix={false}>
         </mesh>
         <group position={[position[0], position[1], 0]} autoUpdateMatrix={false}>
-            <Root anchorX="right" anchorY="top" flexDirection="column" pixelSize={0.0005} padding={15}>
-                <Container borderRadius={16} gap={16} width={470} height={470} overflow="scroll" flexDirection="column" ref={cardRef}>
-                    <UIText fontFamily="inter" textAlign="left" color="white" fontSize={16}>{composedSpec ? JSON.stringify(composedSpec, null, 3).replace(/^/gm, '|  ') : ''}</UIText>
+            <Container anchorX="right" anchorY="top" flexDirection="column" pixelSize={0.0005} padding={15}>
+                <Container width={470} height={470} overflow="scroll" flexDirection="column" gap={16} ref={cardRef}>
+                    <UIText fontFamily="inter" textAlign="left" color="white" fontSize={16} whiteSpace="pre">{composedSpec ? JSON.stringify(composedSpec, null, 3).replace(/^/gm, '|  ') : ''}</UIText>
                 </Container>
-            </Root>
+            </Container>
         </group>
     </>;
 }
@@ -596,5 +593,7 @@ function VisGroup() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'VisGroup' ? <VisGroup /> : null;
+    return conceptType === 'VisGroup' ? <ErrorBoundary fallback={null}>
+        <VisGroup />
+    </ErrorBoundary> : null;
 }

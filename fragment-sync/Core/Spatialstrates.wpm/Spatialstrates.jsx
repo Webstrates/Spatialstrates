@@ -12,16 +12,50 @@ import { CanvasView } from '#Spatialstrates .canvas-view';
 function SpaceView() {
     const [currentView] = useProperty('currentView');
     const [currentSpace, setCurrentSpace] = useProperty('locationHash');
+    const [, setXRPlatform] = useProperty('xrPlatform');
+
+    // Detect XR platform type
+    const initXRPlatformTimeout = useRef(null);
+    useEffect(() => {
+        if (initXRPlatformTimeout.current) {
+            clearTimeout(initXRPlatformTimeout.current);
+            initXRPlatformTimeout.current = null;
+        }
+
+        if (typeof setXRPlatform === 'function') {
+            initXRPlatformTimeout.current = setTimeout(async () => {
+                const supportsImmersiveAR = navigator.xr && await navigator.xr.isSessionSupported('immersive-ar');
+                const supportsImmersiveVR = navigator.xr && await navigator.xr.isSessionSupported('immersive-vr');
+
+                const isAndroid = navigator.userAgent.includes('Android')
+                const isOculusBrowser = navigator.userAgent.includes('OculusBrowser');
+
+                const supportsModelElement = typeof window.HTMLModelElement !== 'undefined';
+
+                if (supportsModelElement && supportsImmersiveVR) {
+                    setXRPlatform('Vision Pro');
+                } else if (isOculusBrowser && supportsImmersiveVR) {
+                    setXRPlatform('Quest');
+                } else if (isAndroid && supportsImmersiveAR) {
+                    setXRPlatform('Android Mobile');
+                } else {
+                    setXRPlatform('None');
+                }
+
+                initXRPlatformTimeout.current = null;
+            }, 1000);
+        }
+    }, [setXRPlatform]);
 
     // Initialize the current space if it is not set
-    const timeout = useRef(null);
+    const initSpaceTimeout = useRef(null);
     useEffect(() => {
-        if (timeout.current) {
-            clearTimeout(timeout.current);
-            timeout.current = null;
+        if (initSpaceTimeout.current) {
+            clearTimeout(initSpaceTimeout.current);
+            initSpaceTimeout.current = null;
         }
         if (!currentSpace) {
-            timeout.current = setTimeout(async () => {
+            initSpaceTimeout.current = setTimeout(async () => {
                 const spaceUUIDs = await VarvEngine.getAllUUIDsFromType('Space');
 
                 if (spaceUUIDs.length > 0) {
@@ -29,7 +63,7 @@ function SpaceView() {
                 } else {
                     setCurrentSpace(await VarvEngine.getConceptFromType('Space').create(null, { name: 'New Space' }));
                 }
-                timeout.current = null;
+                initSpaceTimeout.current = null;
             }, 1000);
         }
     }, [currentSpace, setCurrentSpace]);
@@ -54,8 +88,8 @@ function SpaceView() {
 
 export function App() {
     return <GlobalEventProvider>
-        <DynamicComponents selector=".dynamic-gui-component" />
         <Varv concept="SpaceManager">
+            <DynamicComponents selector=".dynamic-gui-component" />
             <SpaceView />
         </Varv>
     </GlobalEventProvider>;

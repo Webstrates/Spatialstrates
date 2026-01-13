@@ -38,15 +38,6 @@ if (!window.moduleMoleculeUploader) {
         });
     };
 
-    const handleUploadFile = (file) => {
-        // HACK: Cannot check if the file is valid yet
-        // if (file.type === 'model/pdb') {
-            handleUploadMolecule(file);
-        // } else {
-        //     alert('File type not supported.');
-        // }
-    };
-
     const activateDropZone = (element, type) => {
         if (element.__uploadDropZoneActivated) return;
 
@@ -65,7 +56,7 @@ if (!window.moduleMoleculeUploader) {
             const files = e.dataTransfer.files;
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                handleUploadFile(file);
+                handleUploadMolecule(file);
             }
         });
 
@@ -76,7 +67,7 @@ if (!window.moduleMoleculeUploader) {
             input.accept = '.pdb';
             input.onchange = (e) => {
                 for (let i = 0; i < e.target.files.length; i++) {
-                    handleUploadFile(e.target.files[i], type);
+                    handleUploadMolecule(e.target.files[i], type);
                 }
             };
             input.click();

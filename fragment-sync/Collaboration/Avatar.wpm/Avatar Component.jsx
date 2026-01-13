@@ -19,28 +19,30 @@ if (Fragment.one('#AudioStream .default')) {
 }
 
 
-useGLTF.preload("avatar-models.zip/model-camera.glb");
-useGLTF.preload("avatar-models.zip/model-phone.glb");
-useGLTF.preload("avatar-models.zip/model-headset.glb");
-useGLTF.preload("https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/meta-quest-touch-plus/left.glb");
-useGLTF.preload("https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/meta-quest-touch-plus/right.glb");
-useGLTF.preload("https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/generic-hand/left.glb");
-useGLTF.preload("https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/generic-hand/right.glb");
+useGLTF.preload('avatar-models.zip/model-camera.glb');
+useGLTF.preload('avatar-models.zip/model-phone.glb');
+useGLTF.preload('avatar-models.zip/model-headset-quest.glb');
+useGLTF.preload('avatar-models.zip/model-headset-vision-pro.glb');
+useGLTF.preload('https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/meta-quest-touch-plus/left.glb');
+useGLTF.preload('https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/meta-quest-touch-plus/right.glb');
+useGLTF.preload('https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/generic-hand/left.glb');
+useGLTF.preload('https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/generic-hand/right.glb');
 
-const cameraModel = <Gltf src="avatar-models.zip/model-camera.glb" scale={1} rotation={[0, Math.PI, 0]} />;
-const phoneModel = <Gltf src="avatar-models.zip/model-phone.glb" scale={0.01} />;
-const headsetModel = <Gltf src="avatar-models.zip/model-headset.glb" scale={0.9} rotation={[0, Math.PI, 0]} position={[0, 0.04, 0.11]} />;
+const cameraModel = <Gltf src='avatar-models.zip/model-camera.glb' scale={1} rotation={[0, Math.PI, 0]} />;
+const phoneModel = <Gltf src='avatar-models.zip/model-phone.glb' scale={0.01} />;
+const headsetQuestModel = <Gltf src='avatar-models.zip/model-headset-quest.glb' scale={0.9} rotation={[0, Math.PI, 0]} position={[0, 0.04, 0.11]} />;
+const headsetVisionProModel = <Gltf src='avatar-models.zip/model-headset-vision-pro.glb' scale={0.32} rotation={[0, Math.PI / 2, 0]} position={[0, -0.01, 0.115]} />;
 
-const controllerLeftModel = <Gltf src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/meta-quest-touch-plus/left.glb" />;
-const controllerRightModel = <Gltf src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/meta-quest-touch-plus/right.glb" />;
-const handLeftModel = <Gltf src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/generic-hand/left.glb" rotation={[Math.PI / 2, -Math.PI / 2, -Math.PI / 8]} />;
-const handRightModel = <Gltf src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.16/dist/profiles/generic-hand/right.glb" rotation={[Math.PI / 2, Math.PI / 2, Math.PI / 8]} />;
+const controllerLeftModel = <Gltf src='https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/meta-quest-touch-plus/left.glb' />;
+const controllerRightModel = <Gltf src='https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/meta-quest-touch-plus/right.glb' />;
+const handLeftModel = <Gltf src='https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/generic-hand/left.glb' rotation={[Math.PI / 2, -Math.PI / 2, -Math.PI / 8]} />;
+const handRightModel = <Gltf src='https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0.20/dist/profiles/generic-hand/right.glb' rotation={[Math.PI / 2, Math.PI / 2, Math.PI / 8]} />;
 
 const viewCone = <Cone args={[0.1, 0.1, 32]} position={[0, 0, -0.05]} rotation={[Math.PI / 2, 0, 0]}>
     <meshStandardMaterial color="skyblue" transparent={true} opacity={0.66} />
 </Cone>;
 
-const cursorModel = <Box args={[0.005, 0.005, 1]} position={[0, 0, 0]}>
+const cursorModel = <Box args={[0.005, 0.005, 2]} position={[0, 0, 0]}>
     <meshBasicMaterial color="skyblue" />
 </Box>;
 
@@ -51,7 +53,7 @@ function AvatarModel() {
     const [client] = useProperty('client');
     const [view] = useProperty('view');
     const [type] = useProperty('type');
-    const [userAgent] = useProperty('userAgent');
+    const [avatarXRPlatform] = useProperty('avatarXRPlatform');
     const [inputSourceProfile] = useProperty('inputSourceProfile');
 
     const [model, setModel] = useState(cameraModel);
@@ -59,9 +61,11 @@ function AvatarModel() {
     useEffect(() => {
         switch (type) {
             case 'camera':
-                if (userAgent.includes('OculusBrowser')) {
-                    setModel(<> {headsetModel} {viewCone} </>);
-                } else if (/(iPad|iPhone|iPod|Android)/i.test(userAgent)) {
+                if (avatarXRPlatform === 'Quest') {
+                    setModel(<> {headsetQuestModel} {viewCone} </>);
+                } else if (avatarXRPlatform === 'Vision Pro') {
+                    setModel(<> {headsetVisionProModel} {viewCone} </>);
+                } else if (avatarXRPlatform === 'Android Mobile') {
                     setModel(<> {phoneModel} {viewCone} </>);
                 } else {
                     setModel(<> {cameraModel} {viewCone} </>);
@@ -86,13 +90,13 @@ function AvatarModel() {
             default:
                 setModel(cameraModel);
         }
-    }, [type, userAgent, inputSourceProfile]);
+    }, [type, avatarXRPlatform, inputSourceProfile]);
 
+    // TODO: This feature needs to be re-implemented
     // const [remoteControlled, setRemoteControlled] = useProperty('remoteControlled');
     // const [remoteControllingClient, setRemoteControllingClient] = useProperty('remoteControllingClient');
 
     // const remoteControlCallback = (newValue) => {
-    //     // TODO: This feature needs to be re-implemented
     //     setRemoteControlled(newValue);
     //     setRemoteControllingClient(newValue ? webstrate.clientId : '');
     // };
@@ -106,7 +110,6 @@ function AvatarModel() {
             {/* </group> : model} */}
             {type == 'camera' || type == 'cursor' ? <Billboard position={type == 'camera' ? [0, 0.11, 0] : [0, 0.05, 0.0]}>
                 <Text
-                    // rotation={type == 'camera' ? [0, Math.PI, 0] : [0, - Math.PI / 2, 0]}
                     textAlign="center"
                     anchorX="center"
                     anchorY="middle"

@@ -144,8 +144,8 @@ export function Main() {
                 <AvatarChecker />
             </Varv>
             {/* <Varv concept="Avatar" if="isMine">
-            <AvatarRemoteController />
-        </Varv> */}
+                <AvatarRemoteController />
+            </Varv> */}
         </Varv>
     </Varv>;
 }

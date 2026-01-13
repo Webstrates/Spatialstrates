@@ -5,8 +5,9 @@ import * as THREE from 'three';
 import { PDBLoader } from 'three/addons/loaders/PDBLoader.js';
 import { useLoader } from '@react-three/fiber';
 import { Billboard } from '@react-three/drei';
-import { Text as UIText, Root } from '@react-three/uikit';
-import { Defaults, Card } from '@react-three/uikit-apfel';
+import { Text as UIText } from '@react-three/uikit';
+import { Label } from '@react-three/uikit-default';
+import { Panel } from '@react-three/uikit-horizon';
 import { useProperty } from '#VarvReact';
 
 import { Movable } from '#Spatialstrates .movable';
@@ -18,7 +19,7 @@ function Molecule() {
     const [selected] = useProperty('selected');
     const [url] = useProperty('url');
     const [note] = useProperty('note');
-    const [scale] = useProperty('scale');
+    const [moleculeScale] = useProperty('moleculeScale');
     const pdb = useLoader(PDBLoader, url);
 
     // Create meshes from PDB data and extract atom data for labels
@@ -125,7 +126,7 @@ function Molecule() {
     }, [pdb]);
 
     const handle = useMemo(() => (<>
-        <group scale={[scale, scale, scale]}>
+        <group scale={[moleculeScale, moleculeScale, moleculeScale]}>
             {moleculeObject && <primitive object={moleculeObject} />}
 
             {atomLabels.map((label, index) => (
@@ -140,7 +141,7 @@ function Molecule() {
                 </Text>
             ))}
         </group>
-    </>), [moleculeObject, atomLabels, scale]);
+    </>), [moleculeObject, atomLabels, moleculeScale]);
 
     const title = useMemo(() => <Text position={[0, 0.075, 0]}
         fontSize={0.05}
@@ -154,13 +155,11 @@ function Molecule() {
     return <Movable handle={handle} upright={false}>
         <Billboard position={[0, -0.375, 0]}>
             {title}
-            {selected && note ? <Defaults>
-                <Root anchorX="center" anchorY="top" flexDirection="column" pixelSize={0.0005} padding={15}>
-                    <Card borderRadius={24} padding={24} gap={16} flexDirection="column">
-                        <UIText fontSize={24}>{note}</UIText>
-                    </Card>
-                </Root>
-            </Defaults> : null}
+            {selected && note ? <Panel anchorX="center" anchorY="top" pixelSize={0.0005} padding={24} flexDirection="column">
+                <Label>
+                    <UIText fontSize={24}>{note}</UIText>
+                </Label>
+            </Panel> : null}
         </Billboard>
     </Movable>;
 }

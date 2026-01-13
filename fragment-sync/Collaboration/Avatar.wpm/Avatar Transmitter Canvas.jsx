@@ -35,6 +35,7 @@ function AvatarTransmitter({ type }) {
     const conceptRef = useRef(null);
     const avatarConcept = VarvEngine.getConceptFromType('Avatar');
     const [currentSpace] = useProperty('locationHash');
+    const [xrPlatform] = useProperty('xrPlatform');
     const [userName, setUserName] = useState('');
     const editor = useEditor();
     const [projectionPlane] = useProperty('projectionPlane');
@@ -48,6 +49,8 @@ function AvatarTransmitter({ type }) {
     }, []);
 
     useEffect(() => {
+        if (!xrPlatform) return;
+
         const avatarFilter = FilterAction.constructFilter({
             and: [
                 {
@@ -72,7 +75,7 @@ function AvatarTransmitter({ type }) {
                 // Otherwise create a new one
                 uuid = await avatarConcept.create(null, {
                     type: type,
-                    userAgent: window.navigator.userAgent,
+                    avatarXRPlatform: xrPlatform,
                     client: webstrate.clientId,
                     isMine: true
                 });
@@ -81,7 +84,7 @@ function AvatarTransmitter({ type }) {
         };
 
         runAsync();
-    }, [type]);
+    }, [type, xrPlatform]);
 
     useEffect(() => {
         if (!conceptRef.current) return;

@@ -1,5 +1,22 @@
 {
     "concepts": {
+        "Environment": {
+            "schema": {
+                "name": "string",
+                "url": "string",
+                "position": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "rotation": { "array": {
+                    "items": "number",
+                    "default": [ 0, 0, 0 ]
+                }},
+                "scale": { "number": {
+                    "default": 1
+                }}
+            }
+        },
         "SpaceManager": {
             "schema": {
                 "placeholder": "string",
@@ -10,14 +27,16 @@
                 }},
                 "showBoundary": "boolean",
                 "showProjectionPlane": "boolean",
-                "depthSensing": "boolean"
+                "depthSensing": "boolean",
+                "xrPlatform": "string"
             },
             "mappings": {
                 "locationHash": [ "memory", "location", "cauldron"],
                 "currentView": [ "memory", "cauldron" ],
                 "showBoundary": [ "memory", "cauldron" ],
                 "showProjectionPlane": [ "memory", "cauldron" ],
-                "depthSensing": [ "memory", "cauldron" ]
+                "depthSensing": [ "memory", "cauldron" ],
+                "xrPlatform": [ "memory", "cauldron" ]
             }
         },
         "Space": {
@@ -36,7 +55,8 @@
                 "projectionPlane": { "array": {
                     "items": "number",
                     "default": [ 0, 1.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 ]
-                }}
+                }},
+                "environment": "Environment"
             }
         },
         "Movable": {

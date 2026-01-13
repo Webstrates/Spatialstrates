@@ -75,27 +75,35 @@
             margin-right: 6px;
             border: 1px solid #444;
         }
+
         &[color=""]:before {
             display: none;
         }
+
         &[color="red"]:before {
             background: hsl(0, 80%, 60%);
         }
+
         &[color="green"]:before {
             background: hsl(120, 80%, 60%);
         }
+
         &[color="blue"]:before {
             background: hsl(204, 80%, 60%);
         }
+
         &[color="yellow"]:before {
             background: hsl(60, 80%, 60%);
         }
+
         &[color="purple"]:before {
             background: hsl(270, 80%, 60%);
         }
+
         &[color="orange"]:before {
             background: hsl(30, 80%, 60%);
         }
+
         &[color="pink"]:before {
             background: hsl(310, 80%, 60%);
         }
@@ -123,13 +131,17 @@
 
     .space-menu {
         display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
+        flex-direction: column;
         gap: 8px;
         min-height: 32px;
         padding: 8px;
         border-radius: 4px;
         background: #ddd;
+
+        >* {
+            flex: 1 0 auto;
+            height: 32px !important;
+        }
     }
 
     .space-list {
@@ -164,27 +176,35 @@
             margin-right: 6px;
             border: 1px solid #444;
         }
+
         &[color=""] .space-name:before {
             display: none;
         }
+
         &[color="red"] .space-name:before {
             background: hsl(0, 80%, 60%);
         }
+
         &[color="green"] .space-name:before {
             background: hsl(120, 80%, 60%);
         }
+
         &[color="blue"] .space-name:before {
             background: hsl(204, 80%, 60%);
         }
+
         &[color="yellow"] .space-name:before {
             background: hsl(60, 80%, 60%);
         }
+
         &[color="purple"] .space-name:before {
             background: hsl(270, 80%, 60%);
         }
+
         &[color="orange"] .space-name:before {
             background: hsl(30, 80%, 60%);
         }
+
         &[color="pink"] .space-name:before {
             background: hsl(310, 80%, 60%);
         }

@@ -1,8 +1,9 @@
 import React from 'react';
 let { useState, useEffect, useMemo, useCallback } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { Sphere, useGLTF } from '@react-three/drei';
-import { Root, Container, Text as UIText } from "@react-three/uikit";
+import { Container, Text as UIText } from "@react-three/uikit";
 import { useProperty } from '#VarvReact';
 
 import { Text } from '#Spatialstrates .text';
@@ -119,13 +120,13 @@ function DatasetDisplay({ position }) {
             autoUpdateMatrix={false}>
         </mesh>
         <group position={[position[0], position[1], 0]} autoUpdateMatrix={false}>
-            <Root anchorX="center" anchorY="bottom" flexDirection="column" pixelSize={0.0005} padding={15}>
-                <Container borderRadius={16} gap={16} width={470} height={470} overflow="scroll" flexDirection="column">
+            <Container anchorX="center" anchorY="bottom" flexDirection="column" pixelSize={0.0005} padding={15}>
+                <Container width={470} height={470} overflow="scroll" flexDirection="column" gap={16}>
                     <UIText textAlign="left" fontSize={16} color="white" whiteSpace="pre">{text}</UIText>
                 </Container>
-            </Root>
+            </Container>
         </group>
-    </>;
+    </>;;
 }
 
 
@@ -295,5 +296,7 @@ ${contentTitle}`;
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'VisPiece' ? <VisPiece /> : null;
+    return conceptType === 'VisPiece' ? <ErrorBoundary fallback={null}>
+        <VisPiece />
+    </ErrorBoundary> : null;
 }

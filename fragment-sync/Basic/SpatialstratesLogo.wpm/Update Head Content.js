@@ -7,8 +7,6 @@ if (!manifestLink) {
     WPMv2.stripProtection(manifestLink);
 }
 
-
-
 let iconLink = document.head.querySelector('link[rel="icon"]');
 if (!iconLink) {
     iconLink = document.createElement('link');

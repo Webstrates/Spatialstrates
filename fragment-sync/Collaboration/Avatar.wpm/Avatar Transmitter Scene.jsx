@@ -90,6 +90,7 @@ function AvatarTransmitter({ device, type, inputSourceProfiles }) {
     const conceptRef = useRef(null);
     const avatarConcept = VarvEngine.getConceptFromType('Avatar');
     const [currentSpace] = useProperty('locationHash');
+    const [xrPlatform] = useProperty('xrPlatform');
     const [userName, setUserName] = useState('');
 
     useEffect(() => {
@@ -102,6 +103,7 @@ function AvatarTransmitter({ device, type, inputSourceProfiles }) {
 
     useEffect(() => {
         if (!device) return;
+        if (!xrPlatform) return;
 
         const runAsync = async () => {
             let uuid;
@@ -125,7 +127,7 @@ function AvatarTransmitter({ device, type, inputSourceProfiles }) {
                 // Otherwise create a new one
                 uuid = await avatarConcept.create(null, {
                     type: type,
-                    userAgent: window.navigator.userAgent,
+                    avatarXRPlatform: xrPlatform,
                     client: webstrate.clientId,
                     inputSourceProfile: inputSourceProfiles ? JSON.stringify(inputSourceProfiles) : '',
                     isMine: true
@@ -135,7 +137,7 @@ function AvatarTransmitter({ device, type, inputSourceProfiles }) {
         };
 
         runAsync();
-    }, [device, type]);
+    }, [device, type, xrPlatform]);
 
     const slowWritebackTimeout = useRef(null);
     useFrame(() => {

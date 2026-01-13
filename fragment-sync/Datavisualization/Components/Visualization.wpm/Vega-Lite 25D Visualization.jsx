@@ -214,7 +214,6 @@ const generateNonInstanced = (items, key) => {
                 itemComponents.push(areas);
                 break;
             case 'symbol':
-                // FIXME: This only does do spheres so far
                 const symbols = item.items.map((innerItem, index) =>
                     <Sphere key={itemKey + '-' + index}
                         args={[getItemSize(innerItem)]}

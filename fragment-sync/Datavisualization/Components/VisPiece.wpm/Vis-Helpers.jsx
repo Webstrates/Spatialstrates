@@ -442,7 +442,6 @@ const is2D = async () => {
     return currentView === '2D';
 };
 const getPositionVector = async (uuid) => {
-    // FIXME: This might be bad for performance:
     if (await is2D()) {
         const concept = await VarvEngine.getConceptFromUUID(uuid);
         const position = await concept.getPropertyValue(uuid, 'position');

@@ -1,5 +1,5 @@
 import React from 'react';
-const { useState } = React;
+const { useState, useRef, useEffect } = React;
 import { Varv, useProperty } from '#VarvReact';
 
 import { deleteMovable } from '#Spatialstrates .movable-helpers';
@@ -11,8 +11,8 @@ function SpaceRenamer() {
     const [name, setName] = useProperty('name');
 
     return <label>
-        Rename Space
-        <input value={name ? name : ''} onChange={e => setName(e.target.value)} title='Rename Space' />
+        Space Name
+        <input value={name ? name : ''} onChange={e => setName(e.target.value)} title='Change Space Name' />
     </label>;
 }
 
@@ -20,7 +20,7 @@ function SpaceColorChanger() {
     const [color, setColor] = useProperty('color');
 
     return <label>
-        Change Space Color
+        Space Color
         <select value={color} onChange={e => setColor(e.target.value)} title='Change Space Color'>
             <option value="">Default</option>
             <option value="red">Red</option>
@@ -60,9 +60,94 @@ function SpaceSelector({ selectSpace }) {
     </div>;
 }
 
+function EnvironmentSelector({ updateSelectValue }) {
+    const [name] = useProperty('name');
+    const [uuid] = useProperty('concept::uuid');
+
+    useEffect(() => {
+        updateSelectValue();
+    }, [uuid]);
+
+    return <option value={uuid}>{name}</option>;
+}
+
+function EnvironmentRenamer() {
+    const [name, setName] = useProperty('name');
+
+    return <label>
+        Environment Name
+        <input value={name ? name : ''} onChange={e => setName(e.target.value)} title='Change Environment Name' />
+    </label>;
+}
+
+function SpaceEnvironmentMenu() {
+    const [environment, setEnvironment] = useProperty('environment');
+    const selectRef = useRef();
+
+    const handleUploadEnvironment = (file) => {
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+
+        const request = new XMLHttpRequest();
+        request.open('POST', window.location.pathname);
+        request.send(formData);
+
+        return new Promise((resolve, reject) => {
+            request.addEventListener('load', async () => {
+                const asset = JSON.parse(request.responseText);
+                const newEnvironment = await VarvEngine.getConceptFromType('Environment').create(null, {
+                    name: asset.fileName,
+                    url: asset.fileName
+                });
+                setEnvironment(newEnvironment);
+                resolve(asset);
+            });
+            request.addEventListener('error', (e) => {
+                reject(new Error('Failed to upload model'));
+            });
+        });
+    };
+
+    const addEnvironment = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.glb';
+        input.onchange = (e) => {
+            for (let i = 0; i < e.target.files.length; i++) {
+                handleUploadEnvironment(e.target.files[i]);
+            }
+        };
+        input.click();
+    };
+
+    const deleteEnvironment = async () => {
+        await VarvEngine.getConceptFromType('Environment').delete(environment);
+        setEnvironment('');
+    };
+
+    return <>
+        <label>
+            Environment
+            <select onChange={e => setEnvironment(e.target.value || '')} title="Select Environment" ref={selectRef} value={environment}>
+                <option value=''>None</option>
+                <Varv concept="Environment">
+                    <EnvironmentSelector updateSelectValue={() => {
+                        selectRef.current.value = environment || '';
+                    }} />
+                </Varv>
+            </select>
+        </label>
+        <Varv property="environment">
+            <EnvironmentRenamer />
+        </Varv>
+        <button onClick={addEnvironment} title="Add Environment">Add Environment</button>
+        {environment ? <button onClick={deleteEnvironment} title="Delete Environment" className="red">Delete Environment</button> : null}
+    </>;
+}
+
 function SpaceManagerMenu() {
     const [visible, setVisible] = useState(false);
-    const [space, setSpace] = useProperty('locationHash');
+    const [, setSpace] = useProperty('locationHash');
 
     const addSpace = async () => {
         setSpace(await VarvEngine.getConceptFromType('Space').create(null, { name: 'New Space' }));
@@ -89,6 +174,9 @@ function SpaceManagerMenu() {
                     <SpaceRenamer />
                     <SpaceColorChanger />
                 </div>
+                <div className="space-menu">
+                    <SpaceEnvironmentMenu />
+                </div>
             </Varv>
         </Dialog>
 
@@ -112,7 +200,7 @@ function SpaceTab() {
 }
 
 function NewSpaceTab() {
-    const [currentSpace, setCurrentSpace] = useProperty('locationHash');
+    const [, setCurrentSpace] = useProperty('locationHash');
 
     const addSpace = async () => {
         setCurrentSpace(await VarvEngine.getConceptFromType('Space').create(null, { name: 'New Space' }));

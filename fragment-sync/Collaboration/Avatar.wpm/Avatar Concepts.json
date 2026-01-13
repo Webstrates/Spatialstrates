@@ -13,7 +13,7 @@
                         "enum": [ "camera", "controllerLeft", "controllerRight", "handLeft", "handRight", "cursor" ]
                     }
                 },
-                "userAgent": "string",
+                "avatarXRPlatform": "string",
                 "inputSourceProfile": "string",
                 "client": "string",
                 "clientVideoStream": { "array": {

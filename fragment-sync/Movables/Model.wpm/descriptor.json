@@ -1,8 +1,0 @@
-{
-    "description": "A simple scalable 3D model component.",
-    "dependencies": [
-        "#Menu"
-    ],
-    "assets": [],
-    "version": "0.2.0"
-}

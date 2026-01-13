@@ -8,7 +8,7 @@ import { transcribeAudio } from '#AIHelpers .default';
 
 
 function GoBackControllerButton() {
-    const [currentSpace, setCurrentSpace] = useProperty('locationHash');
+    const [, setCurrentSpace] = useProperty('locationHash');
     const historyRef = useRef([]);
     const programmaticHashRef = useRef(null);
 
@@ -57,7 +57,7 @@ function SpaceSelectionButton() {
 }
 
 function SpaceCreator() {
-    const [currentSpace, setCurrentSpace] = useProperty('locationHash');
+    const [, setCurrentSpace] = useProperty('locationHash');
 
     return <ControllerMenuButton onClick={async () => {
         const newSpaceUUID = await VarvEngine.getConceptFromType('Space').create(null, {
@@ -68,7 +68,7 @@ function SpaceCreator() {
 }
 
 function SpaceRenamer() {
-    const [name, setName] = useProperty('name');
+    const [, setName] = useProperty('name');
     const [listening, setListening] = useState(false);
 
 
@@ -95,6 +95,27 @@ function SpaceColorChanger() {
         <ControllerMenuButton toggled={color === 'purple'} onClick={() => setColor('purple')}>Purple</ControllerMenuButton>
         <ControllerMenuButton toggled={color === 'orange'} onClick={() => setColor('orange')}>Orange</ControllerMenuButton>
         <ControllerMenuButton toggled={color === 'pink'} onClick={() => setColor('pink')}>Pink</ControllerMenuButton>
+    </>;
+}
+
+function EnvironmentButton({ currentEnvironment, setEnvironment }) {
+    const [name] = useProperty('name');
+    const [uuid] = useProperty('concept::uuid');
+
+    return <ControllerMenuButton
+        toggled={currentEnvironment === uuid}
+        onClick={() => setEnvironment(uuid)}
+    >{name || 'Unnamed'}</ControllerMenuButton>;
+}
+
+function SpaceEnvironmentChanger() {
+    const [environment, setEnvironment] = useProperty('environment');
+
+    return <>
+        <ControllerMenuButton toggled={!environment} onClick={() => setEnvironment('')}>None</ControllerMenuButton>
+        <Varv concept="Environment">
+            <EnvironmentButton currentEnvironment={environment} setEnvironment={setEnvironment} />
+        </Varv>
     </>;
 }
 
@@ -127,3 +148,9 @@ addItemToControllerSubMenu('currentSpace', 'spaces-color-changer', <Varv concept
         <SpaceColorChanger />
     </Varv>
 </Varv>, 300);
+addItemToControllerSubMenu('currentSpace', 'spacer2', <ControllerMenuSpacer />, 350);
+addItemToControllerSubMenu('currentSpace', 'spaces-environment-changer', <Varv concept="SpaceManager">
+    <Varv property="locationHash">
+        <SpaceEnvironmentChanger />
+    </Varv>
+</Varv>, 400);

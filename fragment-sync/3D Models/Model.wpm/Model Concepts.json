@@ -1,0 +1,27 @@
+{
+    "concepts": {
+        "ModelManager": {
+            "comment": "TODO: Change this to use its own concept type for models like environments.",
+            "schema": {
+                "models": { "array": "string" }
+            }
+        },
+        "Model": {
+            "schema": {
+                "url": "string",
+                "modelSize": { "number": {
+                    "default": 0.5
+                }},
+                "upright": { "boolean": {
+                    "default": false
+                }},
+                "sizeLocked": { "boolean": {
+                    "default": false
+                }}
+            },
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

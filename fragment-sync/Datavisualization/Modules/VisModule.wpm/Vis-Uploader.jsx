@@ -18,7 +18,7 @@ if (!window.moduleVisComponentUploader) {
     addItemToSubMenu('file-upload', 'upload-dataset', <div className="upload-drop-zone" id="dataset-upload-drop-zone">Upload Dataset</div>, 200);
     addItemToSubMenu('file-upload', 'spacer1', <MenuSpacer />, 300);
 
-    // TODO: This is not super robust
+    // FIXME: This is not super robust
     const convertCSVtoJSON = (csv) => {
         const lines = csv.split('\n');
         const result = [];

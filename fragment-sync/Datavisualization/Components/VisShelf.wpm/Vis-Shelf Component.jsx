@@ -1,5 +1,6 @@
 import React from 'react';
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
+import { ErrorBoundary } from 'react-error-boundary';
 import { Color, Object3D, Matrix4, MeshStandardMaterial, InstancedMesh } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useGLTF } from '@react-three/drei';
@@ -334,5 +335,7 @@ function VisShelf() {
 
 export function Main() {
     const [conceptType] = useProperty('concept::name');
-    return conceptType === 'VisShelf' ? <VisShelf /> : null;
+    return conceptType === 'VisShelf' ? <ErrorBoundary fallback={null}>
+        <VisShelf />
+    </ErrorBoundary> : null;
 }

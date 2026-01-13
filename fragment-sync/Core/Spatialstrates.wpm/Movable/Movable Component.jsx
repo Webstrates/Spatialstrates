@@ -1,25 +1,23 @@
 import React from 'react';
 const { useRef, useState, useEffect, useCallback, useMemo } = React;
-import { Matrix4 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useXRInputSourceEvent } from '@react-three/xr';
+import { isXRInputSourceState } from '@react-three/xr';
+import { Handle, HandleTarget, defaultApply } from '@react-three/handle'
+import { create } from 'zustand';
 import { useProperty } from '#VarvReact';
 
 import { useGlobalEvents } from '#Spatialstrates .global-events';
-import { getDeviceFromInputEvent } from '#Spatialstrates .device-helpers';
 import { deselectMovables } from '#Spatialstrates .movable-helpers';
 
 
 
 const FAST_WRITEBACK_TIMEOUT = 33;
-const SLOW_WRITEBACK_TIMEOUT = 500;
+const SLOW_WRITEBACK_TIMEOUT = 333;
 
 export const SELECTED_COLOR_PRIMARY = 'hsl(14, 100%, 50%)';
 export const SELECTED_COLOR_SECONDARY = 'hsl(26, 100%, 60%)';
 export const HOVERED_SELECTED_COLOR_PRIMARY = 'hsl(14, 100%, 65%)';
 export const HOVERED_SELECTED_COLOR_SECONDARY = 'hsl(26, 100%, 75%)';
-
-
 
 // Generic wrapper for Movable concept properties into ThreeJS transform properties
 export function useTransform() {
@@ -89,63 +87,65 @@ export function useTransform() {
     return transform;
 }
 
+const vibrateOnEvent = (e) => {
+    if (isXRInputSourceState(e.pointerState) && e.pointerState.type === 'controller') {
+        e.pointerState.inputSource.gamepad?.hapticActuators[0]?.pulse(0.3, 50)
+    }
+};
+
 /**
  * Make a group of children moveable with a handle that allows
  * selecting them and dragging them around
  */
 export function Movable({ children, handle, upright = true, onDragStart, onDragEnd, onDragging }) {
+    // Create a store for this specific instance of Movable
+    const useMovableStore = useMemo(() => create(() => ({
+        position: [0, 0, 0],
+        rotation: [0, 0, 0]
+    })), []);
+
     const transform = useTransform();
     const [selected, setSelected] = useProperty('selected');
     const [hovered, setHovered] = useProperty('hovered');
     const [beingDragged, setBeingDragged] = useProperty('beingDragged');
 
-    // Setup refs for dragging
-    const grabbingController = useRef();
-    const dragRef = useRef();
-
     // Setup dragging devices
-    const [currentXRInputSource, setCurrentXRInputSource] = useState(null);
     const [uuid] = useProperty('concept::uuid');
 
     const { triggerEvent, subscribeEvent } = useGlobalEvents();
 
     // Update the transformation of the movable
-    const previousTransform = useMemo(() => new Matrix4(), []);
-    const parentTransform = useMemo(() => new Matrix4(), []);
-    const finalTransform = useMemo(() => new Matrix4(), []);
     const fastWritebackTimeout = useRef();
     const slowWritebackTimeout = useRef();
+    const handleRef = useRef();
+    const handleTargetRef = useRef(null)
 
-    const updatePreviousTransform = useCallback(() => {
-        parentTransform.copy(dragRef.current.parent.matrixWorld).invert();
-        previousTransform
-            .copy(parentTransform) // Convert to parent space
-            .multiply(grabbingController.current.matrixWorld) // Get controller in parent space
-            .invert(); // Invert for future use
-    }, []);
+    useEffect(() => {
+        if (!transform.initialized) return;
+        useMovableStore.setState({
+            position: transform.position,
+            rotation: transform.rotation
+        });
+        const updateRefTransform = (state) => {
+            handleTargetRef.current?.position.set(...state.position);
+            handleTargetRef.current?.rotation.set(...state.rotation);
+        };
+        updateRefTransform(useMovableStore.getState());
+        return useMovableStore.subscribe((state) => updateRefTransform(state));
+    }, [transform]);
 
     // Handle input events for dragging and hovering
-    const selectAndStartDrag = useCallback((e) => {
-        if (e) e.stopPropagation();
-        if (grabbingController.current) return;
+    const select = useCallback(() => {
         setSelected(true);
-        setBeingDragged(true);
-        setCurrentXRInputSource(e?.nativeEvent?.inputSource);
-
         deselectMovables();
-
-        if (dragRef && dragRef.current) {
-            triggerEvent('drag-start', { target: uuid });
-            if (typeof onDragStart === 'function') onDragStart();
-            grabbingController.current = getDeviceFromInputEvent(e);
-            if (grabbingController.current) {
-                updatePreviousTransform();
-            }
-        }
-    }, [setSelected, setBeingDragged]);
+    }, [setSelected]);
 
     const remoteInitiateDrag = useCallback((payload) => {
-        if (payload.target === uuid) selectAndStartDrag(payload.e);
+        if (payload.target === uuid) {
+            // FIXME: This does not capture the pointer properly
+            // handleRef.current?.capture(payload.e.pointerId, payload.e.object);
+            select();
+        }
     }, [uuid]);
 
     useEffect(() => {
@@ -153,98 +153,79 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
         return () => unsubscribe();
     }, [remoteInitiateDrag, subscribeEvent, uuid]);
 
-    const stopDrag = useCallback((e) => {
-        if (e) e.stopPropagation();
-        setBeingDragged(false);
-        setCurrentXRInputSource(null);
-
-        if (grabbingController.current) {
-            grabbingController.current = undefined;
-            transform.position = dragRef.current.position.toArray();
-            transform.rotation = dragRef.current.rotation.toArray();
-            triggerEvent('drag-end', { target: uuid });
-            if (typeof onDragEnd === 'function') onDragEnd();
-        }
-    }, [setBeingDragged, currentXRInputSource, setCurrentXRInputSource]);
-
-    const startHover = useCallback((e) => {
-        if (e) e.stopPropagation();
-        setHovered(true);
-    }, [setHovered]);
-
-    const stopHover = useCallback(() => {
-        setHovered(false);
-    }, [setHovered]);
-
-    // Always stop dragging when anything lets go
-    useXRInputSourceEvent(currentXRInputSource, 'selectend', stopDrag, [stopDrag, currentXRInputSource]);
-    useEffect(() => {
-        document.body.addEventListener('pointerup', stopDrag);
-        return () => {
-            document.body.removeEventListener('pointerup', stopDrag);
-        };
-    }, [stopDrag]);
-
     useFrame(() => {
-        if (!beingDragged && dragRef.current) {
-            dragRef.current.position.fromArray(transform.position);
-            dragRef.current.rotation.fromArray(transform.rotation);
-            dragRef.current.updateMatrix();
-            return;
-        }
-        if (!grabbingController.current) return;
+        if (beingDragged) {
+            if (handleTargetRef.current) {
+                if (!fastWritebackTimeout.current) {
+                    transform.position = handleTargetRef.current.position.toArray();
+                    fastWritebackTimeout.current = setTimeout(() => {
+                        fastWritebackTimeout.current = null;
+                    }, FAST_WRITEBACK_TIMEOUT);
+                }
 
-        finalTransform
-            .copy(parentTransform) // Convert to parent space
-            .multiply(grabbingController.current.matrixWorld); // Get controller in parent space
-
-        dragRef.current.applyMatrix4(previousTransform); // Apply inverse of original position
-        dragRef.current.applyMatrix4(finalTransform); // Apply new position
-
-        if (upright) {
-            dragRef.current.rotation.reorder('YXZ');
-            dragRef.current.rotation.x = 0;
-            dragRef.current.rotation.z = 0;
-        }
-        dragRef.current.updateMatrix();
-        updatePreviousTransform();
-
-        // Update the Varv state
-        if (!fastWritebackTimeout.current) {
-            transform.position = dragRef.current.position.toArray();
-            fastWritebackTimeout.current = setTimeout(() => {
-                fastWritebackTimeout.current = null;
-            }, FAST_WRITEBACK_TIMEOUT);
-        }
-        if (!slowWritebackTimeout.current) {
-            transform.rotation = dragRef.current.rotation.toArray();
-            if (typeof onDragging === 'function') onDragging();
-            slowWritebackTimeout.current = setTimeout(() => {
-                slowWritebackTimeout.current = null;
-            }, SLOW_WRITEBACK_TIMEOUT);
+                if (!slowWritebackTimeout.current) {
+                    transform.rotation = handleTargetRef.current.rotation.toArray();
+                    if (typeof onDragging === 'function') onDragging();
+                    slowWritebackTimeout.current = setTimeout(() => {
+                        slowWritebackTimeout.current = null;
+                    }, SLOW_WRITEBACK_TIMEOUT);
+                }
+            }
+        } else {
+            useMovableStore.setState({
+                position: transform.position,
+                rotation: transform.rotation
+            });
         }
     });
 
-    // useEffect(() => {
-    //     if (upright && dragRef.current && transform.initialized) {
-    //         dragRef.current.rotation.reorder('YXZ');
-    //         dragRef.current.rotation.x = 0;
-    //         dragRef.current.rotation.z = 0;
-    //         dragRef.current.updateMatrix();
-    //         transform.rotation = dragRef.current.rotation.toArray();
-    //     }
-    // }, [upright, transform.initialized]);
+    const startDrag = useCallback(() => {
+        setBeingDragged(true);
 
-    return <group ref={dragRef}
-        matrixAutoUpdate={false}
-        matrixWorldAutoUpdate={true}>
-        <group
-            onPointerDown={selectAndStartDrag}
-            onPointerUp={stopDrag}
-            onPointerOver={startHover}
-            onPointerOut={stopHover}>
-            {handle}
-        </group>
+        triggerEvent('drag-start', { target: uuid });
+        if (typeof onDragStart === 'function') onDragStart();
+    }, [setBeingDragged, onDragStart, triggerEvent, uuid]);
+
+    const stopDrag = useCallback(() => {
+        setBeingDragged(false);
+
+        triggerEvent('drag-end', { target: uuid });
+        if (typeof onDragEnd === 'function') onDragEnd();
+    }, [setBeingDragged, onDragEnd, triggerEvent, uuid]);
+
+    const applyTransform = useCallback((state, target) => {
+        defaultApply(state, target);
+
+        if (state.first) {
+            startDrag();
+        }
+
+        if (state.last) {
+            // Always write back on last frame to ensure final position/rotation persists
+            transform.position = target.position.toArray();
+            transform.rotation = target.rotation.toArray();
+            stopDrag();
+        }
+    }, [transform, startDrag, stopDrag]);
+
+    return <HandleTarget ref={handleTargetRef}>
+        <Handle ref={handleRef}
+            targetRef="from-context"
+            rotate={upright ? 'y' : true}
+            scale={false}
+            apply={applyTransform}
+        >
+            <group
+                onPointerDown={select}
+                onPointerOver={(e) => {
+                    setHovered(true);
+                    vibrateOnEvent(e);
+                }}
+                onPointerOut={() => setHovered(false)}
+            >
+                {handle}
+            </group>
+        </Handle>
         {children}
-    </group>;
+    </HandleTarget>;
 }

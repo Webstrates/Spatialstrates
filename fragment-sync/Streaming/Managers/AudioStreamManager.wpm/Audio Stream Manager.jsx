@@ -23,21 +23,8 @@ if (!window.moduleAudioStreamManager) {
 
     addCleanupConceptType(CONCEPT_NAME);
 
-    window.moduleAudioStreamManager.streamShare.addStreamAddedListener((client, stream) => {
+    window.moduleAudioStreamManager.streamShare.addStreamAddedListener((client) => {
         console.log('Got audioStream from ' + client);
-
-        // Find or create their element
-        // let element = document.querySelector(QUERY_PREFIX + client);
-        // if (!element) {
-        //     element = document.createElement('video');
-        //     element.style.position = 'fixed';
-        //     element.style.width = '0px';
-        //     element.id = ID_PREFIX + client;
-        //     element.muted = client == webstrate.clientId;
-        //     document.body.appendChild(element);
-        // }
-        // element.srcObject = stream;
-        // doIfClicked(() => { element.play(); });
     });
 
     // Convenience functions for managing Varv spawning and despawning

@@ -1,0 +1,10 @@
+{
+    "concepts": {
+        "ModelShelf": {
+            "schema": {},
+            "extensions": {
+                "inject": [ "Movable" ]
+            }
+        }
+    }
+}

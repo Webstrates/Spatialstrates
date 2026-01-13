@@ -1,6 +1,6 @@
 import React from 'react';
 const { useEffect } = React;
-import { useEditor } from 'tldraw';
+import { useEditor, toRichText } from 'tldraw';
 import { useProperty } from '#VarvReact';
 
 
@@ -19,7 +19,7 @@ export function TitleText() {
             type: 'text',
             opacity: 0.25,
             props: {
-                text: name || '',
+                richText: toRichText(name || ''),
                 textAlign: 'middle',
                 font: 'sans',
                 color: 'black'

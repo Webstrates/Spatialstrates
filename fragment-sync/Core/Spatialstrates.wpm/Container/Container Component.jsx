@@ -2,8 +2,9 @@ import React from 'react';
 const { useState, useMemo, useEffect, useCallback } = React;
 import { MeshStandardMaterial, Vector3, Matrix4, Box3, Euler } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
-import { Defaults, Card, Button, List, ListItem, Input } from '@react-three/uikit-apfel';
+import { Container as UIContainer, Text as UIText } from '@react-three/uikit';
+import { Label } from '@react-three/uikit-default';
+import { Panel, Button, Input, Divider } from '@react-three/uikit-horizon';
 import { Varv, useProperty } from '#VarvReact';
 
 import { useGlobalEvents } from '#Spatialstrates .global-events';
@@ -69,9 +70,9 @@ function SpaceOption({ currentSpace }) {
     const [uuid] = useProperty('concept::uuid');
     const [name] = useProperty('name');
 
-    return currentSpace != uuid ? <ListItem selected={containedSpace === uuid} onClick={() => setContainedSpace(uuid)}>
+    return currentSpace != uuid ? <Button variant={containedSpace === uuid ? 'primary' : 'secondary'} onClick={() => setContainedSpace(uuid)}>
         <UIText>{name || 'No Name'}</UIText>
-    </ListItem> : null;
+    </Button> : null;
 }
 
 function SpaceRenamer() {
@@ -87,8 +88,11 @@ function SpaceRenamer() {
     }
 
     return <UIContainer flexDirection="row" gap={8}>
-        <UIText>Rename</UIText>
-        <Button platter onClick={updateName}>
+        <Label>
+            <UIText>Rename</UIText>
+        </Label>
+        <Divider orientation="vertical" />
+        <Button variant={listening ? 'primary' : 'secondary'} onClick={updateName}>
             <UIText textAlign="center">{listening ? 'Speak Now' : 'Record New Name'}</UIText>
         </Button>
         <Input value={name || ''} onValueChange={setName} placeholder="Space Name" />
@@ -99,33 +103,34 @@ function SpaceColorChanger() {
     const [color, setColor] = useProperty('color');
 
     return <UIContainer flexDirection="row" gap={8}>
-        <UIText>Color</UIText>
-        <List type="plain" flexDirection="row" gap={8}>
-            <ListItem selected={color === ''} onClick={() => setColor('')}>
-                <UIText>Default</UIText>
-            </ListItem>
-            <ListItem selected={color === 'red'} onClick={() => setColor('red')}>
-                <UIText>Red</UIText>
-            </ListItem>
-            <ListItem selected={color === 'green'} onClick={() => setColor('green')}>
-                <UIText>Green</UIText>
-            </ListItem>
-            <ListItem selected={color === 'blue'} onClick={() => setColor('blue')}>
-                <UIText>Blue</UIText>
-            </ListItem>
-            <ListItem selected={color === 'yellow'} onClick={() => setColor('yellow')}>
-                <UIText>Yellow</UIText>
-            </ListItem>
-            <ListItem selected={color === 'purple'} onClick={() => setColor('purple')}>
-                <UIText>Purple</UIText>
-            </ListItem>
-            <ListItem selected={color === 'orange'} onClick={() => setColor('orange')}>
-                <UIText>Orange</UIText>
-            </ListItem>
-            <ListItem selected={color === 'pink'} onClick={() => setColor('pink')}>
-                <UIText>Pink</UIText>
-            </ListItem>
-        </List>
+        <Label>
+            <UIText>Color</UIText>
+        </Label>
+        <Divider orientation="vertical" />
+        <Button variant={color === '' ? 'primary' : 'secondary'} onClick={() => setColor('')}>
+            <UIText>Default</UIText>
+        </Button>
+        <Button variant={color === 'red' ? 'primary' : 'secondary'} onClick={() => setColor('red')}>
+            <UIText>Red</UIText>
+        </Button>
+        <Button variant={color === 'green' ? 'primary' : 'secondary'} onClick={() => setColor('green')}>
+            <UIText>Green</UIText>
+        </Button>
+        <Button variant={color === 'blue' ? 'primary' : 'secondary'} onClick={() => setColor('blue')}>
+            <UIText>Blue</UIText>
+        </Button>
+        <Button variant={color === 'yellow' ? 'primary' : 'secondary'} onClick={() => setColor('yellow')}>
+            <UIText>Yellow</UIText>
+        </Button>
+        <Button variant={color === 'purple' ? 'primary' : 'secondary'} onClick={() => setColor('purple')}>
+            <UIText>Purple</UIText>
+        </Button>
+        <Button variant={color === 'orange' ? 'primary' : 'secondary'} onClick={() => setColor('orange')}>
+            <UIText>Orange</UIText>
+        </Button>
+        <Button variant={color === 'pink' ? 'primary' : 'secondary'} onClick={() => setColor('pink')}>
+            <UIText>Pink</UIText>
+        </Button>
     </UIContainer>;
 }
 
@@ -143,21 +148,21 @@ function ContainerMenuBasic() {
         }, 100);
     }, [setContainedSpace]);
 
-    return <group position={[0, -0.5 * 0.5, 0.5 * 0.5]} rotation={[-Math.PI * 0.1, 0, 0]}>
-        <Defaults>
-            <Root anchorX="center" anchorY="top" flexDirection="column" pixelSize={0.0005} padding={15}>
-                <Card borderRadius={24} padding={24} gap={16} flexDirection="column">
-                    <Button platter onPointerDown={() => createNewSpace()}>
-                        <UIText>Create New Space</UIText>
-                    </Button>
-                    <List type="plain" flexDirection="row" gap={8}>
-                        <Varv concept="Space">
-                            <SpaceOption currentSpace={space} />
-                        </Varv>
-                    </List>
-                </Card>
-            </Root>
-        </Defaults>
+    return <group position={[0, -0.5 * 0.5 - 0.01, 0.5 * 0.5]} rotation={[-Math.PI * 0.1, 0, 0]}>
+        <Panel anchorX="center" anchorY="top" pixelSize={0.0005} padding={16} gap={16} flexDirection="column">
+            <Button variant="primary" onPointerDown={() => createNewSpace()}>
+                <UIText>Create New Space</UIText>
+            </Button>
+            <UIContainer flexDirection="row" gap={8}>
+                <Label>
+                    <UIText>Space</UIText>
+                </Label>
+                <Divider orientation="vertical" />
+                <Varv concept="Space">
+                    <SpaceOption currentSpace={space} />
+                </Varv>
+            </UIContainer>
+        </Panel>
     </group>;
 }
 
@@ -182,59 +187,58 @@ function ContainerMenu() {
         await VarvEngine.getConceptFromType('SpaceManager').setPropertyValue(spaceManagerIds[0], 'locationHash', containedSpace);
     }, [containedSpace]);
 
-    return Array.isArray(boundarySize) ? <group position={[0, -0.5 * boundarySize[1], 0.5 * boundarySize[2]]} rotation={[-Math.PI * 0.1, 0, 0]}>
-        <Defaults>
-            <Root anchorX="center" anchorY="top" flexDirection="column" pixelSize={0.0005} padding={15}>
-                <Card borderRadius={24} padding={24} gap={16} flexDirection="column">
-                    <Button platter onPointerDown={() => createNewSpace()}>
-                        <UIText>Create New Space</UIText>
-                    </Button>
-                    <UIContainer flexDirection="row" gap={8}>
-                        <UIText>Space</UIText>
-                        <List type="plain" flexDirection="row" gap={8}>
-                            <ListItem selected={containedSpace === ''} onClick={() => setContainedSpace('')}>
-                                <UIText>None</UIText>
-                            </ListItem>
-                            <Varv concept="Space">
-                                <SpaceOption currentSpace={space} />
-                            </Varv>
-                        </List>
-                    </UIContainer>
-                    <Varv property="containedSpace">
-                        <SpaceRenamer />
-                        <SpaceColorChanger />
-                        <Button platter onClick={enterSpace}>
-                            <UIText>Enter Space</UIText>
-                        </Button>
-                    </Varv>
-                    <UIContainer flexDirection="row" gap={8}>
-                        <UIText>Clipping Mode</UIText>
-                        <List type="plain" flexDirection="row" gap={8}>
-                            <ListItem selected={clippingMode === 'hide'} onClick={() => setClippingMode('hide')}>
-                                <UIText>Hide Outside</UIText>
-                            </ListItem>
-                            <ListItem selected={clippingMode === 'show'} onClick={() => setClippingMode('show')}>
-                                <UIText>Show All</UIText>
-                            </ListItem>
-                        </List>
-                    </UIContainer>
-                    <UIContainer flexDirection="row" gap={8}>
-                        <UIText>Collaboration</UIText>
-                        <List type="plain" flexDirection="row" gap={8}>
-                            <ListItem selected={collaborationLevel === 'close'} onClick={() => setCollaborationLevel('close')}>
-                                <UIText>On</UIText>
-                            </ListItem>
-                            {/* <ListItem selected={collaborationLevel === 'loose'} onClick={() => setCollaborationLevel('loose')}>
-                                <UIText>Loose Collaboration</UIText>
-                            </ListItem> */}
-                            <ListItem selected={collaborationLevel === 'none'} onClick={() => setCollaborationLevel('none')}>
-                                <UIText>Off</UIText>
-                            </ListItem>
-                        </List>
-                    </UIContainer>
-                </Card>
-            </Root>
-        </Defaults>
+    return Array.isArray(boundarySize) ? <group position={[0, -0.5 * boundarySize[1] - 0.01, 0.5 * boundarySize[2]]} rotation={[-Math.PI * 0.1, 0, 0]}>
+        <Panel anchorX="center" anchorY="top" pixelSize={0.0005} padding={16} gap={16} flexDirection="column">
+            <Button variant="primary" onPointerDown={() => createNewSpace()}>
+                <UIText>Create New Space</UIText>
+            </Button>
+            <UIContainer flexDirection="row" gap={8}>
+                <Label>
+                    <UIText>Space</UIText>
+                </Label>
+                <Divider orientation="vertical" />
+                <Button variant={containedSpace === '' ? 'primary' : 'secondary'} onClick={() => setContainedSpace('')}>
+                    <UIText>None</UIText>
+                </Button>
+                <Varv concept="Space">
+                    <SpaceOption currentSpace={space} />
+                </Varv>
+            </UIContainer>
+            <Varv property="containedSpace">
+                <SpaceRenamer />
+                <SpaceColorChanger />
+                <Button variant="secondary" onClick={enterSpace}>
+                    <UIText>Enter Space</UIText>
+                </Button>
+            </Varv>
+            <UIContainer flexDirection="row" gap={8}>
+                <Label>
+                    <UIText>Clipping Mode</UIText>
+                </Label>
+                <Divider orientation="vertical" />
+                <Button variant={clippingMode === 'hide' ? 'primary' : 'secondary'} onClick={() => setClippingMode('hide')}>
+                    <UIText>Hide Outside</UIText>
+                </Button>
+                <Button variant={clippingMode === 'show' ? 'primary' : 'secondary'} onClick={() => setClippingMode('show')}>
+                    <UIText>Show All</UIText>
+                </Button>
+            </UIContainer>
+            <UIContainer flexDirection="row" gap={8}>
+                <Label>
+                    <UIText>Collaboration</UIText>
+                </Label>
+                <Divider orientation="vertical" />
+                <Button variant={collaborationLevel === 'close' ? 'primary' : 'secondary'} onClick={() => setCollaborationLevel('close')}>
+                    <UIText>On</UIText>
+                </Button>
+                {/* <Button variant={collaborationLevel === 'loose' ? 'primary' : 'secondary'} onClick={() => setCollaborationLevel('loose')}>
+                            <UIText>Loose Collaboration</UIText>
+                        </Button> */}
+                <Button variant={collaborationLevel === 'none' ? 'primary' : 'secondary'} onClick={() => setCollaborationLevel('none')}>
+                    <UIText>Off</UIText>
+                </Button>
+            </UIContainer>
+        </Panel>
     </group> : null;
 }
 

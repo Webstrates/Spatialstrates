@@ -80,7 +80,11 @@ export class MovableShapeUtil extends BaseBoxShapeUtil {
             backgroundColor: 'white',
             borderRadius: '8px',
             border: '1px solid red',
-            padding: '8px'
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center'
         }}>Unsupported Movable of type {shape.props.conceptType}</HTMLContainer>;
     }
 }

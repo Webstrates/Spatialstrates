@@ -3,7 +3,7 @@
         "Molecule": {
             "schema": {
                 "url": "string",
-                "scale": { "number": {
+                "moleculeScale": { "number": {
                     "default": 0.001
                 }},
                 "note": "string"

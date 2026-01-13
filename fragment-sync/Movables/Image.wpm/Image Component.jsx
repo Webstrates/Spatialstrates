@@ -33,7 +33,7 @@ function CustomImage() {
     useEffect(() => {
         if (boundaryRef.current) boundaryRef.current.resetErrorBoundary();
         if (imageRef.current) {
-            const aspectRatio = imageRef.current.material.__r3f.memoizedProps.imageBounds[0] / imageRef.current.material.__r3f.memoizedProps.imageBounds[1] || 1;
+            const aspectRatio = imageRef.current.material.__r3f.props.imageBounds[0] / imageRef.current.material.__r3f.props.imageBounds[1] || 1;
             if (aspectRatio > 1) {
                 setWidth(MAX_SIZE);
                 setHeight(MAX_SIZE / aspectRatio);

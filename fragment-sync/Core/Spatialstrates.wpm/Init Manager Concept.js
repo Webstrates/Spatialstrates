@@ -1,7 +1,7 @@
 const initConcept = async () => {
     try {
         const managers = await VarvEngine.lookupInstances('SpaceManager');
-        if (managers.length == 0) {
+        if (managers.length === 0) {
             await VarvEngine.getConceptFromType('SpaceManager').create(null, {});
         }
     } catch (e) {
@@ -12,5 +12,3 @@ const initConcept = async () => {
 VarvEngine.registerEventCallback('engineReloaded', () => {
     initConcept();
 });
-
-initConcept();

@@ -3,8 +3,9 @@ const { useState, useEffect, useMemo, useRef } = React;
 import { Color } from 'three';
 import { createPortal, useFrame } from '@react-three/fiber';
 import { useXRInputSourceState } from '@react-three/xr';
-import { Text as UIText, Root } from '@react-three/uikit';
-import { Defaults, Card, Button, List, ListItem } from '@react-three/uikit-apfel';
+import { Container, Text as UIText } from '@react-three/uikit';
+import { Label } from '@react-three/uikit-default';
+import { Panel, Button } from '@react-three/uikit-horizon';
 import { Varv, useProperty } from '#VarvReact';
 
 
@@ -76,39 +77,37 @@ export const addItemToControllerSubMenu = (subMenuId, id, element, weight) => {
 };
 
 export function ControllerMenuTitle({ title }) {
-    return <UIText
-        fontSize={18}
-        fontWeight="light"
-        padding={16}>{title}</UIText>
+    return <Label>
+        <UIText
+            fontSize={18}
+            padding={16}>{title}</UIText>
+    </Label>;
 }
 
 export function ControllerMenuSpacer() {
-    return <UIText color={hsl(0, 0, 30)}>|</UIText>
+    return <Label>
+        <UIText color={hsl(0, 0, 30)}>|</UIText>
+    </Label>;
 }
 
 export function ControllerMenuButton({ onClick, toggled, children }) {
-    return <ListItem
-        selected={toggled}
+    return <Button
+        variant={toggled ? 'primary' : 'secondary'}
         flexGrow={1}
-        borderWidth={1.5}
-        borderColor={hsl(0, 0, 10)}
         onClick={onClick}>
         <UIText textAlign="center">{children}</UIText>
-    </ListItem>;
+    </Button>;
 }
 
 function SubMenuComponent({ key, children }) {
-    return <List key={key}
-        type="plain"
+    return <Container key={key}
         maxWidth={800}
-        borderRadius={16}
-        padding={8}
-        backgroundColor={hsl(0, 0, 20)}
+        padding={16}
         flexDirection="row"
         flexWrap="wrap"
         gap={8}>
         {children}
-    </List>
+    </Container>
 }
 
 function PropertyForwarder({ setColor, setName }) {
@@ -164,32 +163,20 @@ function SubMenus() {
                 <PropertyForwarder setColor={setColor} setName={setName} />
             </Varv>
         </Varv>
-        <Defaults>
-            <Root
-                anchorX="center"
-                anchorY="bottom"
-                flexDirection="column"
-                pixelSize={0.0005}>
-                <Card borderRadius={24}
-                    borderBend={24}
-                    padding={24}
-                    gap={16}
-                    flexDirection="column">
-                    {showMenu ? output : null}
-                    <Button platter
-                        size="lg"
-                        backgroundColor={COLORS[color] || ''}
-                        backgroundOpacity={0.5}
-                        hover={{
-                            backgroundColor: COLORS[color] || '',
-                            backgroundOpacity: 0.65,
-                        }}
-                        onClick={() => setShowMenu(!showMenu)}>
-                        <UIText>{name || 'Toggle Menu'}</UIText>
-                    </Button>
-                </Card>
-            </Root>
-        </Defaults>
+        <Panel
+            anchorX="center"
+            anchorY="bottom"
+            pixelSize={0.0005}
+            padding={16}
+            gap={16}
+            flexDirection="column">
+            {showMenu ? output : null}
+            <Button
+                variant="primary"
+                onClick={() => setShowMenu(!showMenu)}>
+                <UIText>{name || 'Toggle Menu'}</UIText>
+            </Button>
+        </Panel>
     </>;
 }
 
@@ -204,6 +191,7 @@ function ControllerMenu() {
         rotation={controllerLeft ? [-Math.PI / 2, 0, 0] : [-0.2, 0.2, -0.5]}>
         {submenus}
     </group>, [submenus, controllerLeft]);
+
 
     const slowWritebackTimeout = useRef(null);
     useFrame(() => {

@@ -1,4 +1,4 @@
-@import url("https://esm.sh/tldraw@3.7.0/tldraw.css");
+@import url("https://esm.sh/tldraw@4.2.0/tldraw.css");
 
 .tldraw-canvas {
     display: block;
@@ -63,7 +63,7 @@
     .tlui-button__tool[data-value="note"],
     .tlui-button__tool[data-value="asset"],
     .tlui-button__tool[data-value="rectangle"],
-    .tlui-button__tool.tlui-toolbar__overflow {
+    .tlui-button__tool.tlui-main-toolbar__overflow {
         display: none;
     }
 }

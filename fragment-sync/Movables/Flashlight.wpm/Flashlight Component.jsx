@@ -5,8 +5,9 @@ import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useFrame } from '@react-three/fiber';
 import { Cone, Billboard } from '@react-three/drei';
-import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
-import { Defaults, Card, List, ListItem } from '@react-three/uikit-apfel';
+import { Container, Text as UIText } from '@react-three/uikit';
+import { Label } from '@react-three/uikit-default';
+import { Panel, Button, Divider } from '@react-three/uikit-horizon';
 import { useProperty } from '#VarvReact';
 
 import { Movable, SELECTED_COLOR_PRIMARY, HOVERED_SELECTED_COLOR_PRIMARY } from '#Spatialstrates .movable';
@@ -70,72 +71,71 @@ function Flashlight() {
             <group ref={groupRef} />
             {selected & !beingDragged ? <Billboard position={[0, 0, 0.1]}>
                 <group position={[0, 0.1, 0]}>
-                    <Defaults>
-                        <Root anchorX="center" anchorY="bottom" flexDirection="column" pixelSize={0.0005} padding={15}>
-                            <Card borderRadius={24} padding={24} gap={16} flexDirection="column">
-                                <UIContainer flexDirection="row" gap={8} alignItems="center">
-                                    <UIText>Color</UIText>
-                                    <List type="plain" flexDirection="row" gap={8}>
-                                        <ListItem selected={color === 'white'} onClick={() => setColor('white')}>
-                                            <UIText>White</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'red'} onClick={() => setColor('red')}>
-                                            <UIText>Red</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'green'} onClick={() => setColor('green')}>
-                                            <UIText>Green</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'blue'} onClick={() => setColor('blue')}>
-                                            <UIText>Blue</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'yellow'} onClick={() => setColor('yellow')}>
-                                            <UIText>Yellow</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'purple'} onClick={() => setColor('purple')}>
-                                            <UIText>Purple</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'orange'} onClick={() => setColor('orange')}>
-                                            <UIText>Orange</UIText>
-                                        </ListItem>
-                                        <ListItem selected={color === 'pink'} onClick={() => setColor('pink')}>
-                                            <UIText>Pink</UIText>
-                                        </ListItem>
-                                    </List>
-                                </UIContainer>
-                                <UIContainer flexDirection="row" gap={8} alignItems="center">
-                                    <UIText>Intensity</UIText>
-                                    <List type="plain" flexDirection="row" gap={8}>
-                                        <ListItem selected={intensity === 0} onClick={() => setIntensity(0)}>
-                                            <UIText>Off</UIText>
-                                        </ListItem>
-                                        <ListItem selected={intensity === 1} onClick={() => setIntensity(1)}>
-                                            <UIText>Weak</UIText>
-                                        </ListItem>
-                                        <ListItem selected={intensity === DEFAULT_INTENSITY} onClick={() => setIntensity(DEFAULT_INTENSITY)}>
-                                            <UIText>Normal</UIText>
-                                        </ListItem>
-                                        <ListItem selected={intensity === 10} onClick={() => setIntensity(10)}>
-                                            <UIText>Strong</UIText>
-                                        </ListItem>
-                                    </List>
-                                </UIContainer>
-                                <UIContainer flexDirection="row" gap={8} alignItems="center">
-                                    <UIText>Angle</UIText>
-                                    <List type="plain" flexDirection="row" gap={8}>
-                                        <ListItem selected={angle === Math.PI / 16} onClick={() => setAngle(Math.PI / 16)}>
-                                            <UIText>Narrow</UIText>
-                                        </ListItem>
-                                        <ListItem selected={angle === DEFAULT_ANGLE} onClick={() => setAngle(DEFAULT_ANGLE)}>
-                                            <UIText>Normal</UIText>
-                                        </ListItem>
-                                        <ListItem selected={angle === Math.PI / 4} onClick={() => setAngle(Math.PI / 4)}>
-                                            <UIText>Wide</UIText>
-                                        </ListItem>
-                                    </List>
-                                </UIContainer>
-                            </Card>
-                        </Root>
-                    </Defaults>
+                    <Panel anchorX="center" anchorY="bottom" pixelSize={0.0005} padding={16} gap={16} flexDirection="column">
+                        <Container flexDirection="row" gap={8}>
+                            <Label>
+                                <UIText width={75} textAlign="center">Color</UIText>
+                            </Label>
+                            <Divider orientation="vertical" />
+                            <Button variant={color === 'white' ? 'primary' : 'tertiary'} onClick={() => setColor('white')}>
+                                <UIText>White</UIText>
+                            </Button>
+                            <Button variant={color === 'red' ? 'primary' : 'tertiary'} onClick={() => setColor('red')}>
+                                <UIText>Red</UIText>
+                            </Button>
+                            <Button variant={color === 'green' ? 'primary' : 'tertiary'} onClick={() => setColor('green')}>
+                                <UIText>Green</UIText>
+                            </Button>
+                            <Button variant={color === 'blue' ? 'primary' : 'tertiary'} onClick={() => setColor('blue')}>
+                                <UIText>Blue</UIText>
+                            </Button>
+                            <Button variant={color === 'yellow' ? 'primary' : 'tertiary'} onClick={() => setColor('yellow')}>
+                                <UIText>Yellow</UIText>
+                            </Button>
+                            <Button variant={color === 'purple' ? 'primary' : 'tertiary'} onClick={() => setColor('purple')}>
+                                <UIText>Purple</UIText>
+                            </Button>
+                            <Button variant={color === 'orange' ? 'primary' : 'tertiary'} onClick={() => setColor('orange')}>
+                                <UIText>Orange</UIText>
+                            </Button>
+                            <Button variant={color === 'pink' ? 'primary' : 'tertiary'} onClick={() => setColor('pink')}>
+                                <UIText>Pink</UIText>
+                            </Button>
+                        </Container>
+                        <Container flexDirection="row" gap={8}>
+                            <Label>
+                                <UIText width={75} textAlign="center">Intensity</UIText>
+                            </Label>
+                            <Divider orientation="vertical" />
+                            <Button variant={intensity === 0 ? 'primary' : 'tertiary'} onClick={() => setIntensity(0)}>
+                                <UIText>Off</UIText>
+                            </Button>
+                            <Button variant={intensity === 1 ? 'primary' : 'tertiary'} onClick={() => setIntensity(1)}>
+                                <UIText>Weak</UIText>
+                            </Button>
+                            <Button variant={intensity === DEFAULT_INTENSITY ? 'primary' : 'tertiary'} onClick={() => setIntensity(DEFAULT_INTENSITY)}>
+                                <UIText>Normal</UIText>
+                            </Button>
+                            <Button variant={intensity === 10 ? 'primary' : 'tertiary'} onClick={() => setIntensity(10)}>
+                                <UIText>Strong</UIText>
+                            </Button>
+                        </Container>
+                        <Container flexDirection="row" gap={8}>
+                            <Label>
+                                <UIText width={75} textAlign="center">Angle</UIText>
+                            </Label>
+                            <Divider orientation="vertical" />
+                            <Button variant={angle === Math.PI / 16 ? 'primary' : 'tertiary'} onClick={() => setAngle(Math.PI / 16)}>
+                                <UIText>Narrow</UIText>
+                            </Button>
+                            <Button variant={angle === DEFAULT_ANGLE ? 'primary' : 'tertiary'} onClick={() => setAngle(DEFAULT_ANGLE)}>
+                                <UIText>Normal</UIText>
+                            </Button>
+                            <Button variant={angle === Math.PI / 4 ? 'primary' : 'tertiary'} onClick={() => setAngle(Math.PI / 4)}>
+                                <UIText>Wide</UIText>
+                            </Button>
+                        </Container>
+                    </Panel>
                 </group>
             </Billboard> : null}
         </Movable>

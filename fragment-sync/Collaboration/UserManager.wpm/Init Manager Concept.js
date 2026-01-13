@@ -12,5 +12,3 @@ const initConcept = async () => {
 VarvEngine.registerEventCallback('engineReloaded', () => {
     initConcept();
 });
-
-initConcept();

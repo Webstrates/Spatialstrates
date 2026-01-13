@@ -1,0 +1,12 @@
+{
+    "description": "A model gallery shelf for all uploaded models.",
+    "dependencies": [
+        "#Spatialstrates",
+        "#Menu",
+        "#Model"
+    ],
+    "assets": [
+        "bookshelf.glb"
+    ],
+    "version": "0.3.0"
+}

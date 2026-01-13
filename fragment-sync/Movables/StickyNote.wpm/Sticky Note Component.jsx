@@ -5,8 +5,8 @@ import { MeshStandardMaterial } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Text as UIText, Root, Container as UIContainer } from '@react-three/uikit';
-import { Defaults, Card, Button, List, ListItem } from '@react-three/uikit-apfel';
+import { Text as UIText } from '@react-three/uikit';
+import { Panel, Button } from '@react-three/uikit-horizon';
 import { useProperty } from '#VarvReact';
 
 import { Movable } from '#Spatialstrates .movable';
@@ -88,41 +88,35 @@ function StickyNote() {
             <group ref={iconRef} position={[0.1, 0.025, 0]} rotation={[0, -Math.PI, 0]}>
                 <Icon model={microphoneIcon} onClick={updateText} />
             </group>
-            <group position={[0, -0.05, 0]} rotation={[0, 0, 0]}>
-                <Defaults>
-                    <Root anchorX="center" anchorY="top" flexDirection="column" pixelSize={0.0005} padding={15}>
-                        <Card borderRadius={24} padding={24} gap={16} flexDirection="column">
-                            <UIContainer flexDirection="row" gap={8} alignItems="center">
-                                <Button platter onClick={() => setShowColorOptions(!showColorOptions)}>
-                                    <UIText>Show Colors</UIText>
-                                </Button>
-                                {showColorOptions ? <List type="plain" flexDirection="row" gap={8}>
-                                    <ListItem selected={color === 'red'} onClick={() => setColor('red')}>
-                                        <UIText>Red</UIText>
-                                    </ListItem>
-                                    <ListItem selected={color === 'green'} onClick={() => setColor('green')}>
-                                        <UIText>Green</UIText>
-                                    </ListItem>
-                                    <ListItem selected={color === 'blue'} onClick={() => setColor('blue')}>
-                                        <UIText>Blue</UIText>
-                                    </ListItem>
-                                    <ListItem selected={color === 'yellow'} onClick={() => setColor('yellow')}>
-                                        <UIText>Yellow</UIText>
-                                    </ListItem>
-                                    <ListItem selected={color === 'purple'} onClick={() => setColor('purple')}>
-                                        <UIText>Purple</UIText>
-                                    </ListItem>
-                                    <ListItem selected={color === 'orange'} onClick={() => setColor('orange')}>
-                                        <UIText>Orange</UIText>
-                                    </ListItem>
-                                    <ListItem selected={color === 'pink'} onClick={() => setColor('pink')}>
-                                        <UIText>Pink</UIText>
-                                    </ListItem>
-                                </List> : null}
-                            </UIContainer>
-                        </Card>
-                    </Root>
-                </Defaults>
+            <group position={[0, -0.06, 0]} rotation={[0, 0, 0]}>
+                <Panel anchorX="center" anchorY="top" padding={16} gap={8} flexDirection="row" pixelSize={0.0005}>
+                    <Button variant="secondary" onClick={() => setShowColorOptions(!showColorOptions)}>
+                        <UIText>Show Colors</UIText>
+                    </Button>
+                    {showColorOptions ? (<>
+                        <Button variant={color === 'red' ? 'primary' : 'tertiary'} onClick={() => setColor('red')}>
+                            <UIText>Red</UIText>
+                        </Button>
+                        <Button variant={color === 'green' ? 'primary' : 'tertiary'} onClick={() => setColor('green')}>
+                            <UIText>Green</UIText>
+                        </Button>
+                        <Button variant={color === 'blue' ? 'primary' : 'tertiary'} onClick={() => setColor('blue')}>
+                            <UIText>Blue</UIText>
+                        </Button>
+                        <Button variant={color === 'yellow' ? 'primary' : 'tertiary'} onClick={() => setColor('yellow')}>
+                            <UIText>Yellow</UIText>
+                        </Button>
+                        <Button variant={color === 'purple' ? 'primary' : 'tertiary'} onClick={() => setColor('purple')}>
+                            <UIText>Purple</UIText>
+                        </Button>
+                        <Button variant={color === 'orange' ? 'primary' : 'tertiary'} onClick={() => setColor('orange')}>
+                            <UIText>Orange</UIText>
+                        </Button>
+                        <Button variant={color === 'pink' ? 'primary' : 'tertiary'} onClick={() => setColor('pink')}>
+                            <UIText>Pink</UIText>
+                        </Button>
+                    </>) : null}
+                </Panel>
             </group>
         </> : null}
     </Movable>;

@@ -88,8 +88,6 @@ export const getOptionsForPath = async (path) => {
         case 'encoding.color.color':
             return { type: 'color' };
 
-        // TODO: Add transforms?
-
         default:
             return null;
     }

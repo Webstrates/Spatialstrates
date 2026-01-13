@@ -1,4 +1,5 @@
 import React from 'react';
+import { IfSessionModeSupported } from '@react-three/xr';
 import { Varv, useProperty } from '#VarvReact';
 
 import { addSubMenu, addItemToSubMenu, MenuTitle, MenuSpacer, MenuButton } from '#Menu .default';
@@ -93,27 +94,37 @@ addItemToSubMenu('camera', 'move-camera', <Varv concept="SpaceManager">
 </Varv>, 0);
 addItemToSubMenu('camera', 'spacer1', <Varv concept="SpaceManager">
     <CheckIsSceneView>
-        <MenuSpacer />
+        <IfSessionModeSupported mode="immersive-ar">
+            <MenuSpacer />
+        </IfSessionModeSupported>
     </CheckIsSceneView>
 </Varv>, 50);
 addItemToSubMenu('camera', 'toggle-depth-sensing', <Varv concept="SpaceManager">
     <CheckIsSceneView>
-        <DepthSensingToggle />
+        <IfSessionModeSupported mode="immersive-ar">
+            <DepthSensingToggle />
+        </IfSessionModeSupported>
     </CheckIsSceneView>
 </Varv>, 100);
 addItemToSubMenu('camera', 'toggle-ar', <Varv concept="SpaceManager">
     <CheckIsSceneView>
-        <MenuButton onClick={toggleAR}>Toggle AR</MenuButton>
+        <IfSessionModeSupported mode="immersive-ar">
+            <MenuButton onClick={toggleAR}>Toggle AR</MenuButton>
+        </IfSessionModeSupported>
     </CheckIsSceneView>
 </Varv>, 200);
 addItemToSubMenu('camera', 'spacer2', <Varv concept="SpaceManager">
     <CheckIsSceneView>
-        <MenuSpacer />
+        <IfSessionModeSupported mode="immersive-vr">
+            <MenuSpacer />
+        </IfSessionModeSupported>
     </CheckIsSceneView>
 </Varv>, 250);
 addItemToSubMenu('camera', 'toggle-vr', <Varv concept="SpaceManager">
     <CheckIsSceneView>
-        <MenuButton onClick={toggleVR}>Toggle VR</MenuButton>
+        <IfSessionModeSupported mode="immersive-vr">
+            <MenuButton onClick={toggleVR}>Toggle VR</MenuButton>
+        </IfSessionModeSupported>
     </CheckIsSceneView>
 </Varv>, 300);
 addItemToSubMenu('camera', 'title', <Varv concept="SpaceManager">
