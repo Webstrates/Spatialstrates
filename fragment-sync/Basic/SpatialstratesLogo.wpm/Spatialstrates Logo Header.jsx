@@ -18,7 +18,7 @@ export function Main() {
 
         <Dialog visible={visible} setVisible={setVisible}>
             <h2>Spatialstrates</h2>
-            <p>Version 0.3.0 | <a href="https://github.com/Webstrates/Spatialstrates" target="_blank">GitHub</a></p>
+            <p>Version 0.3.1 | <a href="https://github.com/Webstrates/Spatialstrates" target="_blank">GitHub</a></p>
             <p>XR Platform: {xrPlatform}</p>
         </Dialog>
     </>;
