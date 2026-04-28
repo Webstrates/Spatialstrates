@@ -1762,10 +1762,6 @@ if(typeof webstrate  !== "undefined") {
                     "repository": "codestrates-repos"
                 },
                 {
-                    "package": "FragmentFilesystemSync",
-                    "repository": "codestrates-repos"
-                },
-                {
                     "package": "fragment_markdown",
                     "repository": "codestrates-repos"
                 },
@@ -1912,12 +1908,20 @@ if(typeof webstrate  !== "undefined") {
                 {
                     "package": "ModelShelf",
                     "repository": "spatialstrates-repos"
+                },
+                {
+                    "package": "FragmentFilesystemSync",
+                    "repository": "codestrates-repos"
+                },
+                {
+                    "package": "MaterialSymbolsFont",
+                    "repository": "spatialstrates-repos"
                 }
             ],
             "options": {}
         }
     ],
-    "updated": 1768232739758,
+    "updated": 1776332104977,
     "knownRepositories": [
         "varv-repos",
         "wpm-repos",
@@ -1933,7 +1937,17 @@ if(typeof webstrate  !== "undefined") {
 
 
 
-<code-folder name="WPM"><wpm-package data-repository="wpm-repos" id="WPM-loading-skin-simple" style="width: 0px; height: 0px; position: absolute; visibility: hidden;"><script id="descriptor-script" type="descriptor">
+<code-folder name="Codestrates"><wpm-package data-repository="wpm-repos" id="WPM-dev"><script id="descriptor-script" type="descriptor">
+                    {
+                        "dependencies": [
+                        ],
+                        "forceEmbedding": true
+                    }
+
+                    </script>
+
+
+                </wpm-package><wpm-package data-repository="wpm-repos" id="WPM-loading-skin-simple" style="width: 0px; height: 0px; position: absolute; visibility: hidden;"><script id="descriptor-script" type="descriptor">
 {
     "description": "A simple loading skin for the bootloader to avoid seeing improperly rendered HTML while loading",
     "dependencies": [
@@ -1987,96 +2001,1594 @@ html[transient-wpm2-bootloader="waiting"]:before, html[transient-wpm2-bootloader
 
 html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:before, html[transient-wpm2-bootloader="loading"][transient-wpm2-bootloader="loaded"]:before, html[transient-wpm2-bootloader="initializing"][transient-wpm2-bootloader="loaded"]:before, html[transient-wpm2-bootloader="loaded"][transient-wpm2-bootloader="loaded"]:before {
   animation: wpm-bootloader-done 1s ease-out both; }
-</style></wpm-package><wpm-package data-repository="wpm-repos" id="WPM-dev"><script id="descriptor-script" type="descriptor">
+</style></wpm-package><wpm-package data-repository="codestrates-repos" id="FragmentFilesystemSync" name="FragmentFilesystemSync"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+    "description": "Allows syncing fragments into a directory structure on a local disk",
+    "dependencies": [
+        "#fragment_core",
+        "#EventSystem",
+        "webstrate-components-repos #MenuSystem"
+    ],
+    "license": "Apache 2.0",
+    "assets": [],
+    "version": "0.3"
+}</wpm-descriptor></code-fragment><script id="FragmentFilesystemSync-script" type="disabled">let store = "directoryHandles";
+let folderElements = ["CODE-FOLDER", "WPM-PACKAGE"];
+let extensionTypes = {
+    "text/javascript": "js",
+    "text/javascript+babel": "jsx",
+    "text/slopscript+babel": "slop",
+    "text/x-typescript": "ts",
+    "text/python": "py",
+    "text/ruby": "rb",
+    "application/x-lua": "lua",
+    "text/html": "html",
+    "text/markdown": "md",
+    "text/x-latex": "tex",
+    "image/svg+xml": "svg",
+    "application/json": "json",
+    "wpm/descriptor": "json",
+    "text/varv": "json",
+    "text/css": "css",
+    "text/x-scss": "scss"
+}
+let autoCloneAttributes = ["id", "data-repository", "auto", "class"];
+let trackedAttributes = ['auto', 'data-type', 'class', 'id'];
+
+class FragmentFilesystemSync {
+    static isSupported() {
+        if (!window) return false;
+        if (!window.showDirectoryPicker) return false;
+        if (!window.indexedDB) return false;
+        if (!window.MutationObserver) return false;
+        return true;
+    }
+
+    constructor(dbname) {
+        let self = this;
+        this.isSyncing = false;
+        this.fragmentLinks = [];
+        this.directoryHandle = false;
+        this.pathMapping = new Map();
+        this.nodeMapping = new Map();
+
+        const request = indexedDB.open(dbname);
+        request.onerror = (event) => {
+            console.error("Failed to open filesystem sync IndexedDB", event);
+        };
+        request.onsuccess = (event) => {
+            self.db = event.target.result;
+            self.onPageLoad();
+        };
+        request.onupgradeneeded = (event) => {
+            self.db = event.target.result;
+
+            // Create an objectStore to hold file handles to directories
+            self.db.createObjectStore(store, { keyPath: "webstrate" });
+        }
+    }
+
+    async onPageLoad() {
+        this.directoryHandle = await this.getSavedHandle();
+        if (this.directoryHandle) {
+            // Sync immediately
+            this.enableSyncing();
+        }
+    }
+
+    getSavedHandle() {
+        return new Promise((resolve, reject) => {
+            let request = this.db.transaction(store).objectStore(store).get(location.pathname);
+            request.onerror = (event) => {
+                reject(event);
+            };
+            request.onsuccess = (event) => {
+                resolve(request.result?.handle);
+            };
+        });
+    }
+
+    setDirectory(handle = false) {
+        this.directoryHandle = handle;
+        return new Promise((resolve, reject) => {
+            let request;
+            if (handle) {
+                request = this.db.transaction(store, "readwrite").objectStore(store).put(
                     {
-                        "dependencies": [
-                        ],
-                        "forceEmbedding": true
+                        webstrate: location.pathname,
+                        handle: handle
                     }
+                );
+            } else {
+                request = this.db.transaction(store, "readwrite").objectStore(store).delete(location.pathname);
+            }
+            request.onerror = (event) => { reject(event); };
+            request.onsuccess = resolve;
+        });
+    }
 
-                    </script>
+    async popupDirectoryPicker() {
+        let directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+        if (!directoryHandle) return;
+
+        let needConfirm = true;
+
+        // Check if folder is empty then it is ok
+        let fileCount = 0;
+        for await (const key of directoryHandle.keys()) {
+            fileCount++;
+        }
+        if (fileCount === 0) needConfirm = false;
+
+        // Check if folder already contains meta file for this webstrate then it is also ok
+        try {
+            let metaFileHandle = await directoryHandle.getFileHandle("ffs.meta");
+            let metaFile = await metaFileHandle.getFile();
+            if (JSON.parse(await metaFile.text()).location == location.pathname) needConfirm = false;
+        } catch (ex) {
+            // ignore
+        }
+
+        if (needConfirm && !window.confirm('Warning: The contents of the folder ' + directoryHandle.name + ' you selected will be overwritten with the fragments in this codestrate. All its content will be deleted!')) return;
+        return directoryHandle;
+    }
+
+    async enableSyncing() {
+        let self = this;
+        if (this.isSyncing) throw new Error("Cannot start FFS, already syncing, stop it first");
+        if (!this.directoryHandle) throw new Error("No sync directory set");
+        if (!await this.directoryHandle.requestPermission({ mode: "readwrite" })) throw new Error("Must have access to dir");
+        console.log("Starting Fragment Filesystem Sync");
+        this.lastKnownDiskAttributes = {};
+
+        // TODO: Test if out-of-sync and ask for whether to overwrite filesystem or webstrate
+
+        // Clean up the directory
+        for await (const entry of this.directoryHandle.values()) {
+            await this.directoryHandle.removeEntry(entry.name, { recursive: true });
+        }
+
+        // Observe when fragments are added/removed
+        this.observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === "childList") {
+                    for (const addedNode of mutation.addedNodes) {
+                        if (addedNode.matches && addedNode.matches("code-fragment")) {
+                            self.onWSFragmentElementAdded(addedNode);
+                        } else if (addedNode.querySelectorAll) {
+                            addedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                self.onWSFragmentElementAdded(node);
+                            })
+                        }
+                    }
+                    for (const removedNode of mutation.removedNodes) {
+                        if (removedNode.matches && removedNode.matches("code-fragment")) {
+                            self.onWSFragmentElementRemoved(removedNode);
+                        } else if (removedNode.querySelectorAll) {
+                            removedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                self.onWSFragmentElementRemoved(node);
+                            })
+                        }
+                    }
+                }
+            }
+        });
+        this.observer.observe(document.body, { childList: true, subtree: true });
+        document.querySelectorAll("body code-fragment").forEach((fragment) => {
+            self.onWSFragmentElementAdded(fragment);
+        });
+
+        // Every second synchronize contents
+        let ffsUpdateTick = async () => {
+            let metaFileHandle = await this.directoryHandle.getFileHandle("ffs.meta", { create: true });
+            let metaFile = await metaFileHandle.getFile();
+            let oldMeta = {};
+            try {
+                oldMeta = JSON.parse(await metaFile.text());
+            } catch (ex) {
+                // Ignore this, just create a new one
+            }
+            let metaChangeDetector = JSON.stringify(oldMeta.paths);
+
+            // Sync FS and WS
+            if (oldMeta.paths) await self.synchronizeFSOperations(oldMeta);
+            await self.synchronizeWSFragments();
+            await self.synchronizeAttributes();
+
+            // Generate new meta file for advanced merging functionality
+            let meta = { metaVersion: 1, version: webstrate.version, lastMetaSync: new Date().getTime(), paths: {}, location: location.pathname };
+            for (const [path, part] of this.pathMapping) {
+                let entryMeta = { wid: part.node.webstrate.id };
+                if (part.link) {
+                    entryMeta.type = "fragment";
+                    entryMeta.lastModified = part.link.elementLastModified;
+                    entryMeta.hash = part.link.hash;
+                } else {
+                    entryMeta.type = "directory";
+                }
+                autoCloneAttributes.forEach(attr => {
+                    if (part.node.hasAttribute(attr)) entryMeta[attr] = part.node.getAttribute(attr);
+                })
+                meta.paths[path] = entryMeta;
+            };
+            if (metaChangeDetector != JSON.stringify(meta.paths)) {
+                // Meta needs to be rewritten
+                await writeFile(metaFileHandle, JSON.stringify(meta));
+            }
+            self.updater = setTimeout(ffsUpdateTick, 1000);
+        };
+        ffsUpdateTick();
+
+        this.isSyncing = true;
+    }
+
+    disableSyncing() {
+        clearTimeout(this.updater);
+        this.observer?.disconnect();
+        this.fragmentLinks = [];
+        this.lastKnownDiskAttributes = {};
+        this.isSyncing = false;
+        console.log("Stopped FFS");
+    }
+
+    onWSFragmentElementAdded(fragmentElement) {
+        // TODO: Check if already exists and ignore
+        setTimeout(() => { this.fragmentLinks.push(new FragmentLink(fragmentElement.fragment)) }, 1);
+    }
+    onWSFragmentElementRemoved(fragmentElement) {
+        this.fragmentLinks = this.fragmentLinks.filter((link) => link.fragment.element !== fragmentElement);
+    }
+
+    async synchronizeFSOperations(oldMeta) {
+        async function addElementFromOldFS(path, element, type) {
+            let parentPath = path.substring(0, path.lastIndexOf("/"));
+            let parentNode = false;
+            if (parentPath == "") {
+                parentNode = document.body;
+            } else if (oldMeta.paths[parentPath]) { // Try to find node by WSID
+                let wsNode = findFolderNodeByWSID(oldMeta.paths[parentPath].wid);
+                if (wsNode) parentNode = wsNode;
+            }
+
+            if (!parentNode) {
+                console.log("Couldn't map parent folder, giving up on adding", path);
+            } else {
+                // TODO: Check for collisions/duplicates here
+                let name = path.split("/");
+                name = name[name.length - 1];
+                let extensionLocation = name.lastIndexOf(".");
+                name = name.substring(0, (extensionLocation != -1) ? extensionLocation : undefined);
+
+                element.setAttribute("name", name);
+                parentNode.appendChild(element);
+                WPMv2.stripProtection(element);
+
+                // continue after webstrates id generation
+                await new Promise(resolve => setTimeout(resolve, 0));
+                oldMeta.paths[path] = {
+                    wid: element.webstrate.id,
+                    type: type
+                };
+            }
+        }
+
+        // Check if any new files/dirs in FS with the old mapping from FS
+        await traverseDirectoryStructure("", this.directoryHandle, async (path, name, parent, entry) => {
+            if (!oldMeta.paths[path]) {
+                // A new directory, create it in the webstrate
+                let newFolderElement;
+                if (name.endsWith(".wpm")) {
+                    newFolderElement = document.createElement("wpm-package");
+                } else {
+                    newFolderElement = document.createElement("code-folder");
+                }
+                await addElementFromOldFS(path, newFolderElement, "directory");
+            }
+
+            // Check again and flag as seen if it exists now
+            if (oldMeta.paths[path]) oldMeta.paths[path].seen = true;
+            return true;
+        }, async (path, name, parent, entry) => {
+            if (!oldMeta.paths[path]) {
+                // A new file, create the fragment
+                if (path === "/ffs.meta" || path === "/ffs.attributes.json") return; // Ignore meta files
+                let extension = name.substring(name.lastIndexOf(".") + 1);
+                let type = Object.keys(extensionTypes).find(key => extensionTypes[key] == extension);
+                if (FragmentFilesystemSync.DEBUG) console.log("New file spotted", extension, type, path, name, parent, entry);
+                if (type) {
+                    // Recognized fragment type
+                    let fragmentElement = document.createElement("code-fragment");
+                    fragmentElement.setAttribute("data-type", type);
+                    await addElementFromOldFS(path, fragmentElement, "fragment");
+
+                    // Check if this is a move/rename op
+                    let file = await entry.getFile();
+                    let contents = await file.text();
+                    if (contents.length > 0) {
+                        let hash = await sha256(contents);
+                        if (FragmentFilesystemSync.DEBUG) console.log("Looking for ", hash);
+                        let collision = Object.values(oldMeta.paths).find((p) => { return p.type == "fragment" && p.hash == hash; });
+                        if (collision) {
+                            // Copy over old attributes
+                            if (FragmentFilesystemSync.DEBUG) console.log("Found")
+                            autoCloneAttributes.forEach(attr => {
+                                if (FragmentFilesystemSync.DEBUG) console.log("Adding attrs")
+                                if (collision[attr] === undefined) {
+                                    if (FragmentFilesystemSync.DEBUG) console.log("removing attrs", attr);
+                                    fragmentElement.removeAttribute(attr);
+                                } else {
+                                    if (FragmentFilesystemSync.DEBUG) console.log("added attrs", attr, collision[attr]);
+                                    fragmentElement.setAttribute(attr, collision[attr]);
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+
+            // Check file existance again
+            if (oldMeta.paths[path]) {
+                // Also check for modifications
+                let file = await entry.getFile();
+                let oldFileMeta = oldMeta.paths[path]
+                if ((!oldFileMeta.lastModified) || file.lastModified > oldMeta.lastMetaSync) {
+                    let element = await findFragmentNodeByWSID(oldFileMeta.wid);
+                    if (!element) {
+                        console.log("Couldn't find element node to push FS contents to", path);
+                    } else {
+                        let fileContents = await file.text();
+                        // Only update fragment if content actually differs to avoid feedback loops
+                        if (element.fragment.raw !== fileContents) {
+                            element.fragment.raw = fileContents;
+                        }
+                    }
+                }
+
+                oldMeta.paths[path].seen = true;
+            }
+        });
+
+        // Check if any deleted files in FS with the old mapping from FS
+        for (const [path, entry] of Object.entries(oldMeta.paths)) {
+            if (!entry.seen) {
+                if (FragmentFilesystemSync.DEBUG) console.log("Detected deleted path in FS", path);
+                switch (entry.type) {
+                    case "directory":
+                        let wsDirNode = findFolderNodeByWSID(entry.wid);
+                        if (!wsDirNode) {
+                            console.log("Couldn't find deleted directory in webstrate", entry);
+                        } else {
+                            wsDirNode.remove();
+                        }
+                        break;
+                    case "fragment":
+                        let wsFragNode = findFragmentNodeByWSID(entry.wid);
+                        if (!wsFragNode) {
+                            console.log("Couldn't find deleted fragment in webstrate", entry);
+                        } else {
+                            wsFragNode.remove();
+                        }
+                        break;
+                    default:
+                        console.log("Unknown entry type deleted", entry)
+                }
+            }
+        }
+
+        // Yield, to trigger mutation observers for deletions before continueing
+        await new Promise(resolve => setTimeout(resolve, 1));
+    }
+
+    async synchronizeWSFragments() {
+        // Create new filename and directory mapping for fragment links
+        let sanitizeFileName = (rawName) => rawName.replace(/[^()a-z0-9.#\-_ ]/gi, '_');
+        let newPathMapping = new Map();
+        let newNodeMapping = new Map();
+
+        // Build element-to-FragmentLink lookup for quick access during traversal
+        let fragmentLinkMap = new Map();
+        this.fragmentLinks.forEach((link) => {
+            fragmentLinkMap.set(link.fragment.element, link);
+        });
+
+        // Recurse through DOM in order, registering both folders and fragments
+        let registerElements = function registerElements(currentPath, currentElement) {
+            if (folderElements.includes(currentElement.nodeName)) {
+                // This is a folder
+                let path;
+                let counter = 0;
+                let extension = "";
+                if (currentElement.nodeName === "WPM-PACKAGE") extension = ".wpm";
+                do {
+                    // Not unique, append a number
+                    path = currentPath + "/" + sanitizeFileName(getNodeName(currentElement)) + (counter > 0 ? "_" + counter : "") + extension;
+                    counter++;
+                } while (newPathMapping.get(path));
+                newPathMapping.set(path, { node: currentElement });
+                newNodeMapping.set(currentElement, path);
+                currentPath = path;
+            } else if (currentElement.nodeName === "CODE-FRAGMENT") {
+                // This is a fragment
+                let link = fragmentLinkMap.get(currentElement);
+                if (link) {
+                    let fragmentPath;
+                    let counter = 0;
+                    do {
+                        fragmentPath = currentPath + "/" + sanitizeFileName(link.getRawName()) + (counter > 0 ? "_" + counter : "") + "." + link.getExtension();
+                        counter++;
+                    } while (newPathMapping.get(fragmentPath));
+                    newPathMapping.set(fragmentPath, { node: link.fragment.element, link: link });
+                    newNodeMapping.set(link.fragment.element, fragmentPath);
+                }
+            }
+            for (let i = 0; i < currentElement.children.length; i++) {
+                registerElements(currentPath, currentElement.children[i]);
+            }
+        }
+        registerElements("", document.body);
+        this.nodeMapping = newNodeMapping;
+        this.pathMapping = newPathMapping;
 
 
-                </wpm-package></code-folder><code-folder name="Meta Elements"><varv-data></varv-data><varv-signaling></varv-signaling><screen-signaling></screen-signaling><video-signaling></video-signaling><audio-signaling></audio-signaling></code-folder><code-fragment data-type="text/markdown" name="AGENTS"># AGENTS.md Codestrates
 
-## Filesystem Sync
 
-- This is a folder that contains synchronized fragments from a codestrate as files
-    - This means, you cannot execute the code locally and there is no build step
-- Files are synchronized fragments from the codestrate
-    - The available types are:
-        - `.html` - HTML files (not used in conjunction with React)
-        - `.css` - CSS files
-        - `.scss` - SCSS files
-        - `.js` - JavaScript files
-        - `.jsx` - React JSX files
-        - `.json` - JSON files (can be used to store data)
-        - `.md` - Markdown files
-- The name of files is set as the `name=""` attribute in the `&lt;code-fragment>` elements in the DOM
-    - This can be used when importing and exporting functions, e.g., React components, between files
-- Folders that end with `.wpm` are Webstrates Package Manager packages
-    - These can usually imported using WPM, e.g., `import { MyComponent } from '#PackageName.wpm .default';`
+        // Check if there are new dirs that need to be pushed to FS
+        let paths = Array.from(this.pathMapping.keys()).sort();
+        let sortedDirs = [{ path: "", handle: this.directoryHandle }];
+        for (const path of paths) {
+            let entity = this.pathMapping.get(path);
+            if (!entity.link) {
+                // Directory
+                sortedDirs.push({ path: path, handle: await getOrCreateFSDirectory(this.directoryHandle, path) });
+            }
+        }
 
+        // Check fragments to push to FS
+        for (const dir of sortedDirs) {
+            if (!dir.handle) {
+                console.log("Skipping file sync because directory could not be found", dir);
+                continue;
+            }
+            for (const path of paths) {
+                if (path.substr(0, path.lastIndexOf("/")) == dir.path) {
+                    let entity = this.pathMapping.get(path);
+                    if (entity.link) {
+                        // File in this dir
+                        let fileWasJustCreated = false;
+                        let fileName = path.substring(path.lastIndexOf('/') + 1);
+                        let fileHandle;
+                        try {
+                            fileHandle = await dir.handle.getFileHandle(fileName);
+                        } catch (ex) {
+                            // Not found
+                            // TODO: Test for other things than NotFound
+                            try {
+                                fileHandle = await dir.handle.getFileHandle(fileName, { create: true });
+                                if (FragmentFilesystemSync.DEBUG) console.log("Creating new file in FS because it didnt exist", path)
+                                fileWasJustCreated = true;
+                            } catch (ex2) {
+                                console.log("Cannot write file, skipping", path, ex2);
+                            }
+                        }
+
+                        let file = await fileHandle.getFile();
+                        if (fileWasJustCreated || entity.link.elementLastModified > file.lastModified) {
+                            // Only write to FS if content actually differs to avoid feedback loops
+                            let fileContents = await file.text();
+                            if (fileWasJustCreated || entity.link.fragment.raw !== fileContents) {
+                                await writeFile(fileHandle, entity.link.fragment.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Check if FS has fragments/dirs that should be deleted
+        let unknownPathDeleter = (path, name, parent, entry) => {
+            if (!this.pathMapping.has(path)) {
+                if (path == "/ffs.meta" || path == "/ffs.attributes.json") return false; // leave meta files alone
+                parent.removeEntry(name, { recursive: true }); // Delete it
+                return false; // Do not continue into the directory
+            }
+            return true;
+        };
+        await traverseDirectoryStructure("", this.directoryHandle, unknownPathDeleter, unknownPathDeleter);
+    }
+
+    async synchronizeAttributes() {
+        let attributesFileName = 'ffs.attributes.json';
+
+        // Read current attributes file from disk
+        let diskRawText = '';
+        let diskAttributes = {};
+        try {
+            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName);
+            let file = await fileHandle.getFile();
+            diskRawText = await file.text();
+            if (diskRawText.trim().length > 0) {
+                diskAttributes = nestedToFlatAttributes(JSON.parse(diskRawText));
+            }
+        } catch (ex) {
+            // File doesn't exist yet or parse error, treat as empty
+        }
+
+        // Detect disk changes (user edits) and apply to DOM
+        // Only process paths that exist in both disk JSON and current pathMapping
+        for (const [path, diskAttrs] of Object.entries(diskAttributes)) {
+            let part = this.pathMapping.get(path);
+            if (!part) continue; // Path doesn't exist in current mapping, skip
+            if (typeof diskAttrs !== 'object' || diskAttrs === null) continue;
+
+            let lastKnown = this.lastKnownDiskAttributes[path] || {};
+
+            for (const attr of trackedAttributes) {
+                let hasDiskValue = diskAttrs.hasOwnProperty(attr);
+                let hasLastKnownValue = lastKnown.hasOwnProperty(attr);
+                let diskValue = hasDiskValue ? diskAttrs[attr] : undefined;
+                let lastKnownValue = hasLastKnownValue ? lastKnown[attr] : undefined;
+
+                // Only apply if this attribute actually changed on disk since last sync
+                if (hasDiskValue !== hasLastKnownValue || diskValue !== lastKnownValue) {
+                    if (!hasDiskValue) {
+                        // Attribute was removed from disk JSON entry
+                        if (part.node.hasAttribute(attr)) {
+                            part.node.removeAttribute(attr);
+                        }
+                    } else {
+                        // Attribute was changed or added on disk
+                        let currentDOMValue = part.node.getAttribute(attr);
+                        if (currentDOMValue !== diskValue) {
+                            part.node.setAttribute(attr, diskValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Build current DOM attributes from pathMapping (after potential disk-to-DOM updates)
+        let finalAttributes = {};
+        for (const path of this.pathMapping.keys()) {
+            let part = this.pathMapping.get(path);
+            let attrs = {};
+            for (const attr of trackedAttributes) {
+                if (part.node.hasAttribute(attr)) {
+                    attrs[attr] = part.node.getAttribute(attr);
+                }
+            }
+            if (Object.keys(attrs).length > 0) {
+                finalAttributes[path] = attrs;
+            }
+        }
+
+        // Write to disk only if the output differs from current file content
+        let nestedOutput = flatToNestedAttributes(finalAttributes);
+        let outputJSON = JSON.stringify(nestedOutput, null, 4) + '\n';
+        if (outputJSON !== diskRawText) {
+            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName, { create: true });
+            await writeFile(fileHandle, outputJSON);
+        }
+
+        // Update last known disk state to detect future user edits
+        this.lastKnownDiskAttributes = JSON.parse(JSON.stringify(finalAttributes));
+    }
+}
+
+class FragmentLink {
+    constructor(fragment) {
+        let self = this;
+        this.fragment = fragment;
+        if (!fragment) throw Error("Cannot construct FragmentLink without a fragment");
+
+        this.fragment.registerOnFragmentChangedHandler(() => { self.onFragmentUpdated() });
+        this.onFragmentUpdated();
+        if (FragmentFilesystemSync.DEBUG) console.log("Monitoring", fragment);
+    }
+
+
+
+    async onFragmentUpdated() {
+        // Store time and hash
+        let newHash = await sha256(this.fragment.raw);
+        if (newHash != this.hash) {
+            // Only update the timestamp if this is a genuine content change,
+            // not just a sync from the filesystem (which would have the same content)
+            let isInitialHash = this.hash === undefined;
+            this.hash = newHash;
+            // Don't update elementLastModified on initial hash calculation,
+            // only on subsequent real changes
+            if (!isInitialHash) {
+                this.elementLastModified = new Date().getTime();
+            }
+        }
+    }
+
+    getRawName() {
+        let name = getNodeName(this.fragment.element);
+        return name ? name : this.fragment.type.substring(this.fragment.type.lastIndexOf('/') + 1);
+    }
+
+    getExtension() {
+        let extension = extensionTypes[this.fragment.type];
+        if (!extension) extension = "txt";
+        return extension;
+    }
+}
+
+
+function getNodeName(node) {
+    let name = node.hasAttribute("name") ? node.getAttribute("name").trim() : "";
+    if (name.length > 0) return name;
+    let id = node.hasAttribute("id") ? node.getAttribute("id").trim() : "";
+    if (id.length > 0) return "#" + id;
+    if (folderElements.includes(node.nodeName)) return node.nodeName.toLowerCase();
+    return false;
+}
+
+function findFolderNodeByWSID(wsid) {
+    return Array.from(document.querySelectorAll(folderElements.join(","))).find(element => element.webstrate?.id == wsid);
+}
+function findFragmentNodeByWSID(wsid) {
+    return Array.from(document.querySelectorAll("code-fragment")).find(element => element.webstrate?.id == wsid);
+}
+
+async function getOrCreateFSDirectory(base, path) {
+    let directories = path.split("/");
+    let currentDir = base;
+    for (let directory of directories) {
+        if (directory.length === 0) continue; // skip initial slash
+        currentDir = await currentDir.getDirectoryHandle(directory, { create: true })
+    }
+    return currentDir;
+}
+
+async function writeFile(fileHandle, contents) {
+    const writable = await fileHandle.createWritable();
+    await writable.write(contents);
+    await writable.close();
+}
+
+async function traverseDirectoryStructure(currentPath, dirHandle, dirCallback, fileCallback) {
+    for await (let [name, entry] of dirHandle.entries()) {
+        let newPath = currentPath + "/" + name
+        if (entry instanceof FileSystemFileHandle) {
+            await fileCallback(newPath, name, dirHandle, entry);
+        } else if (entry instanceof FileSystemDirectoryHandle) {
+            if (await dirCallback(newPath, name, dirHandle, entry)) {
+                await traverseDirectoryStructure(newPath, entry, dirCallback, fileCallback);
+            }
+        }
+    }
+}
+
+function flatToNestedAttributes(flatObj) {
+    let nested = {};
+    for (const [path, attrs] of Object.entries(flatObj)) {
+        let parts = path.split('/').filter(p => p.length > 0);
+        let current = nested;
+        for (let i = 0; i < parts.length; i++) {
+            if (!current[parts[i]]) current[parts[i]] = {};
+            current = current[parts[i]];
+        }
+        current._attributes = attrs;
+    }
+    return nested;
+}
+
+function nestedToFlatAttributes(nested, currentPath) {
+    let flat = {};
+    if (currentPath === undefined) currentPath = '';
+    for (const [key, value] of Object.entries(nested)) {
+        if (key === '_attributes') continue;
+        if (typeof value !== 'object' || value === null) continue;
+        let path = currentPath + '/' + key;
+        if (value._attributes && typeof value._attributes === 'object') {
+            flat[path] = value._attributes;
+        }
+        Object.assign(flat, nestedToFlatAttributes(value, path));
+    }
+    return flat;
+}
+
+async function sha256(input) {
+    const sourceBytes = new TextEncoder().encode(input);
+    const digest = await crypto.subtle.digest("SHA-256", sourceBytes);
+    const resultBytes = [...new Uint8Array(digest)];
+    return resultBytes.map(x => x.toString(16).padStart(2, '0')).join("");
+}
+
+FragmentFilesystemSync.DEBUG = false;
+if (FragmentFilesystemSync.isSupported()) {
+    Fragment.addAllFragmentsLoadedCallback(() => {
+        window.fragmentFilesystemSync = new FragmentFilesystemSync("FragmentFilesystemSync");
+        window.FragmentFilesystemSync = FragmentFilesystemSync;
+
+        // Register with Cauldron (when available)
+        let item;
+        let registerMenuItem = function registerMenuItem() {
+            if (!item) item = MenuSystem.MenuManager.registerMenuItem("Cauldron.File.Sync", {
+                label: "Fragments to Disk...",
+                tooltip: "Copy fragments to a local folder when the page loads and keep them in sync",
+                group: "Codestrates",
+                groupOrder: 200,
+                order: 200,
+                checked: () => {
+                    return fragmentFilesystemSync.isSyncing;
+                },
+                onAction: async (menuItem) => {
+                    // Toggle sync
+                    if (fragmentFilesystemSync.isSyncing) {
+                        fragmentFilesystemSync.disableSyncing();
+                        fragmentFilesystemSync.setDirectory();
+                    } else {
+                        let dir = await fragmentFilesystemSync.popupDirectoryPicker();
+                        if (dir) {
+                            await fragmentFilesystemSync.setDirectory(dir);
+                            fragmentFilesystemSync.enableSyncing();
+                        }
+                    }
+                }
+            });
+        }
+
+        // If Cauldron is there already, run it, otherwise wait
+        if (typeof MenuSystem != 'undefined') {
+            registerMenuItem();
+        } else {
+            EventSystem.registerEventCallback('Cauldron.OnInit', registerMenuItem);
+        }
+
+        wpm.onRemoved(({ detail: packageName }) => {
+            fragmentFilesystemSync.disableSyncing();
+            item?.delete();
+        });
+    });
+}
+</script><code-fragment data-type="text/javascript" name="Fragment Filesystem Sync">let store = "directoryHandles";
+let folderElements = ["CODE-FOLDER", "WPM-PACKAGE"];
+let extensionTypes = {
+    "text/javascript": "js",
+    "text/javascript+babel": "jsx",
+    "text/slopscript+babel": "slop",
+    "text/x-typescript": "ts",
+    "text/python": "py",
+    "text/ruby": "rb",
+    "application/x-lua": "lua",
+    "text/html": "html",
+    "text/markdown": "md",
+    "text/x-latex": "tex",
+    "image/svg+xml": "svg",
+    "application/json": "json",
+    "wpm/descriptor": "json",
+    "text/varv": "json",
+    "text/css": "css",
+    "text/x-scss": "scss"
+}
+let autoCloneAttributes = ["id", "data-repository", "auto", "class"];
+let trackedAttributes = ['auto', 'data-type', 'class', 'id'];
+
+class FragmentFilesystemSync {
+    static isSupported() {
+        if (!window) return false;
+        if (!window.showDirectoryPicker) return false;
+        if (!window.indexedDB) return false;
+        if (!window.MutationObserver) return false;
+        return true;
+    }
+
+    constructor(dbname) {
+        let self = this;
+        this.isSyncing = false;
+        this.fragmentLinks = [];
+        this.directoryHandle = false;
+        this.pathMapping = new Map();
+        this.nodeMapping = new Map();
+
+        const request = indexedDB.open(dbname);
+        request.onerror = (event) => {
+            console.error("Failed to open filesystem sync IndexedDB", event);
+        };
+        request.onsuccess = (event) => {
+            self.db = event.target.result;
+            self.onPageLoad();
+        };
+        request.onupgradeneeded = (event) => {
+            self.db = event.target.result;
+
+            // Create an objectStore to hold file handles to directories
+            self.db.createObjectStore(store, { keyPath: "webstrate" });
+        }
+    }
+
+    async onPageLoad() {
+        this.directoryHandle = await this.getSavedHandle();
+        if (this.directoryHandle) {
+            // Sync immediately
+            this.enableSyncing();
+        }
+    }
+
+    getSavedHandle() {
+        return new Promise((resolve, reject) => {
+            let request = this.db.transaction(store).objectStore(store).get(location.pathname);
+            request.onerror = (event) => {
+                reject(event);
+            };
+            request.onsuccess = (event) => {
+                resolve(request.result?.handle);
+            };
+        });
+    }
+
+    setDirectory(handle = false) {
+        this.directoryHandle = handle;
+        return new Promise((resolve, reject) => {
+            let request;
+            if (handle) {
+                request = this.db.transaction(store, "readwrite").objectStore(store).put(
+                    {
+                        webstrate: location.pathname,
+                        handle: handle
+                    }
+                );
+            } else {
+                request = this.db.transaction(store, "readwrite").objectStore(store).delete(location.pathname);
+            }
+            request.onerror = (event) => { reject(event); };
+            request.onsuccess = resolve;
+        });
+    }
+
+    async popupDirectoryPicker() {
+        let directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+        if (!directoryHandle) return;
+
+        let needConfirm = true;
+
+        // Check if folder is empty then it is ok
+        let fileCount = 0;
+        for await (const key of directoryHandle.keys()) {
+            fileCount++;
+        }
+        if (fileCount === 0) needConfirm = false;
+
+        // Check if folder already contains meta file for this webstrate then it is also ok
+        try {
+            let metaFileHandle = await directoryHandle.getFileHandle("ffs.meta");
+            let metaFile = await metaFileHandle.getFile();
+            if (JSON.parse(await metaFile.text()).location == location.pathname) needConfirm = false;
+        } catch (ex) {
+            // ignore
+        }
+
+        if (needConfirm && !window.confirm('Warning: The contents of the folder ' + directoryHandle.name + ' you selected will be overwritten with the fragments in this codestrate. All its content will be deleted!')) return;
+        return directoryHandle;
+    }
+
+    async enableSyncing() {
+        let self = this;
+        if (this.isSyncing) throw new Error("Cannot start FFS, already syncing, stop it first");
+        if (!this.directoryHandle) throw new Error("No sync directory set");
+        if (!await this.directoryHandle.requestPermission({ mode: "readwrite" })) throw new Error("Must have access to dir");
+        console.log("Starting Fragment Filesystem Sync");
+        this.lastKnownDiskAttributes = {};
+
+        // TODO: Test if out-of-sync and ask for whether to overwrite filesystem or webstrate
+
+        // Clean up the directory
+        for await (const entry of this.directoryHandle.values()) {
+            await this.directoryHandle.removeEntry(entry.name, { recursive: true });
+        }
+
+        // Observe when fragments are added/removed
+        this.observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === "childList") {
+                    for (const addedNode of mutation.addedNodes) {
+                        if (addedNode.matches && addedNode.matches("code-fragment")) {
+                            self.onWSFragmentElementAdded(addedNode);
+                        } else if (addedNode.querySelectorAll) {
+                            addedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                self.onWSFragmentElementAdded(node);
+                            })
+                        }
+                    }
+                    for (const removedNode of mutation.removedNodes) {
+                        if (removedNode.matches && removedNode.matches("code-fragment")) {
+                            self.onWSFragmentElementRemoved(removedNode);
+                        } else if (removedNode.querySelectorAll) {
+                            removedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                self.onWSFragmentElementRemoved(node);
+                            })
+                        }
+                    }
+                }
+            }
+        });
+        this.observer.observe(document.body, { childList: true, subtree: true });
+        document.querySelectorAll("body code-fragment").forEach((fragment) => {
+            self.onWSFragmentElementAdded(fragment);
+        });
+
+        // Every second synchronize contents
+        let ffsUpdateTick = async () => {
+            let metaFileHandle = await this.directoryHandle.getFileHandle("ffs.meta", { create: true });
+            let metaFile = await metaFileHandle.getFile();
+            let oldMeta = {};
+            try {
+                oldMeta = JSON.parse(await metaFile.text());
+            } catch (ex) {
+                // Ignore this, just create a new one
+            }
+            let metaChangeDetector = JSON.stringify(oldMeta.paths);
+
+            // Sync FS and WS
+            if (oldMeta.paths) await self.synchronizeFSOperations(oldMeta);
+            await self.synchronizeWSFragments();
+            await self.synchronizeAttributes();
+
+            // Generate new meta file for advanced merging functionality
+            let meta = { metaVersion: 1, version: webstrate.version, lastMetaSync: new Date().getTime(), paths: {}, location: location.pathname };
+            for (const [path, part] of this.pathMapping) {
+                let entryMeta = { wid: part.node.webstrate.id };
+                if (part.link) {
+                    entryMeta.type = "fragment";
+                    entryMeta.lastModified = part.link.elementLastModified;
+                    entryMeta.hash = part.link.hash;
+                } else {
+                    entryMeta.type = "directory";
+                }
+                autoCloneAttributes.forEach(attr => {
+                    if (part.node.hasAttribute(attr)) entryMeta[attr] = part.node.getAttribute(attr);
+                })
+                meta.paths[path] = entryMeta;
+            };
+            if (metaChangeDetector != JSON.stringify(meta.paths)) {
+                // Meta needs to be rewritten
+                await writeFile(metaFileHandle, JSON.stringify(meta));
+            }
+            self.updater = setTimeout(ffsUpdateTick, 1000);
+        };
+        ffsUpdateTick();
+
+        this.isSyncing = true;
+    }
+
+    disableSyncing() {
+        clearTimeout(this.updater);
+        this.observer?.disconnect();
+        this.fragmentLinks = [];
+        this.lastKnownDiskAttributes = {};
+        this.isSyncing = false;
+        console.log("Stopped FFS");
+    }
+
+    onWSFragmentElementAdded(fragmentElement) {
+        // TODO: Check if already exists and ignore
+        setTimeout(() => { this.fragmentLinks.push(new FragmentLink(fragmentElement.fragment)) }, 1);
+    }
+    onWSFragmentElementRemoved(fragmentElement) {
+        this.fragmentLinks = this.fragmentLinks.filter((link) => link.fragment.element !== fragmentElement);
+    }
+
+    async synchronizeFSOperations(oldMeta) {
+        async function addElementFromOldFS(path, element, type) {
+            let parentPath = path.substring(0, path.lastIndexOf("/"));
+            let parentNode = false;
+            if (parentPath == "") {
+                parentNode = document.body;
+            } else if (oldMeta.paths[parentPath]) { // Try to find node by WSID
+                let wsNode = findFolderNodeByWSID(oldMeta.paths[parentPath].wid);
+                if (wsNode) parentNode = wsNode;
+            }
+
+            if (!parentNode) {
+                console.log("Couldn't map parent folder, giving up on adding", path);
+            } else {
+                // TODO: Check for collisions/duplicates here
+                let name = path.split("/");
+                name = name[name.length - 1];
+                let extensionLocation = name.lastIndexOf(".");
+                name = name.substring(0, (extensionLocation != -1) ? extensionLocation : undefined);
+
+                element.setAttribute("name", name);
+                parentNode.appendChild(element);
+                WPMv2.stripProtection(element);
+
+                // continue after webstrates id generation
+                await new Promise(resolve => setTimeout(resolve, 0));
+                oldMeta.paths[path] = {
+                    wid: element.webstrate.id,
+                    type: type
+                };
+            }
+        }
+
+        // Check if any new files/dirs in FS with the old mapping from FS
+        await traverseDirectoryStructure("", this.directoryHandle, async (path, name, parent, entry) => {
+            if (!oldMeta.paths[path]) {
+                // A new directory, create it in the webstrate
+                let newFolderElement;
+                if (name.endsWith(".wpm")) {
+                    newFolderElement = document.createElement("wpm-package");
+                } else {
+                    newFolderElement = document.createElement("code-folder");
+                }
+                await addElementFromOldFS(path, newFolderElement, "directory");
+            }
+
+            // Check again and flag as seen if it exists now
+            if (oldMeta.paths[path]) oldMeta.paths[path].seen = true;
+            return true;
+        }, async (path, name, parent, entry) => {
+            if (!oldMeta.paths[path]) {
+                // A new file, create the fragment
+                if (path === "/ffs.meta" || path === "/ffs.attributes.json") return; // Ignore meta files
+                let extension = name.substring(name.lastIndexOf(".") + 1);
+                let type = Object.keys(extensionTypes).find(key => extensionTypes[key] == extension);
+                if (FragmentFilesystemSync.DEBUG) console.log("New file spotted", extension, type, path, name, parent, entry);
+                if (type) {
+                    // Recognized fragment type
+                    let fragmentElement = document.createElement("code-fragment");
+                    fragmentElement.setAttribute("data-type", type);
+                    await addElementFromOldFS(path, fragmentElement, "fragment");
+
+                    // Check if this is a move/rename op
+                    let file = await entry.getFile();
+                    let contents = await file.text();
+                    if (contents.length > 0) {
+                        let hash = await sha256(contents);
+                        if (FragmentFilesystemSync.DEBUG) console.log("Looking for ", hash);
+                        let collision = Object.values(oldMeta.paths).find((p) => { return p.type == "fragment" && p.hash == hash; });
+                        if (collision) {
+                            // Copy over old attributes
+                            if (FragmentFilesystemSync.DEBUG) console.log("Found")
+                            autoCloneAttributes.forEach(attr => {
+                                if (FragmentFilesystemSync.DEBUG) console.log("Adding attrs")
+                                if (collision[attr] === undefined) {
+                                    if (FragmentFilesystemSync.DEBUG) console.log("removing attrs", attr);
+                                    fragmentElement.removeAttribute(attr);
+                                } else {
+                                    if (FragmentFilesystemSync.DEBUG) console.log("added attrs", attr, collision[attr]);
+                                    fragmentElement.setAttribute(attr, collision[attr]);
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+
+            // Check file existance again
+            if (oldMeta.paths[path]) {
+                // Also check for modifications
+                let file = await entry.getFile();
+                let oldFileMeta = oldMeta.paths[path]
+                if ((!oldFileMeta.lastModified) || file.lastModified > oldMeta.lastMetaSync) {
+                    let element = await findFragmentNodeByWSID(oldFileMeta.wid);
+                    if (!element) {
+                        console.log("Couldn't find element node to push FS contents to", path);
+                    } else {
+                        let fileContents = await file.text();
+                        // Only update fragment if content actually differs to avoid feedback loops
+                        if (element.fragment.raw !== fileContents) {
+                            element.fragment.raw = fileContents;
+                        }
+                    }
+                }
+
+                oldMeta.paths[path].seen = true;
+            }
+        });
+
+        // Check if any deleted files in FS with the old mapping from FS
+        for (const [path, entry] of Object.entries(oldMeta.paths)) {
+            if (!entry.seen) {
+                if (FragmentFilesystemSync.DEBUG) console.log("Detected deleted path in FS", path);
+                switch (entry.type) {
+                    case "directory":
+                        let wsDirNode = findFolderNodeByWSID(entry.wid);
+                        if (!wsDirNode) {
+                            console.log("Couldn't find deleted directory in webstrate", entry);
+                        } else {
+                            wsDirNode.remove();
+                        }
+                        break;
+                    case "fragment":
+                        let wsFragNode = findFragmentNodeByWSID(entry.wid);
+                        if (!wsFragNode) {
+                            console.log("Couldn't find deleted fragment in webstrate", entry);
+                        } else {
+                            wsFragNode.remove();
+                        }
+                        break;
+                    default:
+                        console.log("Unknown entry type deleted", entry)
+                }
+            }
+        }
+
+        // Yield, to trigger mutation observers for deletions before continueing
+        await new Promise(resolve => setTimeout(resolve, 1));
+    }
+
+    async synchronizeWSFragments() {
+        // Create new filename and directory mapping for fragment links
+        let sanitizeFileName = (rawName) => rawName.replace(/[^()a-z0-9.#\-_ ]/gi, '_');
+        let newPathMapping = new Map();
+        let newNodeMapping = new Map();
+
+        // Build element-to-FragmentLink lookup for quick access during traversal
+        let fragmentLinkMap = new Map();
+        this.fragmentLinks.forEach((link) => {
+            fragmentLinkMap.set(link.fragment.element, link);
+        });
+
+        // Recurse through DOM in order, registering both folders and fragments
+        let registerElements = function registerElements(currentPath, currentElement) {
+            if (folderElements.includes(currentElement.nodeName)) {
+                // This is a folder
+                let path;
+                let counter = 0;
+                let extension = "";
+                if (currentElement.nodeName === "WPM-PACKAGE") extension = ".wpm";
+                do {
+                    // Not unique, append a number
+                    path = currentPath + "/" + sanitizeFileName(getNodeName(currentElement)) + (counter > 0 ? "_" + counter : "") + extension;
+                    counter++;
+                } while (newPathMapping.get(path));
+                newPathMapping.set(path, { node: currentElement });
+                newNodeMapping.set(currentElement, path);
+                currentPath = path;
+            } else if (currentElement.nodeName === "CODE-FRAGMENT") {
+                // This is a fragment
+                let link = fragmentLinkMap.get(currentElement);
+                if (link) {
+                    let fragmentPath;
+                    let counter = 0;
+                    do {
+                        fragmentPath = currentPath + "/" + sanitizeFileName(link.getRawName()) + (counter > 0 ? "_" + counter : "") + "." + link.getExtension();
+                        counter++;
+                    } while (newPathMapping.get(fragmentPath));
+                    newPathMapping.set(fragmentPath, { node: link.fragment.element, link: link });
+                    newNodeMapping.set(link.fragment.element, fragmentPath);
+                }
+            }
+            for (let i = 0; i &lt; currentElement.children.length; i++) {
+                registerElements(currentPath, currentElement.children[i]);
+            }
+        }
+        registerElements("", document.body);
+        this.nodeMapping = newNodeMapping;
+        this.pathMapping = newPathMapping;
+
+
+
+
+        // Check if there are new dirs that need to be pushed to FS
+        let paths = Array.from(this.pathMapping.keys()).sort();
+        let sortedDirs = [{ path: "", handle: this.directoryHandle }];
+        for (const path of paths) {
+            let entity = this.pathMapping.get(path);
+            if (!entity.link) {
+                // Directory
+                sortedDirs.push({ path: path, handle: await getOrCreateFSDirectory(this.directoryHandle, path) });
+            }
+        }
+
+        // Check fragments to push to FS
+        for (const dir of sortedDirs) {
+            if (!dir.handle) {
+                console.log("Skipping file sync because directory could not be found", dir);
+                continue;
+            }
+            for (const path of paths) {
+                if (path.substr(0, path.lastIndexOf("/")) == dir.path) {
+                    let entity = this.pathMapping.get(path);
+                    if (entity.link) {
+                        // File in this dir
+                        let fileWasJustCreated = false;
+                        let fileName = path.substring(path.lastIndexOf('/') + 1);
+                        let fileHandle;
+                        try {
+                            fileHandle = await dir.handle.getFileHandle(fileName);
+                        } catch (ex) {
+                            // Not found
+                            // TODO: Test for other things than NotFound
+                            try {
+                                fileHandle = await dir.handle.getFileHandle(fileName, { create: true });
+                                if (FragmentFilesystemSync.DEBUG) console.log("Creating new file in FS because it didnt exist", path)
+                                fileWasJustCreated = true;
+                            } catch (ex2) {
+                                console.log("Cannot write file, skipping", path, ex2);
+                            }
+                        }
+
+                        let file = await fileHandle.getFile();
+                        if (fileWasJustCreated || entity.link.elementLastModified > file.lastModified) {
+                            // Only write to FS if content actually differs to avoid feedback loops
+                            let fileContents = await file.text();
+                            if (fileWasJustCreated || entity.link.fragment.raw !== fileContents) {
+                                await writeFile(fileHandle, entity.link.fragment.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Check if FS has fragments/dirs that should be deleted
+        let unknownPathDeleter = (path, name, parent, entry) => {
+            if (!this.pathMapping.has(path)) {
+                if (path == "/ffs.meta" || path == "/ffs.attributes.json") return false; // leave meta files alone
+                parent.removeEntry(name, { recursive: true }); // Delete it
+                return false; // Do not continue into the directory
+            }
+            return true;
+        };
+        await traverseDirectoryStructure("", this.directoryHandle, unknownPathDeleter, unknownPathDeleter);
+    }
+
+    async synchronizeAttributes() {
+        let attributesFileName = 'ffs.attributes.json';
+
+        // Read current attributes file from disk
+        let diskRawText = '';
+        let diskAttributes = {};
+        try {
+            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName);
+            let file = await fileHandle.getFile();
+            diskRawText = await file.text();
+            if (diskRawText.trim().length > 0) {
+                diskAttributes = nestedToFlatAttributes(JSON.parse(diskRawText));
+            }
+        } catch (ex) {
+            // File doesn't exist yet or parse error, treat as empty
+        }
+
+        // Detect disk changes (user edits) and apply to DOM
+        // Only process paths that exist in both disk JSON and current pathMapping
+        for (const [path, diskAttrs] of Object.entries(diskAttributes)) {
+            let part = this.pathMapping.get(path);
+            if (!part) continue; // Path doesn't exist in current mapping, skip
+            if (typeof diskAttrs !== 'object' || diskAttrs === null) continue;
+
+            let lastKnown = this.lastKnownDiskAttributes[path] || {};
+
+            for (const attr of trackedAttributes) {
+                let hasDiskValue = diskAttrs.hasOwnProperty(attr);
+                let hasLastKnownValue = lastKnown.hasOwnProperty(attr);
+                let diskValue = hasDiskValue ? diskAttrs[attr] : undefined;
+                let lastKnownValue = hasLastKnownValue ? lastKnown[attr] : undefined;
+
+                // Only apply if this attribute actually changed on disk since last sync
+                if (hasDiskValue !== hasLastKnownValue || diskValue !== lastKnownValue) {
+                    if (!hasDiskValue) {
+                        // Attribute was removed from disk JSON entry
+                        if (part.node.hasAttribute(attr)) {
+                            part.node.removeAttribute(attr);
+                        }
+                    } else {
+                        // Attribute was changed or added on disk
+                        let currentDOMValue = part.node.getAttribute(attr);
+                        if (currentDOMValue !== diskValue) {
+                            part.node.setAttribute(attr, diskValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Build current DOM attributes from pathMapping (after potential disk-to-DOM updates)
+        let finalAttributes = {};
+        for (const path of this.pathMapping.keys()) {
+            let part = this.pathMapping.get(path);
+            let attrs = {};
+            for (const attr of trackedAttributes) {
+                if (part.node.hasAttribute(attr)) {
+                    attrs[attr] = part.node.getAttribute(attr);
+                }
+            }
+            if (Object.keys(attrs).length > 0) {
+                finalAttributes[path] = attrs;
+            }
+        }
+
+        // Write to disk only if the output differs from current file content
+        let nestedOutput = flatToNestedAttributes(finalAttributes);
+        let outputJSON = JSON.stringify(nestedOutput, null, 4) + '\n';
+        if (outputJSON !== diskRawText) {
+            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName, { create: true });
+            await writeFile(fileHandle, outputJSON);
+        }
+
+        // Update last known disk state to detect future user edits
+        this.lastKnownDiskAttributes = JSON.parse(JSON.stringify(finalAttributes));
+    }
+}
+
+class FragmentLink {
+    constructor(fragment) {
+        let self = this;
+        this.fragment = fragment;
+        if (!fragment) throw Error("Cannot construct FragmentLink without a fragment");
+
+        this.fragment.registerOnFragmentChangedHandler(() => { self.onFragmentUpdated() });
+        this.onFragmentUpdated();
+        if (FragmentFilesystemSync.DEBUG) console.log("Monitoring", fragment);
+    }
+
+
+
+    async onFragmentUpdated() {
+        // Store time and hash
+        let newHash = await sha256(this.fragment.raw);
+        if (newHash != this.hash) {
+            // Only update the timestamp if this is a genuine content change,
+            // not just a sync from the filesystem (which would have the same content)
+            let isInitialHash = this.hash === undefined;
+            this.hash = newHash;
+            // Don't update elementLastModified on initial hash calculation,
+            // only on subsequent real changes
+            if (!isInitialHash) {
+                this.elementLastModified = new Date().getTime();
+            }
+        }
+    }
+
+    getRawName() {
+        let name = getNodeName(this.fragment.element);
+        return name ? name : this.fragment.type.substring(this.fragment.type.lastIndexOf('/') + 1);
+    }
+
+    getExtension() {
+        let extension = extensionTypes[this.fragment.type];
+        if (!extension) extension = "txt";
+        return extension;
+    }
+}
+
+
+function getNodeName(node) {
+    let name = node.hasAttribute("name") ? node.getAttribute("name").trim() : "";
+    if (name.length > 0) return name;
+    let id = node.hasAttribute("id") ? node.getAttribute("id").trim() : "";
+    if (id.length > 0) return "#" + id;
+    if (folderElements.includes(node.nodeName)) return node.nodeName.toLowerCase();
+    return false;
+}
+
+function findFolderNodeByWSID(wsid) {
+    return Array.from(document.querySelectorAll(folderElements.join(","))).find(element => element.webstrate?.id == wsid);
+}
+function findFragmentNodeByWSID(wsid) {
+    return Array.from(document.querySelectorAll("code-fragment")).find(element => element.webstrate?.id == wsid);
+}
+
+async function getOrCreateFSDirectory(base, path) {
+    let directories = path.split("/");
+    let currentDir = base;
+    for (let directory of directories) {
+        if (directory.length === 0) continue; // skip initial slash
+        currentDir = await currentDir.getDirectoryHandle(directory, { create: true })
+    }
+    return currentDir;
+}
+
+async function writeFile(fileHandle, contents) {
+    const writable = await fileHandle.createWritable();
+    await writable.write(contents);
+    await writable.close();
+}
+
+async function traverseDirectoryStructure(currentPath, dirHandle, dirCallback, fileCallback) {
+    for await (let [name, entry] of dirHandle.entries()) {
+        let newPath = currentPath + "/" + name
+        if (entry instanceof FileSystemFileHandle) {
+            await fileCallback(newPath, name, dirHandle, entry);
+        } else if (entry instanceof FileSystemDirectoryHandle) {
+            if (await dirCallback(newPath, name, dirHandle, entry)) {
+                await traverseDirectoryStructure(newPath, entry, dirCallback, fileCallback);
+            }
+        }
+    }
+}
+
+function flatToNestedAttributes(flatObj) {
+    let nested = {};
+    for (const [path, attrs] of Object.entries(flatObj)) {
+        let parts = path.split('/').filter(p => p.length > 0);
+        let current = nested;
+        for (let i = 0; i &lt; parts.length; i++) {
+            if (!current[parts[i]]) current[parts[i]] = {};
+            current = current[parts[i]];
+        }
+        current._attributes = attrs;
+    }
+    return nested;
+}
+
+function nestedToFlatAttributes(nested, currentPath) {
+    let flat = {};
+    if (currentPath === undefined) currentPath = '';
+    for (const [key, value] of Object.entries(nested)) {
+        if (key === '_attributes') continue;
+        if (typeof value !== 'object' || value === null) continue;
+        let path = currentPath + '/' + key;
+        if (value._attributes && typeof value._attributes === 'object') {
+            flat[path] = value._attributes;
+        }
+        Object.assign(flat, nestedToFlatAttributes(value, path));
+    }
+    return flat;
+}
+
+async function sha256(input) {
+    const sourceBytes = new TextEncoder().encode(input);
+    const digest = await crypto.subtle.digest("SHA-256", sourceBytes);
+    const resultBytes = [...new Uint8Array(digest)];
+    return resultBytes.map(x => x.toString(16).padStart(2, '0')).join("");
+}
+
+FragmentFilesystemSync.DEBUG = false;
+if (FragmentFilesystemSync.isSupported()) {
+    Fragment.addAllFragmentsLoadedCallback(() => {
+        window.fragmentFilesystemSync = new FragmentFilesystemSync("FragmentFilesystemSync");
+        window.FragmentFilesystemSync = FragmentFilesystemSync;
+
+        // Register with Cauldron (when available)
+        let item;
+        let registerMenuItem = function registerMenuItem() {
+            if (!item) item = MenuSystem.MenuManager.registerMenuItem("Cauldron.File.Sync", {
+                label: "Fragments to Disk...",
+                tooltip: "Copy fragments to a local folder when the page loads and keep them in sync",
+                group: "Codestrates",
+                groupOrder: 200,
+                order: 200,
+                checked: () => {
+                    return fragmentFilesystemSync.isSyncing;
+                },
+                onAction: async (menuItem) => {
+                    // Toggle sync
+                    if (fragmentFilesystemSync.isSyncing) {
+                        fragmentFilesystemSync.disableSyncing();
+                        fragmentFilesystemSync.setDirectory();
+                    } else {
+                        let dir = await fragmentFilesystemSync.popupDirectoryPicker();
+                        if (dir) {
+                            await fragmentFilesystemSync.setDirectory(dir);
+                            fragmentFilesystemSync.enableSyncing();
+                        }
+                    }
+                }
+            });
+        }
+
+        // If Cauldron is there already, run it, otherwise wait
+        if (typeof MenuSystem != 'undefined') {
+            registerMenuItem();
+        } else {
+            EventSystem.registerEventCallback('Cauldron.OnInit', registerMenuItem);
+        }
+
+        wpm.onRemoved(({ detail: packageName }) => {
+            fragmentFilesystemSync.disableSyncing();
+            item?.delete();
+        });
+    });
+}
+</code-fragment><code-fragment data-type="text/markdown" name="README"># Fragment Filesystem Sync
+
+Synchronizes code fragments from a Codestrates webstrate to a local folder on disk and keeps them in sync bidirectionally.
+
+## Files on Disk
+
+- **Fragment files** (`.js`, `.jsx`, `.css`, `.scss`, `.json`, `.md`, etc.) — the source code of each `&lt;code-fragment>` element, synchronized in both directions.
+- **`ffs.meta`** — internal bookkeeping file that tracks webstrate IDs, content hashes, and timestamps. Do not edit manually.
+- **`ffs.attributes.json`** — a human- and agent-readable JSON file that mirrors the tracked DOM attributes of every fragment and folder. This file is editable: changes made on disk are applied back to the DOM on the next sync tick.
+
+## Files and Folders
+
+Files and folders can be created, renamed, and deleted on disk. The sync will propagate these changes to the DOM:
+
+- **Creating** a file with a recognized extension creates a new `&lt;code-fragment>` in the webstrate.
+- **Creating** a folder (or `.wpm` folder) creates a new `&lt;code-folder>` or `&lt;wpm-package>` element.
+- **Deleting** a file or folder on disk removes the corresponding element from the DOM.
+- **Renaming** is treated as a delete + create. The sync attempts to detect moves by matching content hashes and will carry over attributes like `id` and `class` when possible, but attributes may be lost and need to be re-added in `ffs.attributes.json` after the rename.
+
+> **Important:** When creating or renaming files/folders, the new entries will initially have no attributes. You must add the required `_attributes` (such as `class`, `id`, `auto`) in `ffs.attributes.json` for the new entries to function correctly with WPM imports and auto-run.
+
+## `ffs.attributes.json`
+
+This file uses a nested structure that mirrors the filesystem hierarchy. Each node can have an `_attributes` key containing the tracked DOM attributes for that fragment or folder:
+
+- **`auto`** — the auto-run condition of the fragment (e.g., `""` means auto-run on load, remove the attribute to disable auto-run)
+- **`data-type`** — the MIME type / language of the fragment (e.g., `"text/javascript+babel"` for JSX)
+- **`class`** — CSS classes on the element, used for WPM exports and component registration
+- **`id`** — the element ID, used for WPM package identity and imports
+
+### Example
+
+```json
+{
+    "Code": {
+        "Basic": {
+            "Menu.wpm": {
+                "_attributes": {
+                    "id": "Menu"
+                },
+                "Menu.jsx": {
+                    "_attributes": {
+                        "data-type": "text/javascript+babel",
+                        "class": "default dynamic-gui-component"
+                    }
+                },
+                "Menu Style.scss": {
+                    "_attributes": {
+                        "auto": "",
+                        "data-type": "text/x-scss"
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### Editing Rules
+
+- Only change attribute **values** within existing `_attributes` objects, or add/remove attribute keys.
+- Do not add new file/folder entries — those are managed by the filesystem sync.
+- Changes are applied on the next sync tick (~1 second). Only values that actually differ from the current DOM are written, avoiding unnecessary webstrate versions.
+</code-fragment></wpm-package></code-folder><code-fragment data-type="text/markdown" name="AGENTS"># AGENTS.md
+
+Webstrates + Codestrates + Fragment Filesystem Sync — Agents Documentation — V1
+
+
+## Fragment Filesystem Sync
+
+This folder contains synchronized fragments from a codestrate as plain files. Code cannot be executed locally and there is no build step — editing files here syncs changes back to the live webstrate.
+
+### Fragment Files and Folders
+
+Files correspond to `&lt;code-fragment>` elements in the DOM. The supported types are: `.html`, `.css`, `.scss`, `.js`, `.jsx`, `.json`, `.md`.
+
+Folders correspond to `&lt;code-folder>` elements, and folders ending in `.wpm` correspond to `&lt;wpm-package>` elements. The folder structure on disk mirrors the DOM hierarchy of fragments and folders in the webstrate.
+
+The file- and foldername comes from the `name=""` attribute on the fragment element.
+
+### Attributes File
+
+The `ffs.attributes.json` file in the workspace root contains a nested JSON tree mirroring the filesystem hierarchy. Each entry can have an `_attributes` key with the tracked DOM attributes (`auto`, `data-type`, `class`, `id`) for that fragment or folder.
+
+- Read this file to understand which CSS classes and IDs are assigned to each fragment
+- Edit attribute values here and they will be synced to the DOM automatically on the next tick
+- Do not add or remove file/folder entries in this JSON — only modify attribute values
+
+### Creating, Renaming, and Deleting Files
+
+Files and folders can be created, renamed, and deleted on disk, and the changes will sync to the DOM:
+
+- **Renaming** a file or folder may cause its attributes (`class`, `id`, `auto`) to be lost — re-add them in `ffs.attributes.json` after renaming
+- **Creating** a new file or folder will initially have no attributes — add the required `_attributes` in `ffs.attributes.json` for it to work with WPM imports and auto-run (for example CSS and SCSS files need `auto: ""` to be active)
 
 
 ## Development
 
-- You should only editor files in the `Code` folder
-    - You should never delete, move, rename, or create files
-- Importing from other files works differently, as we need to use query selectors under the hood
-    - For example, to import a React component from another file, you would do: `import MyComponent from '#MyComponent .default';`
-    - Do never use relative imports, e.g., `import MyComponent from '../MyComponent';`
-    - Do never use the folder names, e.g., `import MyComponent from '#Code/MyComponent';`
-- Do never import CSS styles from each other, they are automatically activated in Webstrates
+You should only edit files in the `Code` folder unless the user asks for other changes explicitely.
 
+### Importing and Exporting
 
+- Imports between fragments use DOM query selectors under the hood, not the filesystem path
+- **Exporting** a value from a fragment:
+    - Use standard ES module `export` syntax.
+    - The fragment must have an `id` or `class` attribute set in `ffs.attributes.json` that the importer can reference
+- **Importing** from another fragment:
+    - Use `import MyComponent from '#PackageId .fragmentClass';` — where `PackageId` is the `id` of the `.wpm` folder and `fragmentClass` is the `class` on the fragment file
+    - Example: `import MyComponent from '#MyPackage .default';` imports the default export from the fragment with `class="default"` inside the package with `id="MyPackage"`
+    - Do **not** use relative imports like `import MyComponent from '../MyComponent';`
+    - Do **not** use filesystem folder paths like `import MyComponent from '#Code/MyComponent';`
+- CSS and SCSS files cannot export and import values
 
-## Webstrates/Codestrates Documentation
-
-- Webstrates: https://www.webstrates.net/
-    - Webstrates API: https://webstrates.github.io/userguide/api.html
-- Codestrates: https://codestrates.projects.cavi.au.dk/
-    - Codestrates API: https://codestrates.projects.cavi.au.dk/api/codestrates/
-    - Cauldron API: https://codestrates.projects.cavi.au.dk/api/cauldron/
-    - Webstrates Package Manager (WPM): https://codestrates.projects.cavi.au.dk/api/wpm/
-- cQuery: https://codestrates.projects.cavi.au.dk/api/cquery/cQuery.html
-- OpenAI Proxy Server: https://github.com/cklokmose/openai-proxy
-
-
-
-## Webstrates/Codestrates Overview
-
-### Webstrates API
-Collaborative web document editing platform with real-time synchronization capabilities:
-- **Events**: Subscribe to document loading, element changes, and user interactions
-- **Data Management**: Transient data (temporary), cookies (persistent across devices), and oplog (operation history)
-- **Collaboration**: Asset management with versioning, client monitoring, signaling between users
-- **Advanced Features**: Performance optimization, protected mode, permissions/access control, invite keys, version control and restoration
-
-### Codestrates API
-Built on Webstrates, enables persistent DOM changes with multi-language fragment support:
-- **Editors**: Multiple editor types (AceEditor, CodemirrorEditor, MonacoEditor) with common methods like getValue(), setValue(), insertText(), deleteText()
-- **Fragments**: Support for various languages (HTML, CSS, JavaScript, Python, etc.) with text insertion/deletion handlers
-- **Event System**: Editor events for blur, focus, and selection changes
-- **Programming Languages**: Multi-language fragment execution and management
-
-### Cauldron API
-Browser-based IDE for editing Webstrates directly in the browser:
-- **Core Classes**: Cauldron (open/close/createComponent), CauldronEditor (editing), CauldronInspector (content binding), CauldronSettings (configuration)
-- **Events**: Initialization, open/close, and fragment editor events
-- **Features**: Direct web editing without developer tools, component management, settings configuration
-- **Status**: No stable release yet, extensible IDE-like tool for web document manipulation
-
-### WPM (Webstrates Package Manager) v2 API
-Comprehensive package management system for web-based applications:
-- **Core Classes**: WPMv2 (primary package management), WPMInterface (package events and interactions)
-- **Repository Management**: Register/unregister repositories, package discovery and installation
-- **Dependencies**: Dependency resolution, package metadata management, external requirements
-- **Key Methods**: registerRepository(), installWPMInto(), getCurrentlyInstalledPackages(), requireAll()
-
-
-
-## Code Style
+### Code Style
 
 - Use 4 spaces for indentation
 - Use single quotes for strings
@@ -2085,7 +3597,126 @@ Comprehensive package management system for web-based applications:
 - Use PascalCase for React component names
 - Use descriptive names for variables and functions
 - Add a newline at the end of files
-</code-fragment><wpm-package id="ImportMapping" name="ImportMapping"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+- Titles on, e.g., buttons should be in Title Case, e.g., "Submit Query"
+- Use material icons over emojis by giving an element the "material-icons" class
+- Do not use BEM class naming (e.g. `block__element--modifier`); use SCSS nesting instead
+
+
+## Platform Documentation
+
+- Webstrates: https://www.webstrates.net/
+    - Webstrates API: https://webstrates.github.io/userguide/api.html
+- Codestrates: https://codestrates.projects.cavi.au.dk/
+    - Codestrates API: https://codestrates.projects.cavi.au.dk/api/codestrates/
+    - Cauldron API: https://codestrates.projects.cavi.au.dk/api/cauldron/
+    - Webstrates Package Manager (WPM): https://codestrates.projects.cavi.au.dk/api/wpm/
+- cQuery: https://codestrates.projects.cavi.au.dk/api/cquery/cQuery.html
+
+### Webstrates API
+
+Collaborative web document editing platform with real-time synchronization capabilities:
+- **Events**: Subscribe to document loading, element changes, and user interactions
+- **Data Management**: Transient data (temporary), cookies (persistent across devices), and oplog (operation history)
+- **Collaboration**: Asset management with versioning, client monitoring, signaling between users
+- **Advanced Features**: Performance optimization, protected mode, permissions/access control, invite keys, version control and restoration
+
+### Codestrates API
+
+Built on Webstrates, enables persistent DOM changes with multi-language fragment support:
+- **Editors**: Multiple editor types (AceEditor, CodemirrorEditor, MonacoEditor) with common methods like getValue(), setValue(), insertText(), deleteText()
+- **Fragments**: Support for various languages (HTML, CSS, JavaScript, Python, etc.) with text insertion/deletion handlers
+- **Event System**: Editor events for blur, focus, and selection changes
+- **Programming Languages**: Multi-language fragment execution and management
+
+### Cauldron API
+
+Browser-based IDE for editing Webstrates directly in the browser:
+- **Core Classes**: Cauldron (open/close/createComponent), CauldronEditor (editing), CauldronInspector (content binding), CauldronSettings (configuration)
+- **Events**: Initialization, open/close, and fragment editor events
+- **Features**: Direct web editing without developer tools, component management, settings configuration
+- **Status**: No stable release yet, extensible IDE-like tool for web document manipulation
+
+### WPM (Webstrates Package Manager) v2 API
+
+Comprehensive package management system for web-based applications:
+- **Core Classes**: WPMv2 (primary package management), WPMInterface (package events and interactions)
+- **Repository Management**: Register/unregister repositories, package discovery and installation
+- **Dependencies**: Dependency resolution, package metadata management, external requirements
+- **Key Methods**: registerRepository(), installWPMInto(), getCurrentlyInstalledPackages(), requireAll()
+
+&lt;!-- End Base AGENTS.md File -->
+
+
+
+# Spatialstrates
+
+## Development
+
+- The `Spatialstrates.jsx` file is the entry point of the application
+- Always create React components, do not use regular classes
+- Some WPM packages have multiple exports, identified by CSS class — check `ffs.attributes.json` to see class assignments, or refer to the Importing and Exporting section above
+
+
+## Library Documentation
+
+- React Three Fiber: https://docs.pmnd.rs/react-three-fiber
+- React Three Drei: https://docs.pmnd.rs/drei
+- React Three XR: https://docs.pmnd.rs/xr
+    - Handles API: https://pmndrs.github.io/xr/docs/handles/introduction
+- React Three UIKit: https://docs.pmnd.rs/uikit
+
+
+## Movable Components
+
+Spatialstrates movables should be small WPM packages with one Varv concept, one 3D scene component, one 2D tldraw shape, and one menu/uploader fragment. Use existing packages such as `Code/Movables/StickyNote.wpm`, `Code/Movables/Flashlight.wpm`, `Code/Datavisualization/Components/VisShelf.wpm`, and `Code/Datavisualization/Components/VisPiece.wpm` as templates.
+
+### Structure
+
+- `descriptor.json`: dependencies and assets.
+- `&lt;Name> Concepts.json`: Varv schema with `extensions.inject: [ "Movable" ]`.
+- `&lt;Name> Component.jsx`: 3D React Three Fiber representation.
+- `&lt;Name> Shape.jsx`: 2D tldraw representation.
+- `&lt;Name> Menu.jsx` or uploader/menu fragment: creates instances from desktop and controller menus.
+- Optional `Style.scss`: 2D or DOM styling.
+
+### Varv Concept
+
+Varv is the source of truth. Store persistent state, configuration, and relationships in the concept schema, and inject `Movable` for anything that should appear in space. Use `useProperty` for normal reads/writes and `VarvEngine` only for creation, deletion, grouping, cross-instance updates, or callbacks.
+
+For families of related movables, use an intermediate concept when it avoids duplication. The visualization components use `VisMovable` for shared state, then inject both `Movable` and `VisMovable` into `VisPiece` and `VisGroup`.
+
+### 3D Scene Component
+
+Export `Main`, check `concept::name`, and return `null` for other concept types. Wrap the actual component in `ErrorBoundary fallback={null}` and wrap visible 3D content in `&lt;Movable handle={handle}>...&lt;/Movable>`.
+
+The `handle` should be the selection/drag target. Pass `upright={false}` for freely rotating movables, and use `onDragStart`, `onDragging`, or `onDragEnd` for movement-related behavior such as grouping or proximity authoring. Keep transient 3D UI in React state, but persist user choices in Varv.
+
+### 2D Canvas Shape
+
+Export `Main` as a `MovableShapeUtil` subclass with `static type` matching the Varv concept name. Render custom shape UI inside `&lt;MovableVarvScope shape={shape}>` so `useProperty` targets the represented concept instance.
+
+Use `getDefaultProps()` with `CANVAS_SCALE` for size, `HTMLContainer` for DOM UI, and `stopEventPropagation` on interactive inputs. Keep 2D and 3D behavior equivalent where practical.
+
+### Menu and Creation
+
+Menu fragments should be small auto-run fragments that register entries with `#Menu .default` and, when relevant, `#ControllerMenu .default`. Use `createMovable('&lt;ConceptName>', initialProperties)` from `#Spatialstrates .movable-helpers`; it initializes position/rotation from the current view, selects the new instance, and adds it to the current space. Use stable IDs such as `movables` and `add-&lt;name>`, and Title Case labels like `New Sticky Note`.
+
+### Fragment Attributes and Dynamic Loading
+
+- Concept fragments: `auto: ""`, `data-type: "text/varv"`.
+- 3D component fragments: `class: "default dynamic-movable-scene-component"` unless there are intentional multiple exports.
+- 2D shape fragments: `class: "dynamic-shape-component"`.
+- Menu, uploader, and SCSS fragments that must run automatically: `auto: ""`.
+- WPM folder: `id` matching the import selector, such as `StickyNote`, `VisShelf`, or `VisPiece`.
+
+### Implementation Practices
+
+- Use selector imports, not relative filesystem imports.
+- Keep 3D component, 2D shape, Varv concept, and menu responsibilities separate.
+- For cloned, grouped, or generated movables, update both the concept instance and owning space/group relationship.
+- Clean up callbacks, subscriptions, and external listeners in `useEffect` cleanup functions.
+- Keep geometry, materials, and GLTF loading out of hot render paths with module constants, `useMemo`, and `useGLTF.preload`.
+</code-fragment><code-folder id="meta-elements" name="Meta Elements"><varv-data></varv-data><varv-signaling></varv-signaling><screen-signaling></screen-signaling><video-signaling></video-signaling><audio-signaling></audio-signaling></code-folder><code-folder id="code" name="Code"><wpm-package id="ImportMapping" name="ImportMapping"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "Import map for Spatialstrates.",
     "dependencies": [],
     "assets": [
@@ -2123,22 +3754,22 @@ The `@use-gesture` package is imported from esm.sh has a bug that correct trackp
         "@react-three/drei": "https://esm.sh/v135/@react-three/drei@10.7.7?dev=&target=es2022&external=*",
         "@react-three/xr": "https://esm.sh/v135/@react-three/xr@6.6.29?dev=&target=es2022&external=*",
         "@react-three/handle": "https://esm.sh/v135/@react-three/handle@6.6.29?dev=&target=es2022&external=*",
-        "@react-three/uikit": "https://esm.sh/v135/@react-three/uikit@1.0.60?dev=&target=es2022&external=*",
-        "@react-three/uikit-default": "https://esm.sh/v135/@react-three/uikit-default@1.0.60?dev=&target=es2022&external=*",
-        "@react-three/uikit-lucide": "https://esm.sh/v135/@react-three/uikit-lucide@1.0.60?dev=&target=es2022&external=*",
-        "@react-three/uikit-horizon": "https://esm.sh/v135/@react-three/uikit-horizon@1.0.60?dev=&target=es2022&external=*",
+        "@react-three/uikit": "https://esm.sh/v135/@react-three/uikit@1.0.64?dev=&target=es2022&external=*",
+        "@react-three/uikit-default": "https://esm.sh/v135/@react-three/uikit-default@1.0.64?dev=&target=es2022&external=*",
+        "@react-three/uikit-lucide": "https://esm.sh/v135/@react-three/uikit-lucide@1.0.64?dev=&target=es2022&external=*",
+        "@react-three/uikit-horizon": "https://esm.sh/v135/@react-three/uikit-horizon@1.0.64?dev=&target=es2022&external=*",
 
         "@pmndrs/xr": "https://esm.sh/v135/@pmndrs/xr@6.6.29?dev=&target=es2022&external=*",
         "@pmndrs/xr/": "https://esm.sh/v135/@pmndrs/xr@6.6.29&dev&target=es2022&external=*/",
         "@pmndrs/handle": "https://esm.sh/v135/@pmndrs/handle@6.6.29?dev=&target=es2022&external=*",
         "@pmndrs/pointer-events": "https://esm.sh/v135/@pmndrs/pointer-events@6.6.29?dev=&target=es2022&external=*",
-        "@pmndrs/uikit": "https://esm.sh/v135/@pmndrs/uikit@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit/": "https://esm.sh/v135/@pmndrs/uikit@1.0.60&dev&target=es2022&external=*/",
-        "@pmndrs/uikit-pub-sub": "https://esm.sh/v135/@pmndrs/uikit-pub-sub@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit-default": "https://esm.sh/v135/@pmndrs/uikit-default@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit-lucide": "https://esm.sh/v135/@pmndrs/uikit-lucide@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit-horizon": "https://esm.sh/v135/@pmndrs/uikit-horizon@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/msdfonts": "https://esm.sh/v135/@pmndrs/msdfonts@1.0.60?dev=&target=es2022&external=*",
+        "@pmndrs/uikit": "https://esm.sh/v135/@pmndrs/uikit@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit/": "https://esm.sh/v135/@pmndrs/uikit@1.0.64&dev&target=es2022&external=*/",
+        "@pmndrs/uikit-pub-sub": "https://esm.sh/v135/@pmndrs/uikit-pub-sub@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit-default": "https://esm.sh/v135/@pmndrs/uikit-default@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit-lucide": "https://esm.sh/v135/@pmndrs/uikit-lucide@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit-horizon": "https://esm.sh/v135/@pmndrs/uikit-horizon@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/msdfonts": "https://esm.sh/v135/@pmndrs/msdfonts@1.0.64?dev=&target=es2022&external=*",
 
         "zustand": "https://esm.sh/v135/zustand@4.5.7?dev=&target=es2022&external=*",
         "zustand/": "https://esm.sh/v135/zustand@4.5.7&dev&target=es2022&external=*/",
@@ -2233,22 +3864,22 @@ The `@use-gesture` package is imported from esm.sh has a bug that correct trackp
         "@react-three/drei": "https://esm.sh/v135/@react-three/drei@10.7.7?dev=&target=es2022&external=*",
         "@react-three/xr": "https://esm.sh/v135/@react-three/xr@6.6.29?dev=&target=es2022&external=*",
         "@react-three/handle": "https://esm.sh/v135/@react-three/handle@6.6.29?dev=&target=es2022&external=*",
-        "@react-three/uikit": "https://esm.sh/v135/@react-three/uikit@1.0.60?dev=&target=es2022&external=*",
-        "@react-three/uikit-default": "https://esm.sh/v135/@react-three/uikit-default@1.0.60?dev=&target=es2022&external=*",
-        "@react-three/uikit-lucide": "https://esm.sh/v135/@react-three/uikit-lucide@1.0.60?dev=&target=es2022&external=*",
-        "@react-three/uikit-horizon": "https://esm.sh/v135/@react-three/uikit-horizon@1.0.60?dev=&target=es2022&external=*",
+        "@react-three/uikit": "https://esm.sh/v135/@react-three/uikit@1.0.64?dev=&target=es2022&external=*",
+        "@react-three/uikit-default": "https://esm.sh/v135/@react-three/uikit-default@1.0.64?dev=&target=es2022&external=*",
+        "@react-three/uikit-lucide": "https://esm.sh/v135/@react-three/uikit-lucide@1.0.64?dev=&target=es2022&external=*",
+        "@react-three/uikit-horizon": "https://esm.sh/v135/@react-three/uikit-horizon@1.0.64?dev=&target=es2022&external=*",
 
         "@pmndrs/xr": "https://esm.sh/v135/@pmndrs/xr@6.6.29?dev=&target=es2022&external=*",
         "@pmndrs/xr/": "https://esm.sh/v135/@pmndrs/xr@6.6.29&dev&target=es2022&external=*/",
         "@pmndrs/handle": "https://esm.sh/v135/@pmndrs/handle@6.6.29?dev=&target=es2022&external=*",
         "@pmndrs/pointer-events": "https://esm.sh/v135/@pmndrs/pointer-events@6.6.29?dev=&target=es2022&external=*",
-        "@pmndrs/uikit": "https://esm.sh/v135/@pmndrs/uikit@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit/": "https://esm.sh/v135/@pmndrs/uikit@1.0.60&dev&target=es2022&external=*/",
-        "@pmndrs/uikit-pub-sub": "https://esm.sh/v135/@pmndrs/uikit-pub-sub@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit-default": "https://esm.sh/v135/@pmndrs/uikit-default@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit-lucide": "https://esm.sh/v135/@pmndrs/uikit-lucide@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/uikit-horizon": "https://esm.sh/v135/@pmndrs/uikit-horizon@1.0.60?dev=&target=es2022&external=*",
-        "@pmndrs/msdfonts": "https://esm.sh/v135/@pmndrs/msdfonts@1.0.60?dev=&target=es2022&external=*",
+        "@pmndrs/uikit": "https://esm.sh/v135/@pmndrs/uikit@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit/": "https://esm.sh/v135/@pmndrs/uikit@1.0.64&dev&target=es2022&external=*/",
+        "@pmndrs/uikit-pub-sub": "https://esm.sh/v135/@pmndrs/uikit-pub-sub@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit-default": "https://esm.sh/v135/@pmndrs/uikit-default@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit-lucide": "https://esm.sh/v135/@pmndrs/uikit-lucide@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/uikit-horizon": "https://esm.sh/v135/@pmndrs/uikit-horizon@1.0.64?dev=&target=es2022&external=*",
+        "@pmndrs/msdfonts": "https://esm.sh/v135/@pmndrs/msdfonts@1.0.64?dev=&target=es2022&external=*",
 
         "zustand": "https://esm.sh/v135/zustand@4.5.7?dev=&target=es2022&external=*",
         "zustand/": "https://esm.sh/v135/zustand@4.5.7&dev&target=es2022&external=*/",
@@ -2335,35 +3966,95 @@ if (importMapScript) {
         importMapScript.textContent = importMapFragment.raw;
     }
 }
-</code-fragment></wpm-package><code-folder name="Code"><code-folder name="Core"><code-fragment data-type="text/markdown" name="README"># Core
+</code-fragment></wpm-package><code-folder name="Core"><code-fragment data-type="text/markdown" name="README"># Core
 
 The packages in the Core folder provide the basic functionality of the Spatialstrates platform.
 </code-fragment><wpm-package id="InterFont" name="InterFont"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
-    "description": "Adds the Inter font.",
+    "description": "Adds the Inter font and applies it as the default sans-serif font.",
     "dependencies": [],
     "assets": [
-        "inter-variable.zip"
+        "inter-font.zip"
     ],
     "version": "0.3.0"
 }
-</wpm-descriptor></code-fragment><code-fragment auto data-type="text/css" name="Inter Font">@font-face {
-    font-family: "Inter";
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/css" name="Font Face">@font-face {
+    font-family: 'Inter';
+    font-style: normal;
     font-weight: 100 900;
     font-display: swap;
-    font-style: normal;
-    src: url("inter-variable.zip/inter-variable.woff2") format("woff2-variations"),
-         url("inter-variable.zip/inter-variable.woff2") format("woff2");
-    src: url("inter-variable.zip/inter-variable.woff2") format("woff2") tech("variations");
+    src: url(inter-font.zip/InterVariable.woff2) format('woff2');
 }
 
 @font-face {
-    font-family: "Inter";
+    font-family: 'Inter';
+    font-style: italic;
     font-weight: 100 900;
     font-display: swap;
-    font-style: italic;
-    src: url("inter-variable.zip/inter-variable-Italic.woff2") format("woff2-variations"),
-         url("inter-variable.zip/inter-variable-Italic.woff2") format("woff2");
-    src: url("inter-variable.zip/inter-variable-Italic.woff2") format("woff2") tech("variations");
+    src: url(inter-font.zip/InterVariable-Italic.woff2) format('woff2');
+}
+</code-fragment><code-fragment auto data-type="text/css" name="Configuration">:root {
+    --inter-font: 'Inter', sans-serif;
+}
+
+html,
+body,
+body button,
+body input,
+body optgroup,
+body select,
+body textarea {
+    font-family: var(--inter-font);
+}
+</code-fragment></wpm-package><wpm-package id="MaterialSymbolsFont" name="MaterialSymbolsFont"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
+    "description": "Adds the Material Symbols Outlined icon font.",
+    "dependencies": [],
+    "assets": [],
+    "version": "0.3.0"
+}
+</wpm-descriptor></code-fragment><code-fragment auto data-type="text/css" name="Google Font">/* https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200 */
+
+/* fallback */
+@font-face {
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    font-weight: 100 700;
+    src: url(https://fonts.gstatic.com/s/materialsymbolsoutlined/v325/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsLjBuVY.woff2) format('woff2');
+}
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+}
+</code-fragment><code-fragment auto data-type="text/css" name="Configuration">body .material-icons,
+body .material-icons-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 1, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+body .material-icons-outlined {
+    font-variation-settings: 'FILL' 0, 'GRAD' 0, 'opsz' 24;
 }
 </code-fragment></wpm-package><wpm-package id="Spatialstrates" name="Spatialstrates"><code-fragment data-type="wpm/descriptor"><wpm-descriptor>{
     "description": "The Spatialstrates core package and implementation.",
@@ -2797,6 +4488,7 @@ export function App() {
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 1000;
+    pointer-events: none;
 }
 
 .spatialstrates-stats {
@@ -3036,34 +4728,45 @@ export const getCurrentSpaceUUID = async () => {
 };
 </code-fragment></code-folder><code-folder class="scene-view" name="Scene View"><code-folder name="Components"><code-fragment class="camera" data-type="text/javascript+babel" name="Camera">import React from 'react';
 const { useRef, useEffect } = React;
-import { Vector3, Matrix4 } from 'three';
+import { Vector3 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { PointerLockControls } from '@react-three/drei';
+import { forwardHtmlEvents } from '@pmndrs/pointer-events';
 
 
 
 const SPEED = 1.4;
+const SYNTHETIC_POINTER_ID = 424242;
+
+const createSyntheticPointerTarget = (canvas) => {
+    const eventTarget = new EventTarget();
+    const capturedPointerIds = new Set();
+
+    return {
+        addEventListener: (...args) => eventTarget.addEventListener(...args),
+        removeEventListener: (...args) => eventTarget.removeEventListener(...args),
+        dispatchEvent: (event) => eventTarget.dispatchEvent(event),
+        getBoundingClientRect: () => canvas.getBoundingClientRect(),
+        setPointerCapture: (pointerId) => capturedPointerIds.add(pointerId),
+        hasPointerCapture: (pointerId) => capturedPointerIds.has(pointerId),
+        releasePointerCapture: (pointerId) => capturedPointerIds.delete(pointerId)
+    };
+};
 
 export function CustomCamera() {
     const controls = useRef();
     const crosshair = useRef(document.querySelector('.crosshair'));
     const moveDirection = useRef(new Vector3());
-    const { gl } = useThree();
+    const syntheticPointerEvents = useRef();
+    const { gl, camera, scene } = useThree();
 
     // Track if we're currently dragging in pointer lock mode
     const isPointerLockDragging = useRef(false);
 
-    // Store camera transform info for handle compatibility
-    const cameraTransform = useRef({
-        position: new Vector3(),
-        previousPosition: new Vector3(),
-        deltaPosition: new Vector3(),
-        worldMatrix: new Matrix4()
-    });
-
     useEffect(() => {
         window.moduleCameraControls = {
-            controlsRef: controls
+            controlsRef: controls,
+            getCameraObject: () => controls.current?.getObject?.()
         };
 
         return () => {
@@ -3071,33 +4774,71 @@ export function CustomCamera() {
         };
     }, []);
 
-    // Helper to create and dispatch a synthetic pointer event to the canvas
-    // This works with @pmndrs/pointer-events by sending events at screen center
+    useEffect(() => {
+        const target = createSyntheticPointerTarget(gl.domElement);
+        const { destroy } = forwardHtmlEvents(target, () => camera, scene, {
+            batchEvents: false,
+            pointerTypePrefix: 'screen-'
+        });
+
+        syntheticPointerEvents.current = { target };
+
+        return () => {
+            syntheticPointerEvents.current = null;
+            destroy();
+        };
+    }, [camera, gl, scene]);
+
+    const getCrosshairClientPosition = () => {
+        const canvas = gl.domElement;
+        crosshair.current = crosshair.current || document.querySelector('.crosshair');
+        const crosshairRect = crosshair.current?.getBoundingClientRect();
+
+        if (crosshairRect && crosshairRect.width > 0 && crosshairRect.height > 0) {
+            return {
+                clientX: crosshairRect.left + crosshairRect.width / 2,
+                clientY: crosshairRect.top + crosshairRect.height / 2
+            };
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        return {
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2
+        };
+    };
+
+    // Pointer lock keeps real pointer coordinates at the lock origin, so the
+    // forwarded scene events are dispatched from the visible crosshair instead.
     const dispatchSyntheticPointerEvent = (eventType, buttons = 0) => {
         const canvas = gl.domElement;
-        const rect = canvas.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+        const { clientX, clientY } = getCrosshairClientPosition();
+        const eventButton = eventType === 'pointermove' ? -1 : 0;
 
         const event = new PointerEvent(eventType, {
             bubbles: true,
             cancelable: true,
             view: window,
-            clientX: centerX,
-            clientY: centerY,
-            screenX: centerX,
-            screenY: centerY,
-            pointerId: 1,
+            clientX: clientX,
+            clientY: clientY,
+            screenX: window.screenX + clientX,
+            screenY: window.screenY + clientY,
+            pointerId: SYNTHETIC_POINTER_ID,
             pointerType: 'mouse',
             isPrimary: true,
-            button: 0,
+            button: eventButton,
             buttons: buttons,
             pressure: buttons > 0 ? 0.5 : 0
         });
 
         event.synthetic = true;
 
-        canvas.dispatchEvent(event);
+        const syntheticTarget = syntheticPointerEvents.current?.target;
+        if (syntheticTarget) {
+            syntheticTarget.dispatchEvent(event);
+        } else {
+            canvas.dispatchEvent(event);
+        }
     };
 
     // Block non-synthetic pointer events on the canvas when in pointer lock mode
@@ -3117,17 +4858,29 @@ export function CustomCamera() {
         canvas.addEventListener('pointermove', blockNonSyntheticEvents, true);
         canvas.addEventListener('pointerdown', blockNonSyntheticEvents, true);
         canvas.addEventListener('pointerup', blockNonSyntheticEvents, true);
+        window.addEventListener('pointermove', blockNonSyntheticEvents, true);
+        window.addEventListener('pointerdown', blockNonSyntheticEvents, true);
+        window.addEventListener('pointerup', blockNonSyntheticEvents, true);
+        document.addEventListener('pointermove', blockNonSyntheticEvents, true);
+        document.addEventListener('pointerdown', blockNonSyntheticEvents, true);
+        document.addEventListener('pointerup', blockNonSyntheticEvents, true);
 
         return () => {
             canvas.removeEventListener('pointermove', blockNonSyntheticEvents, true);
             canvas.removeEventListener('pointerdown', blockNonSyntheticEvents, true);
             canvas.removeEventListener('pointerup', blockNonSyntheticEvents, true);
+            window.removeEventListener('pointermove', blockNonSyntheticEvents, true);
+            window.removeEventListener('pointerdown', blockNonSyntheticEvents, true);
+            window.removeEventListener('pointerup', blockNonSyntheticEvents, true);
+            document.removeEventListener('pointermove', blockNonSyntheticEvents, true);
+            document.removeEventListener('pointerdown', blockNonSyntheticEvents, true);
+            document.removeEventListener('pointerup', blockNonSyntheticEvents, true);
         };
     }, [gl]);
 
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (!controls.current.isLocked) return;
+            if (!controls.current?.isLocked) return;
             switch (event.code) {
                 case 'KeyW':
                     moveDirection.current.z = -1;
@@ -3172,11 +4925,14 @@ export function CustomCamera() {
         };
 
         // Handle mouse events while in pointer lock
-        // We dispatch synthetic pointer events at the center of the screen
+        // We dispatch synthetic pointer events at the crosshair.
         const handleMouseDown = (event) => {
             if (!controls.current?.isLocked) return;
             if (event.button !== 0) return; // Only left click
 
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             isPointerLockDragging.current = true;
             dispatchSyntheticPointerEvent('pointerdown', 1);
         };
@@ -3185,38 +4941,47 @@ export function CustomCamera() {
             if (!controls.current?.isLocked) return;
             if (event.button !== 0) return;
 
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             if (isPointerLockDragging.current) {
                 isPointerLockDragging.current = false;
                 dispatchSyntheticPointerEvent('pointerup', 0);
             }
         };
 
+        const handleClick = (event) => {
+            if (!controls.current?.isLocked) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        };
+
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousedown', handleMouseDown, true);
+        document.addEventListener('mouseup', handleMouseUp, true);
+        document.addEventListener('click', handleClick, true);
 
-        controls.current.camera.position.set(0, 1.5, 1);
-
-        // Initialize camera transform tracking
-        cameraTransform.current.position.copy(controls.current.camera.position);
-        cameraTransform.current.previousPosition.copy(controls.current.camera.position);
+        if (controls.current?.camera) {
+            controls.current.camera.position.set(0, 1.5, 1);
+        }
 
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keyup', handleKeyUp);
-            document.removeEventListener('mousedown', handleMouseDown);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mousedown', handleMouseDown, true);
+            document.removeEventListener('mouseup', handleMouseUp, true);
+            document.removeEventListener('click', handleClick, true);
         };
     }, [gl]);
 
     // Use useFrame with a higher priority (negative number = runs earlier)
     // This ensures camera matrix is updated before handles process their transforms
     useFrame((state, delta) => {
-        const cameraObject = controls.current.getObject();
-
-        // Store previous position for delta calculation
-        cameraTransform.current.previousPosition.copy(cameraTransform.current.position);
+        const cameraObject = controls.current?.getObject?.();
+        if (!cameraObject) return;
 
         // Apply movement
         if (moveDirection.current.x != 0 || moveDirection.current.y != 0 || moveDirection.current.z != 0) {
@@ -3230,16 +4995,6 @@ export function CustomCamera() {
         cameraObject.updateMatrix();
         cameraObject.updateMatrixWorld(true);
 
-        // Update camera transform tracking
-        cameraObject.getWorldPosition(cameraTransform.current.position);
-        cameraTransform.current.worldMatrix.copy(cameraObject.matrixWorld);
-
-        // Calculate delta position (useful for handles that need to follow camera movement)
-        cameraTransform.current.deltaPosition.subVectors(
-            cameraTransform.current.position,
-            cameraTransform.current.previousPosition
-        );
-
         // Continuously send pointermove events while in pointer lock
         // This allows hover detection and dragging to work
         if (controls.current?.isLocked) {
@@ -3248,10 +5003,13 @@ export function CustomCamera() {
     }, -100); // Priority -100 ensures this runs before handle updates
 
     const handleOnLock = () => {
-        crosshair.current.style.display = 'block';
+        crosshair.current = crosshair.current || document.querySelector('.crosshair');
+        if (crosshair.current) crosshair.current.style.display = 'block';
+        dispatchSyntheticPointerEvent('pointermove', 0);
     };
     const handleOnUnlock = () => {
-        crosshair.current.style.display = 'none';
+        crosshair.current = crosshair.current || document.querySelector('.crosshair');
+        if (crosshair.current) crosshair.current.style.display = 'none';
 
         if (isPointerLockDragging.current) {
             isPointerLockDragging.current = false;
@@ -3428,7 +5186,8 @@ export function BoundaryPreview() {
 }
 </code-fragment><code-fragment class="projection-plane-preview" data-type="text/javascript+babel" name="Projection Plane Preview">import React from 'react';
 const { useCallback, useRef, useEffect } = React;
-import { BackSide, MeshStandardMaterial, Vector3, Matrix4, Euler, PlaneGeometry } from 'three';
+import { BackSide, MeshStandardMaterial, Vector3, Matrix4, Euler, PlaneGeometry, Quaternion } from 'three';
+import { useFrame } from '@react-three/fiber';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { Handle, HandleTarget } from '@react-three/handle';
 import { defaultApply } from '@pmndrs/handle';
@@ -3443,15 +5202,68 @@ const projectionPlanePreviewBackMaterial = new MeshStandardMaterial({ color: '#0
 const dragGeometry = new RoundedBoxGeometry(1, 1, 1, 1);
 const dragMaterial = new MeshStandardMaterial({ color: '#444' });
 const dragScale = 0.05;
+const PROJECTION_PLANE_WRITEBACK_TIMEOUT = 33;
+
+const getPointerLockCameraObject = () => {
+    const controls = window.moduleCameraControls?.controlsRef?.current;
+    if (!controls?.isLocked) return null;
+
+    return window.moduleCameraControls?.getCameraObject?.() || controls.getObject?.() || controls.camera || null;
+};
+
+const applyWorldTransform = (target, worldPosition, worldQuaternion, parentWorldQuaternion, localPosition, localQuaternion) => {
+    if (!target) return;
+
+    if (target.parent) {
+        target.parent.updateMatrixWorld(true);
+        localPosition.copy(worldPosition);
+        target.parent.worldToLocal(localPosition);
+        target.position.copy(localPosition);
+
+        target.parent.getWorldQuaternion(parentWorldQuaternion);
+        localQuaternion.copy(parentWorldQuaternion).invert().multiply(worldQuaternion);
+        target.quaternion.copy(localQuaternion);
+    } else {
+        target.position.copy(worldPosition);
+        target.quaternion.copy(worldQuaternion);
+    }
+
+    target.updateMatrix();
+    target.updateMatrixWorld(true);
+};
 
 export function ProjectionPlanePreview({ positionOverride, scaleOverride }) {
     const [showProjectionPlane] = useProperty('showProjectionPlane');
     const [projectionPlane, setProjectionPlane] = useProperty('projectionPlane');
     const handleTargetRef = useRef();
+    const writebackTimeout = useRef();
+    const pointerLockDragRef = useRef({
+        active: false,
+        relativePosition: new Vector3(),
+        cameraWorldPosition: new Vector3(),
+        targetWorldPosition: new Vector3(),
+        cameraWorldQuaternion: new Quaternion(),
+        targetWorldQuaternion: new Quaternion(),
+        relativeQuaternion: new Quaternion(),
+        inverseCameraWorldQuaternion: new Quaternion(),
+        parentWorldQuaternion: new Quaternion(),
+        localPosition: new Vector3(),
+        localQuaternion: new Quaternion(),
+        xAxis: new Vector3(),
+        yAxis: new Vector3(),
+        zAxis: new Vector3()
+    });
+
+    useEffect(() => {
+        return () => {
+            if (writebackTimeout.current) clearTimeout(writebackTimeout.current);
+        };
+    }, []);
 
     // Sync the handle target with the projection plane data
     useEffect(() => {
         if (!handleTargetRef.current || !Array.isArray(projectionPlane)) return;
+        if (pointerLockDragRef.current.active) return;
 
         const position = positionOverride || projectionPlane.slice(0, 3);
         const xAxis = new Vector3().fromArray(projectionPlane.slice(3, 6));
@@ -3465,22 +5277,124 @@ export function ProjectionPlanePreview({ positionOverride, scaleOverride }) {
         handleTargetRef.current.rotation.copy(rotation);
     }, [projectionPlane, positionOverride]);
 
+    const beginPointerLockDrag = useCallback((target) => {
+        const cameraObject = getPointerLockCameraObject();
+        const pointerLockDrag = pointerLockDragRef.current;
+
+        if (!cameraObject || !target) {
+            pointerLockDrag.active = false;
+            return;
+        }
+
+        cameraObject.updateMatrixWorld(true);
+        target.updateMatrixWorld(true);
+        cameraObject.getWorldPosition(pointerLockDrag.cameraWorldPosition);
+        cameraObject.getWorldQuaternion(pointerLockDrag.cameraWorldQuaternion);
+        target.getWorldPosition(pointerLockDrag.targetWorldPosition);
+        target.getWorldQuaternion(pointerLockDrag.targetWorldQuaternion);
+
+        pointerLockDrag.relativePosition
+            .subVectors(pointerLockDrag.targetWorldPosition, pointerLockDrag.cameraWorldPosition)
+            .applyQuaternion(pointerLockDrag.inverseCameraWorldQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).invert());
+
+        pointerLockDrag.relativeQuaternion
+            .copy(pointerLockDrag.cameraWorldQuaternion)
+            .invert()
+            .multiply(pointerLockDrag.targetWorldQuaternion);
+
+        pointerLockDrag.active = true;
+    }, []);
+
+    const applyPointerLockTransform = useCallback((target) => {
+        const cameraObject = getPointerLockCameraObject();
+        const pointerLockDrag = pointerLockDragRef.current;
+
+        if (!pointerLockDrag.active) {
+            return false;
+        }
+
+        if (!cameraObject || !target) {
+            pointerLockDrag.active = false;
+            return false;
+        }
+
+        cameraObject.updateMatrixWorld(true);
+        cameraObject.getWorldPosition(pointerLockDrag.cameraWorldPosition);
+        cameraObject.getWorldQuaternion(pointerLockDrag.cameraWorldQuaternion);
+        pointerLockDrag.targetWorldPosition
+            .copy(pointerLockDrag.relativePosition)
+            .applyQuaternion(pointerLockDrag.cameraWorldQuaternion)
+            .add(pointerLockDrag.cameraWorldPosition);
+        pointerLockDrag.targetWorldQuaternion
+            .copy(pointerLockDrag.cameraWorldQuaternion)
+            .multiply(pointerLockDrag.relativeQuaternion);
+
+        applyWorldTransform(
+            target,
+            pointerLockDrag.targetWorldPosition,
+            pointerLockDrag.targetWorldQuaternion,
+            pointerLockDrag.parentWorldQuaternion,
+            pointerLockDrag.localPosition,
+            pointerLockDrag.localQuaternion
+        );
+
+        return true;
+    }, []);
+
+    const updateProjectionPlaneFromTarget = useCallback((target, force = false) => {
+        if (!target) return;
+        if (!force && writebackTimeout.current) return;
+
+        const pointerLockDrag = pointerLockDragRef.current;
+        target.updateMatrixWorld(true);
+        target.getWorldPosition(pointerLockDrag.targetWorldPosition);
+        target.getWorldQuaternion(pointerLockDrag.targetWorldQuaternion);
+
+        pointerLockDrag.xAxis.set(1, 0, 0).applyQuaternion(pointerLockDrag.targetWorldQuaternion);
+        pointerLockDrag.yAxis.set(0, 1, 0).applyQuaternion(pointerLockDrag.targetWorldQuaternion);
+        pointerLockDrag.zAxis.set(0, 0, 1).applyQuaternion(pointerLockDrag.targetWorldQuaternion);
+
+        setProjectionPlane([
+            ...pointerLockDrag.targetWorldPosition.toArray(),
+            ...pointerLockDrag.xAxis.toArray(),
+            ...pointerLockDrag.yAxis.toArray(),
+            ...pointerLockDrag.zAxis.toArray()
+        ]);
+
+        if (force && writebackTimeout.current) {
+            clearTimeout(writebackTimeout.current);
+            writebackTimeout.current = null;
+        }
+
+        if (!force) {
+            writebackTimeout.current = setTimeout(() => {
+                writebackTimeout.current = null;
+            }, PROJECTION_PLANE_WRITEBACK_TIMEOUT);
+        }
+    }, [setProjectionPlane]);
+
     // Custom apply function to update the projection plane on drag
     const applyDrag = useCallback((state, target) => {
         defaultApply(state, target);
 
-        // Update the projection plane value when dragging ends or during drag
-        if (target) {
-            const position = target.position.toArray();
-            const rotation = target.rotation.toArray();
-
-            const xAxis = new Vector3(1, 0, 0).applyEuler(new Euler(rotation[0], rotation[1], rotation[2]));
-            const yAxis = new Vector3(0, 1, 0).applyEuler(new Euler(rotation[0], rotation[1], rotation[2]));
-            const zAxis = new Vector3(0, 0, 1).applyEuler(new Euler(rotation[0], rotation[1], rotation[2]));
-
-            setProjectionPlane([...position, ...xAxis.toArray(), ...yAxis.toArray(), ...zAxis.toArray()]);
+        if (state.first) {
+            beginPointerLockDrag(target);
         }
-    }, [setProjectionPlane]);
+
+        applyPointerLockTransform(target);
+        updateProjectionPlaneFromTarget(target, state.last);
+
+        if (state.last) {
+            pointerLockDragRef.current.active = false;
+        }
+    }, [beginPointerLockDrag, applyPointerLockTransform, updateProjectionPlaneFromTarget]);
+
+    useFrame(() => {
+        if (!pointerLockDragRef.current.active || !handleTargetRef.current) return;
+
+        applyPointerLockTransform(handleTargetRef.current);
+        updateProjectionPlaneFromTarget(handleTargetRef.current);
+    });
 
     if (!Array.isArray(projectionPlane)) return null;
 
@@ -4612,9 +6526,10 @@ export const resetBoundary = async (spaceUUIDParam) => {
 }
 </code-fragment></code-folder><code-folder name="Movable"><code-fragment class="movable" data-type="text/javascript+babel" name="Movable Component">import React from 'react';
 const { useRef, useState, useEffect, useCallback, useMemo } = React;
+import { Euler, Quaternion, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { isXRInputSourceState } from '@react-three/xr';
-import { Handle, HandleTarget, defaultApply } from '@react-three/handle'
+import { Handle, HandleTarget, defaultApply } from '@react-three/handle';
 import { create } from 'zustand';
 import { useProperty } from '#VarvReact';
 
@@ -4625,6 +6540,7 @@ import { deselectMovables } from '#Spatialstrates .movable-helpers';
 
 const FAST_WRITEBACK_TIMEOUT = 33;
 const SLOW_WRITEBACK_TIMEOUT = 333;
+const POINTER_LOCK_EULER_ORDER = 'YXZ';
 
 export const SELECTED_COLOR_PRIMARY = 'hsl(14, 100%, 50%)';
 export const SELECTED_COLOR_SECONDARY = 'hsl(26, 100%, 60%)';
@@ -4701,7 +6617,47 @@ export function useTransform() {
 
 const vibrateOnEvent = (e) => {
     if (isXRInputSourceState(e.pointerState) && e.pointerState.type === 'controller') {
-        e.pointerState.inputSource.gamepad?.hapticActuators[0]?.pulse(0.3, 50)
+        e.pointerState.inputSource.gamepad?.hapticActuators[0]?.pulse(0.3, 50);
+    }
+};
+
+const normalizeAngle = (angle) => {
+    return Math.atan2(Math.sin(angle), Math.cos(angle));
+};
+
+const getPointerLockCameraObject = () => {
+    const controls = window.moduleCameraControls?.controlsRef?.current;
+    if (!controls?.isLocked) return null;
+
+    return window.moduleCameraControls?.getCameraObject?.() || controls.getObject?.() || controls.camera || null;
+};
+
+const applyWorldQuaternion = (target, worldQuaternion, parentWorldQuaternion, localQuaternion) => {
+    if (!target) return;
+
+    if (target.parent) {
+        target.parent.updateMatrixWorld(true);
+        target.parent.getWorldQuaternion(parentWorldQuaternion);
+        localQuaternion.copy(parentWorldQuaternion).invert().multiply(worldQuaternion);
+        target.quaternion.copy(localQuaternion);
+    } else {
+        target.quaternion.copy(worldQuaternion);
+    }
+
+    target.updateMatrix();
+    target.updateMatrixWorld(true);
+};
+
+const applyWorldPosition = (target, worldPosition, localPosition) => {
+    if (!target) return;
+
+    if (target.parent) {
+        target.parent.updateMatrixWorld(true);
+        localPosition.copy(worldPosition);
+        target.parent.worldToLocal(localPosition);
+        target.position.copy(localPosition);
+    } else {
+        target.position.copy(worldPosition);
     }
 };
 
@@ -4730,7 +6686,24 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
     const fastWritebackTimeout = useRef();
     const slowWritebackTimeout = useRef();
     const handleRef = useRef();
-    const handleTargetRef = useRef(null)
+    const handleTargetRef = useRef(null);
+    const pointerLockDragRef = useRef({
+        active: false,
+        relativePosition: new Vector3(),
+        cameraWorldPosition: new Vector3(),
+        targetWorldPosition: new Vector3(),
+        cameraWorldQuaternion: new Quaternion(),
+        targetWorldQuaternion: new Quaternion(),
+        relativeQuaternion: new Quaternion(),
+        inverseCameraWorldQuaternion: new Quaternion(),
+        parentWorldQuaternion: new Quaternion(),
+        localPosition: new Vector3(),
+        localQuaternion: new Quaternion(),
+        cameraEuler: new Euler(0, 0, 0, POINTER_LOCK_EULER_ORDER),
+        targetWorldEuler: new Euler(0, 0, 0, POINTER_LOCK_EULER_ORDER),
+        baseWorldEuler: new Euler(0, 0, 0, POINTER_LOCK_EULER_ORDER),
+        relativeYaw: 0
+    });
 
     useEffect(() => {
         if (!transform.initialized) return;
@@ -4765,7 +6738,123 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
         return () => unsubscribe();
     }, [remoteInitiateDrag, subscribeEvent, uuid]);
 
+    const startDrag = useCallback(() => {
+        setBeingDragged(true);
+
+        triggerEvent('drag-start', { target: uuid });
+        if (typeof onDragStart === 'function') onDragStart();
+    }, [setBeingDragged, onDragStart, triggerEvent, uuid]);
+
+    const stopDrag = useCallback(() => {
+        setBeingDragged(false);
+
+        triggerEvent('drag-end', { target: uuid });
+        if (typeof onDragEnd === 'function') onDragEnd();
+    }, [setBeingDragged, onDragEnd, triggerEvent, uuid]);
+
+    const beginPointerLockDrag = useCallback((target) => {
+        const cameraObject = getPointerLockCameraObject();
+        const pointerLockDrag = pointerLockDragRef.current;
+
+        if (!cameraObject || !target) {
+            pointerLockDrag.active = false;
+            return;
+        }
+
+        cameraObject.updateMatrixWorld(true);
+        target.updateMatrixWorld(true);
+        cameraObject.getWorldPosition(pointerLockDrag.cameraWorldPosition);
+        cameraObject.getWorldQuaternion(pointerLockDrag.cameraWorldQuaternion);
+        target.getWorldPosition(pointerLockDrag.targetWorldPosition);
+        target.getWorldQuaternion(pointerLockDrag.targetWorldQuaternion);
+
+        pointerLockDrag.relativePosition
+            .subVectors(pointerLockDrag.targetWorldPosition, pointerLockDrag.cameraWorldPosition)
+            .applyQuaternion(pointerLockDrag.inverseCameraWorldQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).invert());
+
+        if (upright) {
+            pointerLockDrag.cameraEuler.setFromQuaternion(pointerLockDrag.cameraWorldQuaternion, POINTER_LOCK_EULER_ORDER);
+            pointerLockDrag.targetWorldEuler.setFromQuaternion(pointerLockDrag.targetWorldQuaternion, POINTER_LOCK_EULER_ORDER);
+            pointerLockDrag.baseWorldEuler.copy(pointerLockDrag.targetWorldEuler);
+            pointerLockDrag.relativeYaw = normalizeAngle(pointerLockDrag.targetWorldEuler.y - pointerLockDrag.cameraEuler.y);
+        } else {
+            pointerLockDrag.relativeQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).invert().multiply(pointerLockDrag.targetWorldQuaternion);
+        }
+
+        pointerLockDrag.active = true;
+    }, [upright]);
+
+    const applyPointerLockTransform = useCallback((target) => {
+        const cameraObject = getPointerLockCameraObject();
+        const pointerLockDrag = pointerLockDragRef.current;
+
+        if (!pointerLockDrag.active) {
+            return false;
+        }
+
+        if (!cameraObject || !target) {
+            pointerLockDrag.active = false;
+            return false;
+        }
+
+        cameraObject.updateMatrixWorld(true);
+        cameraObject.getWorldPosition(pointerLockDrag.cameraWorldPosition);
+        cameraObject.getWorldQuaternion(pointerLockDrag.cameraWorldQuaternion);
+        pointerLockDrag.targetWorldPosition
+            .copy(pointerLockDrag.relativePosition)
+            .applyQuaternion(pointerLockDrag.cameraWorldQuaternion)
+            .add(pointerLockDrag.cameraWorldPosition);
+
+        if (upright) {
+            pointerLockDrag.cameraEuler.setFromQuaternion(pointerLockDrag.cameraWorldQuaternion, POINTER_LOCK_EULER_ORDER);
+            pointerLockDrag.targetWorldEuler.set(
+                pointerLockDrag.baseWorldEuler.x,
+                pointerLockDrag.cameraEuler.y + pointerLockDrag.relativeYaw,
+                pointerLockDrag.baseWorldEuler.z,
+                POINTER_LOCK_EULER_ORDER
+            );
+            pointerLockDrag.targetWorldQuaternion.setFromEuler(pointerLockDrag.targetWorldEuler);
+        } else {
+            pointerLockDrag.targetWorldQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).multiply(pointerLockDrag.relativeQuaternion);
+        }
+
+        applyWorldPosition(target, pointerLockDrag.targetWorldPosition, pointerLockDrag.localPosition);
+        applyWorldQuaternion(
+            target,
+            pointerLockDrag.targetWorldQuaternion,
+            pointerLockDrag.parentWorldQuaternion,
+            pointerLockDrag.localQuaternion
+        );
+
+        return true;
+    }, [upright]);
+
+    const applyTransform = useCallback((state, target) => {
+        defaultApply(state, target);
+
+        if (state.first) {
+            beginPointerLockDrag(target);
+            startDrag();
+        }
+
+        applyPointerLockTransform(target);
+
+        if (state.last) {
+            // Always write back on last frame to ensure final position/rotation persists
+            transform.position = target.position.toArray();
+            transform.rotation = target.rotation.toArray();
+            pointerLockDragRef.current.active = false;
+            stopDrag();
+        }
+    }, [transform, startDrag, stopDrag, beginPointerLockDrag, applyPointerLockTransform]);
+
     useFrame(() => {
+        const pointerLockActive = pointerLockDragRef.current.active;
+
+        if (pointerLockActive && handleTargetRef.current) {
+            applyPointerLockTransform(handleTargetRef.current);
+        }
+
         if (beingDragged) {
             if (handleTargetRef.current) {
                 if (!fastWritebackTimeout.current) {
@@ -4783,42 +6872,13 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
                     }, SLOW_WRITEBACK_TIMEOUT);
                 }
             }
-        } else {
+        } else if (!pointerLockActive) {
             useMovableStore.setState({
                 position: transform.position,
                 rotation: transform.rotation
             });
         }
     });
-
-    const startDrag = useCallback(() => {
-        setBeingDragged(true);
-
-        triggerEvent('drag-start', { target: uuid });
-        if (typeof onDragStart === 'function') onDragStart();
-    }, [setBeingDragged, onDragStart, triggerEvent, uuid]);
-
-    const stopDrag = useCallback(() => {
-        setBeingDragged(false);
-
-        triggerEvent('drag-end', { target: uuid });
-        if (typeof onDragEnd === 'function') onDragEnd();
-    }, [setBeingDragged, onDragEnd, triggerEvent, uuid]);
-
-    const applyTransform = useCallback((state, target) => {
-        defaultApply(state, target);
-
-        if (state.first) {
-            startDrag();
-        }
-
-        if (state.last) {
-            // Always write back on last frame to ensure final position/rotation persists
-            transform.position = target.position.toArray();
-            transform.rotation = target.rotation.toArray();
-            stopDrag();
-        }
-    }, [transform, startDrag, stopDrag]);
 
     return &lt;HandleTarget ref={handleTargetRef}>
         &lt;Handle ref={handleRef}
@@ -18436,22 +20496,5 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-model-shelf', &lt;ControllerMenuButton onClick={() => createMovable('ModelShelf')}>New Model Gallery&lt;/ControllerMenuButton>, 350);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
-</code-fragment></wpm-package></code-folder><code-fragment data-type="text/markdown" name="AGENTS"># AGENTS.md Spatialstrates
-
-## Development
-
-- The `Spatialstrates.jsx` file is the entry point of the application
-- Always create React components, do not use regular classes
-- Some WPM packages have multiple exports, these are referred to by CSS class names by convention
-    - You can set the CSS class through the file sync, ask the user to set CSS classes when importing from other files or check the codebase if it was imported somewhere else
-
-
-## Library Documentation
-
-- React Three Fiber: https://docs.pmnd.rs/react-three-fiber
-- React Three Drei: https://docs.pmnd.rs/drei
-- React Three XR: https://docs.pmnd.rs/xr
-    - Handles API: https://pmndrs.github.io/xr/docs/handles/introduction
-- React Three UIKit: https://docs.pmnd.rs/uikit
-</code-fragment></code-folder><code-folder id="vis-component-container" name="Vis-Components"><code-folder class="spec-container" name="Specs"></code-folder><code-folder class="dataset-container" name="Datasets"></code-fragment></code-folder></code-folder>
+</code-fragment></wpm-package></code-folder></code-folder><code-folder id="vis-component-container" name="Vis-Components"><code-folder class="spec-container" name="Specs"></code-folder><code-folder class="dataset-container" name="Datasets"></code-fragment></code-folder></code-folder>
 </body></html>

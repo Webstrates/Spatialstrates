@@ -20,8 +20,8 @@ perl -0777 -pi -e '
     # Remove the entire <head> element and its contents
     s/<head[^>]*>.*?<\/head>//gs;
 
-    # Remove <code-folder name="WPM"> element and its contents
-    s/<code-folder\s+name="WPM"[^>]*>.*?<\/code-folder>//gs;
+    # Remove <code-folder name="Codestrates"> element and its contents
+    s/<code-folder\s+name="Codestrates"[^>]*>.*?<\/code-folder>//gs;
 
     # Remove <code-folder name="Meta Elements"> element and its contents
     s/<code-folder\s+name="Meta Elements"[^>]*>.*?<\/code-folder>//gs;

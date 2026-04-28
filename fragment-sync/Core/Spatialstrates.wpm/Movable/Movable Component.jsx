@@ -1,8 +1,9 @@
 import React from 'react';
 const { useRef, useState, useEffect, useCallback, useMemo } = React;
+import { Euler, Quaternion, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { isXRInputSourceState } from '@react-three/xr';
-import { Handle, HandleTarget, defaultApply } from '@react-three/handle'
+import { Handle, HandleTarget, defaultApply } from '@react-three/handle';
 import { create } from 'zustand';
 import { useProperty } from '#VarvReact';
 
@@ -13,6 +14,7 @@ import { deselectMovables } from '#Spatialstrates .movable-helpers';
 
 const FAST_WRITEBACK_TIMEOUT = 33;
 const SLOW_WRITEBACK_TIMEOUT = 333;
+const POINTER_LOCK_EULER_ORDER = 'YXZ';
 
 export const SELECTED_COLOR_PRIMARY = 'hsl(14, 100%, 50%)';
 export const SELECTED_COLOR_SECONDARY = 'hsl(26, 100%, 60%)';
@@ -89,7 +91,47 @@ export function useTransform() {
 
 const vibrateOnEvent = (e) => {
     if (isXRInputSourceState(e.pointerState) && e.pointerState.type === 'controller') {
-        e.pointerState.inputSource.gamepad?.hapticActuators[0]?.pulse(0.3, 50)
+        e.pointerState.inputSource.gamepad?.hapticActuators[0]?.pulse(0.3, 50);
+    }
+};
+
+const normalizeAngle = (angle) => {
+    return Math.atan2(Math.sin(angle), Math.cos(angle));
+};
+
+const getPointerLockCameraObject = () => {
+    const controls = window.moduleCameraControls?.controlsRef?.current;
+    if (!controls?.isLocked) return null;
+
+    return window.moduleCameraControls?.getCameraObject?.() || controls.getObject?.() || controls.camera || null;
+};
+
+const applyWorldQuaternion = (target, worldQuaternion, parentWorldQuaternion, localQuaternion) => {
+    if (!target) return;
+
+    if (target.parent) {
+        target.parent.updateMatrixWorld(true);
+        target.parent.getWorldQuaternion(parentWorldQuaternion);
+        localQuaternion.copy(parentWorldQuaternion).invert().multiply(worldQuaternion);
+        target.quaternion.copy(localQuaternion);
+    } else {
+        target.quaternion.copy(worldQuaternion);
+    }
+
+    target.updateMatrix();
+    target.updateMatrixWorld(true);
+};
+
+const applyWorldPosition = (target, worldPosition, localPosition) => {
+    if (!target) return;
+
+    if (target.parent) {
+        target.parent.updateMatrixWorld(true);
+        localPosition.copy(worldPosition);
+        target.parent.worldToLocal(localPosition);
+        target.position.copy(localPosition);
+    } else {
+        target.position.copy(worldPosition);
     }
 };
 
@@ -118,7 +160,24 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
     const fastWritebackTimeout = useRef();
     const slowWritebackTimeout = useRef();
     const handleRef = useRef();
-    const handleTargetRef = useRef(null)
+    const handleTargetRef = useRef(null);
+    const pointerLockDragRef = useRef({
+        active: false,
+        relativePosition: new Vector3(),
+        cameraWorldPosition: new Vector3(),
+        targetWorldPosition: new Vector3(),
+        cameraWorldQuaternion: new Quaternion(),
+        targetWorldQuaternion: new Quaternion(),
+        relativeQuaternion: new Quaternion(),
+        inverseCameraWorldQuaternion: new Quaternion(),
+        parentWorldQuaternion: new Quaternion(),
+        localPosition: new Vector3(),
+        localQuaternion: new Quaternion(),
+        cameraEuler: new Euler(0, 0, 0, POINTER_LOCK_EULER_ORDER),
+        targetWorldEuler: new Euler(0, 0, 0, POINTER_LOCK_EULER_ORDER),
+        baseWorldEuler: new Euler(0, 0, 0, POINTER_LOCK_EULER_ORDER),
+        relativeYaw: 0
+    });
 
     useEffect(() => {
         if (!transform.initialized) return;
@@ -153,7 +212,123 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
         return () => unsubscribe();
     }, [remoteInitiateDrag, subscribeEvent, uuid]);
 
+    const startDrag = useCallback(() => {
+        setBeingDragged(true);
+
+        triggerEvent('drag-start', { target: uuid });
+        if (typeof onDragStart === 'function') onDragStart();
+    }, [setBeingDragged, onDragStart, triggerEvent, uuid]);
+
+    const stopDrag = useCallback(() => {
+        setBeingDragged(false);
+
+        triggerEvent('drag-end', { target: uuid });
+        if (typeof onDragEnd === 'function') onDragEnd();
+    }, [setBeingDragged, onDragEnd, triggerEvent, uuid]);
+
+    const beginPointerLockDrag = useCallback((target) => {
+        const cameraObject = getPointerLockCameraObject();
+        const pointerLockDrag = pointerLockDragRef.current;
+
+        if (!cameraObject || !target) {
+            pointerLockDrag.active = false;
+            return;
+        }
+
+        cameraObject.updateMatrixWorld(true);
+        target.updateMatrixWorld(true);
+        cameraObject.getWorldPosition(pointerLockDrag.cameraWorldPosition);
+        cameraObject.getWorldQuaternion(pointerLockDrag.cameraWorldQuaternion);
+        target.getWorldPosition(pointerLockDrag.targetWorldPosition);
+        target.getWorldQuaternion(pointerLockDrag.targetWorldQuaternion);
+
+        pointerLockDrag.relativePosition
+            .subVectors(pointerLockDrag.targetWorldPosition, pointerLockDrag.cameraWorldPosition)
+            .applyQuaternion(pointerLockDrag.inverseCameraWorldQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).invert());
+
+        if (upright) {
+            pointerLockDrag.cameraEuler.setFromQuaternion(pointerLockDrag.cameraWorldQuaternion, POINTER_LOCK_EULER_ORDER);
+            pointerLockDrag.targetWorldEuler.setFromQuaternion(pointerLockDrag.targetWorldQuaternion, POINTER_LOCK_EULER_ORDER);
+            pointerLockDrag.baseWorldEuler.copy(pointerLockDrag.targetWorldEuler);
+            pointerLockDrag.relativeYaw = normalizeAngle(pointerLockDrag.targetWorldEuler.y - pointerLockDrag.cameraEuler.y);
+        } else {
+            pointerLockDrag.relativeQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).invert().multiply(pointerLockDrag.targetWorldQuaternion);
+        }
+
+        pointerLockDrag.active = true;
+    }, [upright]);
+
+    const applyPointerLockTransform = useCallback((target) => {
+        const cameraObject = getPointerLockCameraObject();
+        const pointerLockDrag = pointerLockDragRef.current;
+
+        if (!pointerLockDrag.active) {
+            return false;
+        }
+
+        if (!cameraObject || !target) {
+            pointerLockDrag.active = false;
+            return false;
+        }
+
+        cameraObject.updateMatrixWorld(true);
+        cameraObject.getWorldPosition(pointerLockDrag.cameraWorldPosition);
+        cameraObject.getWorldQuaternion(pointerLockDrag.cameraWorldQuaternion);
+        pointerLockDrag.targetWorldPosition
+            .copy(pointerLockDrag.relativePosition)
+            .applyQuaternion(pointerLockDrag.cameraWorldQuaternion)
+            .add(pointerLockDrag.cameraWorldPosition);
+
+        if (upright) {
+            pointerLockDrag.cameraEuler.setFromQuaternion(pointerLockDrag.cameraWorldQuaternion, POINTER_LOCK_EULER_ORDER);
+            pointerLockDrag.targetWorldEuler.set(
+                pointerLockDrag.baseWorldEuler.x,
+                pointerLockDrag.cameraEuler.y + pointerLockDrag.relativeYaw,
+                pointerLockDrag.baseWorldEuler.z,
+                POINTER_LOCK_EULER_ORDER
+            );
+            pointerLockDrag.targetWorldQuaternion.setFromEuler(pointerLockDrag.targetWorldEuler);
+        } else {
+            pointerLockDrag.targetWorldQuaternion.copy(pointerLockDrag.cameraWorldQuaternion).multiply(pointerLockDrag.relativeQuaternion);
+        }
+
+        applyWorldPosition(target, pointerLockDrag.targetWorldPosition, pointerLockDrag.localPosition);
+        applyWorldQuaternion(
+            target,
+            pointerLockDrag.targetWorldQuaternion,
+            pointerLockDrag.parentWorldQuaternion,
+            pointerLockDrag.localQuaternion
+        );
+
+        return true;
+    }, [upright]);
+
+    const applyTransform = useCallback((state, target) => {
+        defaultApply(state, target);
+
+        if (state.first) {
+            beginPointerLockDrag(target);
+            startDrag();
+        }
+
+        applyPointerLockTransform(target);
+
+        if (state.last) {
+            // Always write back on last frame to ensure final position/rotation persists
+            transform.position = target.position.toArray();
+            transform.rotation = target.rotation.toArray();
+            pointerLockDragRef.current.active = false;
+            stopDrag();
+        }
+    }, [transform, startDrag, stopDrag, beginPointerLockDrag, applyPointerLockTransform]);
+
     useFrame(() => {
+        const pointerLockActive = pointerLockDragRef.current.active;
+
+        if (pointerLockActive && handleTargetRef.current) {
+            applyPointerLockTransform(handleTargetRef.current);
+        }
+
         if (beingDragged) {
             if (handleTargetRef.current) {
                 if (!fastWritebackTimeout.current) {
@@ -171,42 +346,13 @@ export function Movable({ children, handle, upright = true, onDragStart, onDragE
                     }, SLOW_WRITEBACK_TIMEOUT);
                 }
             }
-        } else {
+        } else if (!pointerLockActive) {
             useMovableStore.setState({
                 position: transform.position,
                 rotation: transform.rotation
             });
         }
     });
-
-    const startDrag = useCallback(() => {
-        setBeingDragged(true);
-
-        triggerEvent('drag-start', { target: uuid });
-        if (typeof onDragStart === 'function') onDragStart();
-    }, [setBeingDragged, onDragStart, triggerEvent, uuid]);
-
-    const stopDrag = useCallback(() => {
-        setBeingDragged(false);
-
-        triggerEvent('drag-end', { target: uuid });
-        if (typeof onDragEnd === 'function') onDragEnd();
-    }, [setBeingDragged, onDragEnd, triggerEvent, uuid]);
-
-    const applyTransform = useCallback((state, target) => {
-        defaultApply(state, target);
-
-        if (state.first) {
-            startDrag();
-        }
-
-        if (state.last) {
-            // Always write back on last frame to ensure final position/rotation persists
-            transform.position = target.position.toArray();
-            transform.rotation = target.rotation.toArray();
-            stopDrag();
-        }
-    }, [transform, startDrag, stopDrag]);
 
     return <HandleTarget ref={handleTargetRef}>
         <Handle ref={handleRef}

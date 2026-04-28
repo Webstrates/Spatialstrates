@@ -1,33 +1,44 @@
 import React from 'react';
 const { useRef, useEffect } = React;
-import { Vector3, Matrix4 } from 'three';
+import { Vector3 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { PointerLockControls } from '@react-three/drei';
+import { forwardHtmlEvents } from '@pmndrs/pointer-events';
 
 
 
 const SPEED = 1.4;
+const SYNTHETIC_POINTER_ID = 424242;
+
+const createSyntheticPointerTarget = (canvas) => {
+    const eventTarget = new EventTarget();
+    const capturedPointerIds = new Set();
+
+    return {
+        addEventListener: (...args) => eventTarget.addEventListener(...args),
+        removeEventListener: (...args) => eventTarget.removeEventListener(...args),
+        dispatchEvent: (event) => eventTarget.dispatchEvent(event),
+        getBoundingClientRect: () => canvas.getBoundingClientRect(),
+        setPointerCapture: (pointerId) => capturedPointerIds.add(pointerId),
+        hasPointerCapture: (pointerId) => capturedPointerIds.has(pointerId),
+        releasePointerCapture: (pointerId) => capturedPointerIds.delete(pointerId)
+    };
+};
 
 export function CustomCamera() {
     const controls = useRef();
     const crosshair = useRef(document.querySelector('.crosshair'));
     const moveDirection = useRef(new Vector3());
-    const { gl } = useThree();
+    const syntheticPointerEvents = useRef();
+    const { gl, camera, scene } = useThree();
 
     // Track if we're currently dragging in pointer lock mode
     const isPointerLockDragging = useRef(false);
 
-    // Store camera transform info for handle compatibility
-    const cameraTransform = useRef({
-        position: new Vector3(),
-        previousPosition: new Vector3(),
-        deltaPosition: new Vector3(),
-        worldMatrix: new Matrix4()
-    });
-
     useEffect(() => {
         window.moduleCameraControls = {
-            controlsRef: controls
+            controlsRef: controls,
+            getCameraObject: () => controls.current?.getObject?.()
         };
 
         return () => {
@@ -35,33 +46,71 @@ export function CustomCamera() {
         };
     }, []);
 
-    // Helper to create and dispatch a synthetic pointer event to the canvas
-    // This works with @pmndrs/pointer-events by sending events at screen center
+    useEffect(() => {
+        const target = createSyntheticPointerTarget(gl.domElement);
+        const { destroy } = forwardHtmlEvents(target, () => camera, scene, {
+            batchEvents: false,
+            pointerTypePrefix: 'screen-'
+        });
+
+        syntheticPointerEvents.current = { target };
+
+        return () => {
+            syntheticPointerEvents.current = null;
+            destroy();
+        };
+    }, [camera, gl, scene]);
+
+    const getCrosshairClientPosition = () => {
+        const canvas = gl.domElement;
+        crosshair.current = crosshair.current || document.querySelector('.crosshair');
+        const crosshairRect = crosshair.current?.getBoundingClientRect();
+
+        if (crosshairRect && crosshairRect.width > 0 && crosshairRect.height > 0) {
+            return {
+                clientX: crosshairRect.left + crosshairRect.width / 2,
+                clientY: crosshairRect.top + crosshairRect.height / 2
+            };
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        return {
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2
+        };
+    };
+
+    // Pointer lock keeps real pointer coordinates at the lock origin, so the
+    // forwarded scene events are dispatched from the visible crosshair instead.
     const dispatchSyntheticPointerEvent = (eventType, buttons = 0) => {
         const canvas = gl.domElement;
-        const rect = canvas.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+        const { clientX, clientY } = getCrosshairClientPosition();
+        const eventButton = eventType === 'pointermove' ? -1 : 0;
 
         const event = new PointerEvent(eventType, {
             bubbles: true,
             cancelable: true,
             view: window,
-            clientX: centerX,
-            clientY: centerY,
-            screenX: centerX,
-            screenY: centerY,
-            pointerId: 1,
+            clientX: clientX,
+            clientY: clientY,
+            screenX: window.screenX + clientX,
+            screenY: window.screenY + clientY,
+            pointerId: SYNTHETIC_POINTER_ID,
             pointerType: 'mouse',
             isPrimary: true,
-            button: 0,
+            button: eventButton,
             buttons: buttons,
             pressure: buttons > 0 ? 0.5 : 0
         });
 
         event.synthetic = true;
 
-        canvas.dispatchEvent(event);
+        const syntheticTarget = syntheticPointerEvents.current?.target;
+        if (syntheticTarget) {
+            syntheticTarget.dispatchEvent(event);
+        } else {
+            canvas.dispatchEvent(event);
+        }
     };
 
     // Block non-synthetic pointer events on the canvas when in pointer lock mode
@@ -81,17 +130,29 @@ export function CustomCamera() {
         canvas.addEventListener('pointermove', blockNonSyntheticEvents, true);
         canvas.addEventListener('pointerdown', blockNonSyntheticEvents, true);
         canvas.addEventListener('pointerup', blockNonSyntheticEvents, true);
+        window.addEventListener('pointermove', blockNonSyntheticEvents, true);
+        window.addEventListener('pointerdown', blockNonSyntheticEvents, true);
+        window.addEventListener('pointerup', blockNonSyntheticEvents, true);
+        document.addEventListener('pointermove', blockNonSyntheticEvents, true);
+        document.addEventListener('pointerdown', blockNonSyntheticEvents, true);
+        document.addEventListener('pointerup', blockNonSyntheticEvents, true);
 
         return () => {
             canvas.removeEventListener('pointermove', blockNonSyntheticEvents, true);
             canvas.removeEventListener('pointerdown', blockNonSyntheticEvents, true);
             canvas.removeEventListener('pointerup', blockNonSyntheticEvents, true);
+            window.removeEventListener('pointermove', blockNonSyntheticEvents, true);
+            window.removeEventListener('pointerdown', blockNonSyntheticEvents, true);
+            window.removeEventListener('pointerup', blockNonSyntheticEvents, true);
+            document.removeEventListener('pointermove', blockNonSyntheticEvents, true);
+            document.removeEventListener('pointerdown', blockNonSyntheticEvents, true);
+            document.removeEventListener('pointerup', blockNonSyntheticEvents, true);
         };
     }, [gl]);
 
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (!controls.current.isLocked) return;
+            if (!controls.current?.isLocked) return;
             switch (event.code) {
                 case 'KeyW':
                     moveDirection.current.z = -1;
@@ -136,11 +197,14 @@ export function CustomCamera() {
         };
 
         // Handle mouse events while in pointer lock
-        // We dispatch synthetic pointer events at the center of the screen
+        // We dispatch synthetic pointer events at the crosshair.
         const handleMouseDown = (event) => {
             if (!controls.current?.isLocked) return;
             if (event.button !== 0) return; // Only left click
 
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             isPointerLockDragging.current = true;
             dispatchSyntheticPointerEvent('pointerdown', 1);
         };
@@ -149,38 +213,47 @@ export function CustomCamera() {
             if (!controls.current?.isLocked) return;
             if (event.button !== 0) return;
 
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             if (isPointerLockDragging.current) {
                 isPointerLockDragging.current = false;
                 dispatchSyntheticPointerEvent('pointerup', 0);
             }
         };
 
+        const handleClick = (event) => {
+            if (!controls.current?.isLocked) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        };
+
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousedown', handleMouseDown, true);
+        document.addEventListener('mouseup', handleMouseUp, true);
+        document.addEventListener('click', handleClick, true);
 
-        controls.current.camera.position.set(0, 1.5, 1);
-
-        // Initialize camera transform tracking
-        cameraTransform.current.position.copy(controls.current.camera.position);
-        cameraTransform.current.previousPosition.copy(controls.current.camera.position);
+        if (controls.current?.camera) {
+            controls.current.camera.position.set(0, 1.5, 1);
+        }
 
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keyup', handleKeyUp);
-            document.removeEventListener('mousedown', handleMouseDown);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mousedown', handleMouseDown, true);
+            document.removeEventListener('mouseup', handleMouseUp, true);
+            document.removeEventListener('click', handleClick, true);
         };
     }, [gl]);
 
     // Use useFrame with a higher priority (negative number = runs earlier)
     // This ensures camera matrix is updated before handles process their transforms
     useFrame((state, delta) => {
-        const cameraObject = controls.current.getObject();
-
-        // Store previous position for delta calculation
-        cameraTransform.current.previousPosition.copy(cameraTransform.current.position);
+        const cameraObject = controls.current?.getObject?.();
+        if (!cameraObject) return;
 
         // Apply movement
         if (moveDirection.current.x != 0 || moveDirection.current.y != 0 || moveDirection.current.z != 0) {
@@ -194,16 +267,6 @@ export function CustomCamera() {
         cameraObject.updateMatrix();
         cameraObject.updateMatrixWorld(true);
 
-        // Update camera transform tracking
-        cameraObject.getWorldPosition(cameraTransform.current.position);
-        cameraTransform.current.worldMatrix.copy(cameraObject.matrixWorld);
-
-        // Calculate delta position (useful for handles that need to follow camera movement)
-        cameraTransform.current.deltaPosition.subVectors(
-            cameraTransform.current.position,
-            cameraTransform.current.previousPosition
-        );
-
         // Continuously send pointermove events while in pointer lock
         // This allows hover detection and dragging to work
         if (controls.current?.isLocked) {
@@ -212,10 +275,13 @@ export function CustomCamera() {
     }, -100); // Priority -100 ensures this runs before handle updates
 
     const handleOnLock = () => {
-        crosshair.current.style.display = 'block';
+        crosshair.current = crosshair.current || document.querySelector('.crosshair');
+        if (crosshair.current) crosshair.current.style.display = 'block';
+        dispatchSyntheticPointerEvent('pointermove', 0);
     };
     const handleOnUnlock = () => {
-        crosshair.current.style.display = 'none';
+        crosshair.current = crosshair.current || document.querySelector('.crosshair');
+        if (crosshair.current) crosshair.current.style.display = 'none';
 
         if (isPointerLockDragging.current) {
             isPointerLockDragging.current = false;
