@@ -2010,8 +2010,14 @@ html[transient-wpm2-bootloader="waiting"][transient-wpm2-bootloader="loaded"]:be
     ],
     "license": "Apache 2.0",
     "assets": [],
-    "version": "0.3"
+    "version": "0.7"
 }</wpm-descriptor></code-fragment><script id="FragmentFilesystemSync-script" type="disabled">let store = "directoryHandles";
+let controlDirectoryName = '.ffs';
+let metaFileName = 'ffs.meta';
+let attributesFileName = 'ffs.attributes.json';
+let domOrderFileName = 'ffs.dom-order.json';
+let bootConfigFileName = 'wpm.bootconfig.json';
+let bootConfigSelector = 'head script[type="text/json+bootconfig"]';
 let folderElements = ["CODE-FOLDER", "WPM-PACKAGE"];
 let extensionTypes = {
     "text/javascript": "js",
@@ -2040,16 +2046,32 @@ class FragmentFilesystemSync {
         if (!window.showDirectoryPicker) return false;
         if (!window.indexedDB) return false;
         if (!window.MutationObserver) return false;
+        if (!window.BroadcastChannel) return false;
+        if (!navigator.locks?.request) return false;
         return true;
     }
 
     constructor(dbname) {
         let self = this;
         this.isSyncing = false;
+        this.isEnabled = false;
+        this.syncState = 'disabled';
         this.fragmentLinks = [];
         this.directoryHandle = false;
+        this.controlDirectoryHandle = false;
         this.pathMapping = new Map();
         this.nodeMapping = new Map();
+        this.pendingFragmentLinkTimeouts = new Set();
+        this.workerGeneration = 0;
+        this.workerActive = false;
+        this.lockRequestPromise = false;
+        this.lockAbortController = false;
+        this.syncDelayResolver = false;
+        this.updater = false;
+        this.isDestroyed = false;
+        this.coordinationGeneration = 0;
+        this.dbname = dbname;
+        this.coordinationName = 'fragment-filesystem-sync:' + dbname + ':' + location.pathname;
 
         const request = indexedDB.open(dbname);
         request.onerror = (event) => {
@@ -2057,6 +2079,7 @@ class FragmentFilesystemSync {
         };
         request.onsuccess = (event) => {
             self.db = event.target.result;
+            self.initializeCoordinationChannel();
             self.onPageLoad();
         };
         request.onupgradeneeded = (event) => {
@@ -2067,11 +2090,65 @@ class FragmentFilesystemSync {
         }
     }
 
+    get syncState() {
+        return this._syncState;
+    }
+
+    set syncState(syncState) {
+        if (this._syncState === syncState) return;
+        this._syncState = syncState;
+        try {
+            this.onSyncStateChanged?.(syncState);
+        } catch (error) {
+            console.warn('Could not update the Fragment Filesystem Sync menu state', error);
+        }
+    }
+
     async onPageLoad() {
-        this.directoryHandle = await this.getSavedHandle();
-        if (this.directoryHandle) {
+        let coordinationGeneration = this.coordinationGeneration;
+        let directoryHandle = await this.getSavedHandle();
+        if (coordinationGeneration !== this.coordinationGeneration) return;
+        this.directoryHandle = directoryHandle;
+        if (this.directoryHandle && !this.isDestroyed) {
             // Sync immediately
+            this.isEnabled = true;
+            this.syncState = 'waiting';
             this.enableSyncing();
+        }
+    }
+
+    initializeCoordinationChannel() {
+        if (this.coordinationChannel || this.isDestroyed) return;
+        this.coordinationChannel = new BroadcastChannel(this.coordinationName);
+        this.coordinationChannel.onmessage = (event) => {
+            let coordinationGeneration = ++this.coordinationGeneration;
+            this.onCoordinationMessage(event.data, coordinationGeneration);
+        };
+    }
+
+    async onCoordinationMessage(message, coordinationGeneration) {
+        if (this.isDestroyed || !message) return;
+
+        if (message.type === 'enabled') {
+            try {
+                let handle = await this.getSavedHandle();
+                if (!handle || this.isDestroyed || coordinationGeneration !== this.coordinationGeneration) return;
+                let previousLockRequest = this.lockRequestPromise;
+                if (previousLockRequest) {
+                    this.disableSyncing();
+                    await previousLockRequest;
+                }
+                if (this.isDestroyed || coordinationGeneration !== this.coordinationGeneration) return;
+                this.directoryHandle = handle;
+                this.isEnabled = true;
+                this.syncState = 'waiting';
+                this.enableSyncing();
+            } catch (error) {
+                console.error('Failed to enable Fragment Filesystem Sync in this tab', error);
+                this.syncState = 'error';
+            }
+        } else if (message.type === 'disabled') {
+            this.disableSyncing();
         }
     }
 
@@ -2088,7 +2165,7 @@ class FragmentFilesystemSync {
     }
 
     setDirectory(handle = false) {
-        this.directoryHandle = handle;
+        if (handle || !this.isSyncing) this.directoryHandle = handle;
         return new Promise((resolve, reject) => {
             let request;
             if (handle) {
@@ -2119,123 +2196,336 @@ class FragmentFilesystemSync {
         }
         if (fileCount === 0) needConfirm = false;
 
-        // Check if folder already contains meta file for this webstrate then it is also ok
+        // Check if folder already contains metadata for this webstrate then it is also ok
         try {
-            let metaFileHandle = await directoryHandle.getFileHandle("ffs.meta");
+            let controlDirectoryHandle = await directoryHandle.getDirectoryHandle(controlDirectoryName);
+            let metaFileHandle = await controlDirectoryHandle.getFileHandle(metaFileName);
             let metaFile = await metaFileHandle.getFile();
             if (JSON.parse(await metaFile.text()).location == location.pathname) needConfirm = false;
         } catch (ex) {
             // ignore
         }
 
-        if (needConfirm && !window.confirm('Warning: The contents of the folder ' + directoryHandle.name + ' you selected will be overwritten with the fragments in this codestrate. All its content will be deleted!')) return;
+        if (needConfirm && !window.confirm('Warning: The folder ' + directoryHandle.name + ' will be aligned with the fragments in this codestrate. Differing managed files will be overwritten, and files or folders not represented in the codestrate will be deleted.')) return;
         return directoryHandle;
     }
 
-    async enableSyncing() {
-        let self = this;
-        if (this.isSyncing) throw new Error("Cannot start FFS, already syncing, stop it first");
-        if (!this.directoryHandle) throw new Error("No sync directory set");
-        if (!await this.directoryHandle.requestPermission({ mode: "readwrite" })) throw new Error("Must have access to dir");
-        console.log("Starting Fragment Filesystem Sync");
-        this.lastKnownDiskAttributes = {};
+    async enableSyncingAcrossTabs(directoryHandle) {
+        this.coordinationGeneration++;
+        let previousLockRequest = this.lockRequestPromise;
+        if (previousLockRequest) {
+            this.disableSyncing();
+            await previousLockRequest;
+        }
+        if (this.isDestroyed) return;
+        await this.setDirectory(directoryHandle);
+        this.isEnabled = true;
+        this.syncState = 'waiting';
+        this.coordinationChannel?.postMessage({ type: 'enabled' });
+        this.enableSyncing();
+    }
 
-        // TODO: Test if out-of-sync and ask for whether to overwrite filesystem or webstrate
+    async disableSyncingAcrossTabs() {
+        this.coordinationGeneration++;
+        await this.setDirectory(false);
+        this.coordinationChannel?.postMessage({ type: 'disabled' });
+        this.disableSyncing();
+    }
 
-        // Clean up the directory
-        for await (const entry of this.directoryHandle.values()) {
-            await this.directoryHandle.removeEntry(entry.name, { recursive: true });
+    enableSyncing() {
+        if (this.isDestroyed) return;
+        if (!this.directoryHandle) {
+            this.syncState = 'error';
+            console.error('Cannot start Fragment Filesystem Sync without a directory');
+            return;
         }
 
-        // Observe when fragments are added/removed
-        this.observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === "childList") {
-                    for (const addedNode of mutation.addedNodes) {
-                        if (addedNode.matches && addedNode.matches("code-fragment")) {
-                            self.onWSFragmentElementAdded(addedNode);
-                        } else if (addedNode.querySelectorAll) {
-                            addedNode.querySelectorAll("code-fragment").forEach((node) => {
-                                self.onWSFragmentElementAdded(node);
-                            })
-                        }
-                    }
-                    for (const removedNode of mutation.removedNodes) {
-                        if (removedNode.matches && removedNode.matches("code-fragment")) {
-                            self.onWSFragmentElementRemoved(removedNode);
-                        } else if (removedNode.querySelectorAll) {
-                            removedNode.querySelectorAll("code-fragment").forEach((node) => {
-                                self.onWSFragmentElementRemoved(node);
-                            })
-                        }
-                    }
-                }
-            }
-        });
-        this.observer.observe(document.body, { childList: true, subtree: true });
-        document.querySelectorAll("body code-fragment").forEach((fragment) => {
-            self.onWSFragmentElementAdded(fragment);
-        });
+        this.isEnabled = true;
+        if (this.isSyncing || this.lockRequestPromise) return this.lockRequestPromise;
 
-        // Every second synchronize contents
-        let ffsUpdateTick = async () => {
-            let metaFileHandle = await this.directoryHandle.getFileHandle("ffs.meta", { create: true });
-            let metaFile = await metaFileHandle.getFile();
-            let oldMeta = {};
+        this.syncState = 'waiting';
+        let abortController = new AbortController();
+        this.lockAbortController = abortController;
+
+        let lockRequest = navigator.locks.request(this.coordinationName, {
+            mode: 'exclusive',
+            signal: abortController.signal
+        }, async () => {
+            if (!this.isEnabled || this.isDestroyed) return;
+
+            let savedHandle = await this.getSavedHandle();
+            if (!savedHandle) {
+                this.directoryHandle = false;
+                this.isEnabled = false;
+                this.syncState = 'disabled';
+                return;
+            }
+            this.directoryHandle = savedHandle;
+
+            let permission = await this.directoryHandle.requestPermission({ mode: 'readwrite' });
+            if (permission !== 'granted') throw new Error('Must have read/write access to the sync directory');
+            if (!this.isEnabled || this.isDestroyed) return;
+
+            console.log('Starting Fragment Filesystem Sync in this tab');
+            this.isSyncing = true;
+            this.syncState = 'syncing';
+
             try {
-                oldMeta = JSON.parse(await metaFile.text());
-            } catch (ex) {
-                // Ignore this, just create a new one
+                await this.runSyncWorker();
+            } finally {
+                this.isSyncing = false;
+                if (this.isEnabled && this.syncState === 'syncing') this.syncState = 'waiting';
             }
-            let metaChangeDetector = JSON.stringify(oldMeta.paths);
+        });
 
-            // Sync FS and WS
-            if (oldMeta.paths) await self.synchronizeFSOperations(oldMeta);
-            await self.synchronizeWSFragments();
-            await self.synchronizeAttributes();
+        let trackedLockRequest = lockRequest.catch((error) => {
+            if (error?.name === 'AbortError') return;
+            console.error('Fragment Filesystem Sync could not acquire or use the sync lock', error);
+            if (this.isEnabled && !this.isDestroyed) this.syncState = 'error';
+        }).finally(() => {
+            if (this.lockAbortController === abortController) this.lockAbortController = false;
+            if (this.lockRequestPromise === trackedLockRequest) this.lockRequestPromise = false;
 
-            // Generate new meta file for advanced merging functionality
-            let meta = { metaVersion: 1, version: webstrate.version, lastMetaSync: new Date().getTime(), paths: {}, location: location.pathname };
-            for (const [path, part] of this.pathMapping) {
-                let entryMeta = { wid: part.node.webstrate.id };
-                if (part.link) {
-                    entryMeta.type = "fragment";
-                    entryMeta.lastModified = part.link.elementLastModified;
-                    entryMeta.hash = part.link.hash;
-                } else {
-                    entryMeta.type = "directory";
+            if (this.isEnabled && !this.isDestroyed && this.syncState !== 'error') {
+                setTimeout(() => this.enableSyncing(), 0);
+            }
+        });
+        this.lockRequestPromise = trackedLockRequest;
+        return trackedLockRequest;
+    }
+
+    async prepareSyncDirectory() {
+        try {
+            this.controlDirectoryHandle = await this.directoryHandle.getDirectoryHandle(controlDirectoryName, { create: true });
+        } catch (error) {
+            if (error?.name !== 'TypeMismatchError') throw error;
+            await this.directoryHandle.removeEntry(controlDirectoryName, { recursive: true });
+            this.controlDirectoryHandle = await this.directoryHandle.getDirectoryHandle(controlDirectoryName, { create: true });
+        }
+    }
+
+    async waitForInitialFragmentLinks() {
+        while (this.workerActive) {
+            await new Promise((resolve) => setTimeout(resolve, 1));
+            if (!this.workerActive) return;
+            let fragmentElements = Array.from(document.querySelectorAll('body code-fragment'));
+            let fragmentLinkMap = new Map();
+            this.fragmentLinks.forEach((link) => fragmentLinkMap.set(link.fragment.element, link));
+
+            fragmentElements.forEach((fragmentElement) => {
+                if (!fragmentLinkMap.has(fragmentElement) && fragmentElement.fragment) {
+                    let link = new FragmentLink(fragmentElement.fragment);
+                    this.fragmentLinks.push(link);
+                    fragmentLinkMap.set(fragmentElement, link);
                 }
-                autoCloneAttributes.forEach(attr => {
-                    if (part.node.hasAttribute(attr)) entryMeta[attr] = part.node.getAttribute(attr);
-                })
-                meta.paths[path] = entryMeta;
-            };
-            if (metaChangeDetector != JSON.stringify(meta.paths)) {
-                // Meta needs to be rewritten
-                await writeFile(metaFileHandle, JSON.stringify(meta));
-            }
-            self.updater = setTimeout(ffsUpdateTick, 1000);
-        };
-        ffsUpdateTick();
+            });
 
-        this.isSyncing = true;
+            if (fragmentElements.every((fragmentElement) => fragmentLinkMap.has(fragmentElement))) {
+                await Promise.all(this.fragmentLinks.map((link) => link.ready));
+                return;
+            }
+        }
+    }
+
+    async runSyncWorker() {
+        let self = this;
+        this.workerActive = true;
+        this.workerGeneration++;
+        this.lastKnownDiskAttributes = {};
+        this.lastKnownDiskDomOrder = undefined;
+        this.lastInvalidDiskDomOrder = undefined;
+        this.lastKnownDiskBootConfig = undefined;
+
+        try {
+            await this.prepareSyncDirectory();
+            if (!this.workerActive || !this.controlDirectoryHandle) return;
+
+            // Observe when fragments are added/removed
+            this.observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.type === "childList") {
+                        for (const addedNode of mutation.addedNodes) {
+                            if (addedNode.matches && addedNode.matches("code-fragment")) {
+                                self.onWSFragmentElementAdded(addedNode);
+                            } else if (addedNode.querySelectorAll) {
+                                addedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                    self.onWSFragmentElementAdded(node);
+                                })
+                            }
+                        }
+                        for (const removedNode of mutation.removedNodes) {
+                            if (removedNode.matches && removedNode.matches("code-fragment")) {
+                                self.onWSFragmentElementRemoved(removedNode);
+                            } else if (removedNode.querySelectorAll) {
+                                removedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                    self.onWSFragmentElementRemoved(node);
+                                })
+                            }
+                        }
+                    }
+                }
+            });
+            this.observer.observe(document.body, { childList: true, subtree: true });
+            document.querySelectorAll("body code-fragment").forEach((fragment) => {
+                self.onWSFragmentElementAdded(fragment);
+            });
+
+            await this.waitForInitialFragmentLinks();
+            let authoritativeSyncPending = true;
+            while (this.workerActive) {
+                try {
+                    await this.synchronizeTick(authoritativeSyncPending);
+                    authoritativeSyncPending = false;
+                    if (this.isEnabled) this.syncState = 'syncing';
+                } catch (error) {
+                    console.error('Fragment Filesystem Sync tick failed; retrying', error);
+                    if (this.isEnabled) this.syncState = 'error';
+                }
+                if (this.workerActive) await this.waitForNextSyncTick();
+            }
+        } finally {
+            this.cleanupSyncWorker();
+        }
     }
 
     disableSyncing() {
-        clearTimeout(this.updater);
+        let wasEnabled = this.isEnabled || this.isSyncing || this.lockRequestPromise;
+        this.isEnabled = false;
+        this.syncState = 'disabled';
+        this.lockAbortController?.abort();
+        this.requestSyncWorkerStop();
+        if (!this.isSyncing) this.directoryHandle = false;
+        if (wasEnabled) console.log('Stopped Fragment Filesystem Sync in this tab');
+    }
+
+    requestSyncWorkerStop() {
+        this.workerActive = false;
         this.observer?.disconnect();
+        if (this.updater) clearTimeout(this.updater);
+        this.updater = false;
+        if (this.syncDelayResolver) {
+            let resolve = this.syncDelayResolver;
+            this.syncDelayResolver = false;
+            resolve();
+        }
+    }
+
+    waitForNextSyncTick() {
+        return new Promise((resolve) => {
+            this.syncDelayResolver = resolve;
+            this.updater = setTimeout(() => {
+                this.updater = false;
+                this.syncDelayResolver = false;
+                resolve();
+            }, 1000);
+        });
+    }
+
+    cleanupSyncWorker() {
+        this.requestSyncWorkerStop();
+        this.workerGeneration++;
+        this.pendingFragmentLinkTimeouts.forEach((timeout) => clearTimeout(timeout));
+        this.pendingFragmentLinkTimeouts.clear();
+        this.observer = false;
         this.fragmentLinks = [];
+        this.pathMapping = new Map();
+        this.nodeMapping = new Map();
         this.lastKnownDiskAttributes = {};
-        this.isSyncing = false;
-        console.log("Stopped FFS");
+        this.lastKnownDiskDomOrder = undefined;
+        this.lastInvalidDiskDomOrder = undefined;
+        this.lastKnownDiskBootConfig = undefined;
+        this.controlDirectoryHandle = false;
+        if (!this.isEnabled) this.directoryHandle = false;
+    }
+
+    destroy() {
+        this.isDestroyed = true;
+        this.disableSyncing();
+        this.coordinationChannel?.close();
+        this.coordinationChannel = false;
     }
 
     onWSFragmentElementAdded(fragmentElement) {
-        // TODO: Check if already exists and ignore
-        setTimeout(() => { this.fragmentLinks.push(new FragmentLink(fragmentElement.fragment)) }, 1);
+        let workerGeneration = this.workerGeneration;
+        let timeout = setTimeout(() => {
+            this.pendingFragmentLinkTimeouts.delete(timeout);
+            if (!this.workerActive || workerGeneration !== this.workerGeneration) return;
+            if (!fragmentElement.fragment) return;
+            if (this.fragmentLinks.some((link) => link.fragment.element === fragmentElement)) return;
+            this.fragmentLinks.push(new FragmentLink(fragmentElement.fragment));
+        }, 1);
+        this.pendingFragmentLinkTimeouts.add(timeout);
     }
     onWSFragmentElementRemoved(fragmentElement) {
+        if (document.body.contains(fragmentElement)) return;
         this.fragmentLinks = this.fragmentLinks.filter((link) => link.fragment.element !== fragmentElement);
+    }
+
+    async synchronizeTick(webstrateAuthoritative = false) {
+        let metaFileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, metaFileName, webstrateAuthoritative);
+        let metaFile = await metaFileHandle.getFile();
+        let oldMeta = {};
+        try {
+            oldMeta = JSON.parse(await metaFile.text());
+        } catch (error) {
+            // Ignore this, just create a new one.
+        }
+        let metaChangeDetector = JSON.stringify(oldMeta.paths);
+        this.restorePathMappingsFromMeta(oldMeta);
+
+        // Sync FS and WS
+        if (!webstrateAuthoritative && oldMeta.paths) await this.synchronizeFSOperations(oldMeta);
+        await this.synchronizeWSFragments(webstrateAuthoritative, oldMeta);
+        await this.synchronizeDomOrder(webstrateAuthoritative);
+        await this.synchronizeAttributes(webstrateAuthoritative);
+        await this.synchronizeBootConfig(webstrateAuthoritative);
+
+        // Generate new meta file for advanced merging functionality
+        let meta = { metaVersion: 3, version: webstrate.version, lastMetaSync: new Date().getTime(), paths: {}, location: location.pathname };
+        for (const [path, part] of this.pathMapping) {
+            let entryMeta = { wid: part.node.webstrate.id, basePath: part.basePath };
+            if (part.link) {
+                entryMeta.type = "fragment";
+                entryMeta.fragmentLastModified = part.link.elementLastModified;
+                // The contents both sides agreed on, plus the file stats they were observed with
+                entryMeta.hash = part.syncedHash;
+                entryMeta.fileLastModified = part.fileLastModified;
+                entryMeta.fileSize = part.fileSize;
+            } else {
+                entryMeta.type = "directory";
+            }
+            // Snapshot of the attributes that a file renamed on disk gets back, matched on the
+            // content hash. ffs.attributes.json cannot recover them because it is keyed by path.
+            autoCloneAttributes.forEach(attr => {
+                if (part.node.hasAttribute(attr)) entryMeta[attr] = part.node.getAttribute(attr);
+            })
+            meta.paths[path] = entryMeta;
+        };
+        if (webstrateAuthoritative || metaChangeDetector != JSON.stringify(meta.paths)) {
+            // Meta needs to be rewritten
+            await writeFile(metaFileHandle, JSON.stringify(meta));
+        }
+    }
+
+    restorePathMappingsFromMeta(meta) {
+        if (this.pathMapping.size > 0 || meta.location !== location.pathname || !meta.paths) return;
+
+        let fragmentLinkMap = new Map();
+        this.fragmentLinks.forEach((link) => fragmentLinkMap.set(link.fragment.element, link));
+        for (const [path, entry] of Object.entries(meta.paths)) {
+            let node;
+            let link;
+            if (entry.type === 'directory') {
+                node = findFolderNodeByWSID(entry.wid);
+            } else if (entry.type === 'fragment') {
+                node = findFragmentNodeByWSID(entry.wid);
+                link = fragmentLinkMap.get(node);
+                if (!link) continue;
+            }
+            if (!node) continue;
+            this.pathMapping.set(path, { node: node, link: link, basePath: entry.basePath });
+            this.nodeMapping.set(node, path);
+        }
     }
 
     async synchronizeFSOperations(oldMeta) {
@@ -2273,6 +2563,8 @@ class FragmentFilesystemSync {
 
         // Check if any new files/dirs in FS with the old mapping from FS
         await traverseDirectoryStructure("", this.directoryHandle, async (path, name, parent, entry) => {
+            if (path === '/' + controlDirectoryName) return false;
+
             if (!oldMeta.paths[path]) {
                 // A new directory, create it in the webstrate
                 let newFolderElement;
@@ -2290,7 +2582,7 @@ class FragmentFilesystemSync {
         }, async (path, name, parent, entry) => {
             if (!oldMeta.paths[path]) {
                 // A new file, create the fragment
-                if (path === "/ffs.meta" || path === "/ffs.attributes.json") return; // Ignore meta files
+                if (path === '/ffs.meta' || path === '/ffs.attributes.json' || path === '/ffs.dom-order.json') return; // Ignore legacy control files
                 let extension = name.substring(name.lastIndexOf(".") + 1);
                 let type = Object.keys(extensionTypes).find(key => extensionTypes[key] == extension);
                 if (FragmentFilesystemSync.DEBUG) console.log("New file spotted", extension, type, path, name, parent, entry);
@@ -2325,26 +2617,9 @@ class FragmentFilesystemSync {
                 }
             }
 
-            // Check file existance again
-            if (oldMeta.paths[path]) {
-                // Also check for modifications
-                let file = await entry.getFile();
-                let oldFileMeta = oldMeta.paths[path]
-                if ((!oldFileMeta.lastModified) || file.lastModified > oldMeta.lastMetaSync) {
-                    let element = await findFragmentNodeByWSID(oldFileMeta.wid);
-                    if (!element) {
-                        console.log("Couldn't find element node to push FS contents to", path);
-                    } else {
-                        let fileContents = await file.text();
-                        // Only update fragment if content actually differs to avoid feedback loops
-                        if (element.fragment.raw !== fileContents) {
-                            element.fragment.raw = fileContents;
-                        }
-                    }
-                }
-
-                oldMeta.paths[path].seen = true;
-            }
+            // Check file existance again and flag as seen if it exists now. Contents are
+            // synchronized in synchronizeWSFragments, where both sides of the file are known.
+            if (oldMeta.paths[path]) oldMeta.paths[path].seen = true;
         });
 
         // Check if any deleted files in FS with the old mapping from FS
@@ -2378,52 +2653,78 @@ class FragmentFilesystemSync {
         await new Promise(resolve => setTimeout(resolve, 1));
     }
 
-    async synchronizeWSFragments() {
+    async synchronizeWSFragments(webstrateAuthoritative = false, oldMeta = {}) {
         // Create new filename and directory mapping for fragment links
         let sanitizeFileName = (rawName) => rawName.replace(/[^()a-z0-9.#\-_ ]/gi, '_');
+        let previousPathMapping = this.pathMapping;
+        let previousNodeMapping = this.nodeMapping;
+        let reservedPreviousPaths = new Set(previousNodeMapping.values());
         let newPathMapping = new Map();
         let newNodeMapping = new Map();
 
         // Build element-to-FragmentLink lookup for quick access during traversal
+        let fragmentLinks = this.fragmentLinks;
         let fragmentLinkMap = new Map();
-        this.fragmentLinks.forEach((link) => {
+        fragmentLinks.forEach((link) => {
             fragmentLinkMap.set(link.fragment.element, link);
         });
+
+        let allocatePath = function allocatePath(node, basePath, createCandidate) {
+            let previousPath = previousNodeMapping.get(node);
+            let previousPart = previousPathMapping.get(previousPath);
+            let matchesPreviousBase = previousPart?.basePath === basePath ||
+                (previousPart?.basePath === undefined && isCollisionPathVariant(previousPath, basePath));
+            if (previousPath && matchesPreviousBase && !newPathMapping.has(previousPath)) {
+                return previousPath;
+            }
+
+            let path;
+            let counter = 0;
+            do {
+                path = createCandidate(counter);
+                counter++;
+            } while (newPathMapping.has(path) || reservedPreviousPaths.has(path) || path === '/' + controlDirectoryName);
+            return path;
+        };
 
         // Recurse through DOM in order, registering both folders and fragments
         let registerElements = function registerElements(currentPath, currentElement) {
             if (folderElements.includes(currentElement.nodeName)) {
                 // This is a folder
-                let path;
-                let counter = 0;
-                let extension = "";
-                if (currentElement.nodeName === "WPM-PACKAGE") extension = ".wpm";
-                do {
-                    // Not unique, append a number
-                    path = currentPath + "/" + sanitizeFileName(getNodeName(currentElement)) + (counter > 0 ? "_" + counter : "") + extension;
-                    counter++;
-                } while (newPathMapping.get(path));
-                newPathMapping.set(path, { node: currentElement });
+                let extension = '';
+                if (currentElement.nodeName === 'WPM-PACKAGE') extension = '.wpm';
+                let pathName = sanitizeFileName(getNodeName(currentElement));
+                let basePath = currentPath + '/' + pathName + extension;
+                let path = allocatePath(currentElement, basePath, (counter) => {
+                    return currentPath + '/' + pathName + (counter > 0 ? '_' + counter : '') + extension;
+                });
+                newPathMapping.set(path, { node: currentElement, basePath: basePath });
                 newNodeMapping.set(currentElement, path);
                 currentPath = path;
             } else if (currentElement.nodeName === "CODE-FRAGMENT") {
                 // This is a fragment
                 let link = fragmentLinkMap.get(currentElement);
+                if (!link && currentElement.fragment) {
+                    // Pick up fragments that appeared after the last mutation callback ran
+                    link = new FragmentLink(currentElement.fragment);
+                    fragmentLinks.push(link);
+                    fragmentLinkMap.set(currentElement, link);
+                }
                 if (link) {
-                    let fragmentPath;
-                    let counter = 0;
-                    do {
-                        fragmentPath = currentPath + "/" + sanitizeFileName(link.getRawName()) + (counter > 0 ? "_" + counter : "") + "." + link.getExtension();
-                        counter++;
-                    } while (newPathMapping.get(fragmentPath));
-                    newPathMapping.set(fragmentPath, { node: link.fragment.element, link: link });
+                    let pathName = sanitizeFileName(link.getRawName());
+                    let extension = '.' + link.getExtension();
+                    let basePath = currentPath + '/' + pathName + extension;
+                    let fragmentPath = allocatePath(currentElement, basePath, (counter) => {
+                        return currentPath + '/' + pathName + (counter > 0 ? '_' + counter : '') + extension;
+                    });
+                    newPathMapping.set(fragmentPath, { node: link.fragment.element, link: link, basePath: basePath });
                     newNodeMapping.set(link.fragment.element, fragmentPath);
                 }
             }
             for (let i = 0; i < currentElement.children.length; i++) {
                 registerElements(currentPath, currentElement.children[i]);
             }
-        }
+        };
         registerElements("", document.body);
         this.nodeMapping = newNodeMapping;
         this.pathMapping = newPathMapping;
@@ -2438,7 +2739,7 @@ class FragmentFilesystemSync {
             let entity = this.pathMapping.get(path);
             if (!entity.link) {
                 // Directory
-                sortedDirs.push({ path: path, handle: await getOrCreateFSDirectory(this.directoryHandle, path) });
+                sortedDirs.push({ path: path, handle: await getOrCreateFSDirectory(this.directoryHandle, path, webstrateAuthoritative) });
             }
         }
 
@@ -2453,14 +2754,27 @@ class FragmentFilesystemSync {
                     let entity = this.pathMapping.get(path);
                     if (entity.link) {
                         // File in this dir
+                        let previousEntry = oldMeta.paths?.[path];
+                        if (previousEntry?.type === 'fragment') {
+                            // Carry the last known sync state over in case the file cannot be opened below
+                            entity.syncedHash = previousEntry.hash;
+                            entity.fileLastModified = previousEntry.fileLastModified;
+                            entity.fileSize = previousEntry.fileSize;
+                        } else {
+                            previousEntry = undefined;
+                        }
+
                         let fileWasJustCreated = false;
                         let fileName = path.substring(path.lastIndexOf('/') + 1);
                         let fileHandle;
                         try {
                             fileHandle = await dir.handle.getFileHandle(fileName);
                         } catch (ex) {
-                            // Not found
-                            // TODO: Test for other things than NotFound
+                            if (webstrateAuthoritative && ex?.name === 'TypeMismatchError') {
+                                await dir.handle.removeEntry(fileName, { recursive: true });
+                            } else if (ex?.name !== 'NotFoundError') {
+                                throw ex;
+                            }
                             try {
                                 fileHandle = await dir.handle.getFileHandle(fileName, { create: true });
                                 if (FragmentFilesystemSync.DEBUG) console.log("Creating new file in FS because it didnt exist", path)
@@ -2469,25 +2783,19 @@ class FragmentFilesystemSync {
                                 console.log("Cannot write file, skipping", path, ex2);
                             }
                         }
+                        if (!fileHandle) continue;
 
-                        let file = await fileHandle.getFile();
-                        if (fileWasJustCreated || entity.link.elementLastModified > file.lastModified) {
-                            // Only write to FS if content actually differs to avoid feedback loops
-                            let fileContents = await file.text();
-                            if (fileWasJustCreated || entity.link.fragment.raw !== fileContents) {
-                                await writeFile(fileHandle, entity.link.fragment.raw);
-                            }
-                        }
+                        await synchronizeFragmentContents(entity, fileHandle, previousEntry, fileWasJustCreated, webstrateAuthoritative);
                     }
                 }
             }
         };
 
         // Check if FS has fragments/dirs that should be deleted
-        let unknownPathDeleter = (path, name, parent, entry) => {
+        let unknownPathDeleter = async (path,, parent, entry) => {
+            if (path === '/' + controlDirectoryName) return false;
             if (!this.pathMapping.has(path)) {
-                if (path == "/ffs.meta" || path == "/ffs.attributes.json") return false; // leave meta files alone
-                parent.removeEntry(name, { recursive: true }); // Delete it
+                await parent.removeEntry(name, { recursive: true }); // Delete it
                 return false; // Do not continue into the directory
             }
             return true;
@@ -2495,14 +2803,95 @@ class FragmentFilesystemSync {
         await traverseDirectoryStructure("", this.directoryHandle, unknownPathDeleter, unknownPathDeleter);
     }
 
-    async synchronizeAttributes() {
-        let attributesFileName = 'ffs.attributes.json';
+    getDomOrderGroups() {
+        let groups = [{ path: '/', node: document.body }];
+        for (const [path, part] of this.pathMapping) {
+            if (!part.link) groups.push({ path: path, node: part.node });
+        }
+        return groups.map((group) => {
+            return {
+                path: group.path,
+                node: group.node,
+                children: Array.from(group.node.children).filter((child) => {
+                    return isManagedElement(child) && this.nodeMapping.has(child);
+                })
+            };
+        });
+    }
 
+    buildDomOrder() {
+        let domOrder = {};
+        this.getDomOrderGroups().forEach((group) => {
+            domOrder[group.path] = group.children.map((child) => getPathName(this.nodeMapping.get(child)));
+        });
+        return domOrder;
+    }
+
+    applyDomOrder(diskDomOrder) {
+        this.getDomOrderGroups().forEach((group) => {
+            if (!Object.prototype.hasOwnProperty.call(diskDomOrder, group.path)) return;
+
+            let childByName = new Map();
+            group.children.forEach((child) => childByName.set(getPathName(this.nodeMapping.get(child)), child));
+            let seenChildren = new Set();
+            let desiredChildren = [];
+            diskDomOrder[group.path].forEach((childName) => {
+                let child = childByName.get(childName);
+                if (!child || seenChildren.has(child)) return;
+                seenChildren.add(child);
+                desiredChildren.push(child);
+            });
+            group.children.forEach((child) => {
+                if (!seenChildren.has(child)) desiredChildren.push(child);
+            });
+            reorderManagedChildSlots(group.node, group.children, desiredChildren);
+        });
+    }
+
+    async synchronizeDomOrder(webstrateAuthoritative = false) {
+        let diskRawText;
+        let diskDomOrder;
+        try {
+            let fileHandle = await this.controlDirectoryHandle.getFileHandle(domOrderFileName);
+            let file = await fileHandle.getFile();
+            diskRawText = await file.text();
+        } catch (error) {
+            if (error?.name !== 'NotFoundError') throw error;
+        }
+
+        if (!webstrateAuthoritative && diskRawText !== undefined) {
+            try {
+                diskDomOrder = JSON.parse(diskRawText);
+                if (!isValidDomOrder(diskDomOrder)) throw new Error('Expected an object whose values are arrays of child names');
+            } catch (error) {
+                if (diskRawText !== this.lastInvalidDiskDomOrder) {
+                    console.warn('Ignoring invalid Fragment Filesystem Sync DOM order file', error);
+                }
+                this.lastInvalidDiskDomOrder = diskRawText;
+                return;
+            }
+        }
+        this.lastInvalidDiskDomOrder = undefined;
+
+        let diskChanged = !webstrateAuthoritative && diskDomOrder !== undefined &&
+            JSON.stringify(diskDomOrder) !== JSON.stringify(this.lastKnownDiskDomOrder);
+        if (diskChanged) this.applyDomOrder(diskDomOrder);
+
+        let finalDomOrder = this.buildDomOrder();
+        let outputJSON = JSON.stringify(finalDomOrder, null, 4) + '\n';
+        if (outputJSON !== diskRawText) {
+            let fileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, domOrderFileName, webstrateAuthoritative);
+            await writeFile(fileHandle, outputJSON);
+        }
+        this.lastKnownDiskDomOrder = JSON.parse(JSON.stringify(finalDomOrder));
+    }
+
+    async synchronizeAttributes(webstrateAuthoritative = false) {
         // Read current attributes file from disk
         let diskRawText = '';
         let diskAttributes = {};
         try {
-            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName);
+            let fileHandle = await this.controlDirectoryHandle.getFileHandle(attributesFileName);
             let file = await fileHandle.getFile();
             diskRawText = await file.text();
             if (diskRawText.trim().length > 0) {
@@ -2512,33 +2901,35 @@ class FragmentFilesystemSync {
             // File doesn't exist yet or parse error, treat as empty
         }
 
-        // Detect disk changes (user edits) and apply to DOM
-        // Only process paths that exist in both disk JSON and current pathMapping
-        for (const [path, diskAttrs] of Object.entries(diskAttributes)) {
-            let part = this.pathMapping.get(path);
-            if (!part) continue; // Path doesn't exist in current mapping, skip
-            if (typeof diskAttrs !== 'object' || diskAttrs === null) continue;
+        if (!webstrateAuthoritative) {
+            // Detect disk changes (user edits) and apply to DOM
+            // Only process paths that exist in both disk JSON and current pathMapping
+            for (const [path, diskAttrs] of Object.entries(diskAttributes)) {
+                let part = this.pathMapping.get(path);
+                if (!part) continue; // Path doesn't exist in current mapping, skip
+                if (typeof diskAttrs !== 'object' || diskAttrs === null) continue;
 
-            let lastKnown = this.lastKnownDiskAttributes[path] || {};
+                let lastKnown = this.lastKnownDiskAttributes[path] || {};
 
-            for (const attr of trackedAttributes) {
-                let hasDiskValue = diskAttrs.hasOwnProperty(attr);
-                let hasLastKnownValue = lastKnown.hasOwnProperty(attr);
-                let diskValue = hasDiskValue ? diskAttrs[attr] : undefined;
-                let lastKnownValue = hasLastKnownValue ? lastKnown[attr] : undefined;
+                for (const attr of trackedAttributes) {
+                    let hasDiskValue = diskAttrs.hasOwnProperty(attr);
+                    let hasLastKnownValue = lastKnown.hasOwnProperty(attr);
+                    let diskValue = hasDiskValue ? diskAttrs[attr] : undefined;
+                    let lastKnownValue = hasLastKnownValue ? lastKnown[attr] : undefined;
 
-                // Only apply if this attribute actually changed on disk since last sync
-                if (hasDiskValue !== hasLastKnownValue || diskValue !== lastKnownValue) {
-                    if (!hasDiskValue) {
-                        // Attribute was removed from disk JSON entry
-                        if (part.node.hasAttribute(attr)) {
-                            part.node.removeAttribute(attr);
-                        }
-                    } else {
-                        // Attribute was changed or added on disk
-                        let currentDOMValue = part.node.getAttribute(attr);
-                        if (currentDOMValue !== diskValue) {
-                            part.node.setAttribute(attr, diskValue);
+                    // Only apply if this attribute actually changed on disk since last sync
+                    if (hasDiskValue !== hasLastKnownValue || diskValue !== lastKnownValue) {
+                        if (!hasDiskValue) {
+                            // Attribute was removed from disk JSON entry
+                            if (part.node.hasAttribute(attr)) {
+                                part.node.removeAttribute(attr);
+                            }
+                        } else {
+                            // Attribute was changed or added on disk
+                            let currentDOMValue = part.node.getAttribute(attr);
+                            if (currentDOMValue !== diskValue) {
+                                part.node.setAttribute(attr, diskValue);
+                            }
                         }
                     }
                 }
@@ -2564,12 +2955,50 @@ class FragmentFilesystemSync {
         let nestedOutput = flatToNestedAttributes(finalAttributes);
         let outputJSON = JSON.stringify(nestedOutput, null, 4) + '\n';
         if (outputJSON !== diskRawText) {
-            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName, { create: true });
+            let fileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, attributesFileName, webstrateAuthoritative);
             await writeFile(fileHandle, outputJSON);
         }
 
         // Update last known disk state to detect future user edits
         this.lastKnownDiskAttributes = JSON.parse(JSON.stringify(finalAttributes));
+    }
+
+    async synchronizeBootConfig(webstrateAuthoritative = false) {
+        let bootConfigElement = document.querySelector(bootConfigSelector);
+        if (!bootConfigElement) {
+            if (webstrateAuthoritative) {
+                try {
+                    await this.controlDirectoryHandle.removeEntry(bootConfigFileName, { recursive: true });
+                } catch (error) {
+                    if (error?.name !== 'NotFoundError') throw error;
+                }
+                this.lastKnownDiskBootConfig = undefined;
+            }
+            return;
+        }
+
+        let diskRawText;
+        try {
+            let fileHandle = await this.controlDirectoryHandle.getFileHandle(bootConfigFileName);
+            let file = await fileHandle.getFile();
+            diskRawText = await file.text();
+        } catch (ex) {
+            // File does not exist yet, so it will be created from the DOM below
+        }
+
+        // A disk edit wins when both disk and DOM changed since the previous tick
+        let diskChanged = !webstrateAuthoritative && diskRawText !== undefined && diskRawText !== this.lastKnownDiskBootConfig;
+        if (diskChanged && bootConfigElement.textContent !== diskRawText) {
+            bootConfigElement.textContent = diskRawText;
+        }
+
+        let finalRawText = bootConfigElement.textContent;
+        if (diskRawText !== finalRawText) {
+            let fileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, bootConfigFileName, webstrateAuthoritative);
+            await writeFile(fileHandle, finalRawText);
+        }
+
+        this.lastKnownDiskBootConfig = finalRawText;
     }
 }
 
@@ -2579,27 +3008,30 @@ class FragmentLink {
         this.fragment = fragment;
         if (!fragment) throw Error("Cannot construct FragmentLink without a fragment");
 
+        this.elementLastModified = new Date().getTime();
         this.fragment.registerOnFragmentChangedHandler(() => { self.onFragmentUpdated() });
-        this.onFragmentUpdated();
+        this.ready = this.onFragmentUpdated();
         if (FragmentFilesystemSync.DEBUG) console.log("Monitoring", fragment);
     }
 
-
-
     async onFragmentUpdated() {
-        // Store time and hash
-        let newHash = await sha256(this.fragment.raw);
-        if (newHash != this.hash) {
-            // Only update the timestamp if this is a genuine content change,
-            // not just a sync from the filesystem (which would have the same content)
-            let isInitialHash = this.hash === undefined;
-            this.hash = newHash;
-            // Don't update elementLastModified on initial hash calculation,
-            // only on subsequent real changes
-            if (!isInitialHash) {
-                this.elementLastModified = new Date().getTime();
-            }
+        // Record when the contents genuinely changed, for the metadata file
+        let previousHash = this.hash;
+        let newHash = await this.getContentHash();
+        if (previousHash !== undefined && newHash !== previousHash) {
+            this.elementLastModified = new Date().getTime();
         }
+    }
+
+    async getContentHash(contents = this.fragment.raw) {
+        // Memoized, because every sync tick hashes contents that usually did not change
+        if (this.hash === undefined || this.hashedContents !== contents) {
+            let hash = await sha256(contents);
+            this.hash = hash;
+            this.hashedContents = contents;
+            return hash;
+        }
+        return this.hash;
     }
 
     getRawName() {
@@ -2614,6 +3046,72 @@ class FragmentLink {
     }
 }
 
+
+function recordSyncedFragmentState(entity, file, contentHash) {
+    entity.syncedHash = contentHash;
+    entity.fileLastModified = file.lastModified;
+    entity.fileSize = file.size;
+}
+
+async function writeFragmentFile(entity, fileHandle, contents, contentHash) {
+    await writeFile(fileHandle, contents);
+    recordSyncedFragmentState(entity, await fileHandle.getFile(), contentHash);
+}
+
+/**
+ * Synchronizes the contents of a single fragment and its file in both directions.
+ *
+ * The side that changed since the previous tick wins, which is decided on content hashes rather
+ * than on timestamps: the meta file records the hash of the contents both sides last agreed on.
+ * The recorded file stats are only used to skip reading files that were not touched on disk.
+ */
+async function synchronizeFragmentContents(entity, fileHandle, previousEntry, fileWasJustCreated, webstrateAuthoritative) {
+    let fragmentContents = entity.link.fragment.raw;
+    let fragmentHash = await entity.link.getContentHash(fragmentContents);
+    let syncedHash = previousEntry?.hash;
+
+    if (fileWasJustCreated) {
+        await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        return;
+    }
+
+    let file = await fileHandle.getFile();
+    let fileUntouched = syncedHash !== undefined &&
+        previousEntry.fileLastModified === file.lastModified &&
+        previousEntry.fileSize === file.size;
+    if (fileUntouched && !webstrateAuthoritative) {
+        // The file still is what we wrote or read last, so only the fragment can have changed
+        if (fragmentHash === syncedHash) {
+            recordSyncedFragmentState(entity, file, syncedHash);
+        } else {
+            await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        }
+        return;
+    }
+
+    let fileContents = await file.text();
+    if (fileContents === fragmentContents) {
+        // Both sides already agree, only the file stats need to be refreshed
+        recordSyncedFragmentState(entity, file, fragmentHash);
+        return;
+    }
+    if (webstrateAuthoritative || previousEntry === undefined) {
+        // The webstrate wins while resuming, and for files we have no synchronized state for
+        await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        return;
+    }
+
+    let fileHash = await sha256(fileContents);
+    if (syncedHash !== undefined && fileHash === syncedHash) {
+        // Only the fragment changed since the last tick
+        await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        return;
+    }
+
+    // The file changed on disk, which also wins when the fragment changed as well
+    entity.link.fragment.raw = fileContents;
+    recordSyncedFragmentState(entity, file, fileHash);
+}
 
 function getNodeName(node) {
     let name = node.hasAttribute("name") ? node.getAttribute("name").trim() : "";
@@ -2631,12 +3129,61 @@ function findFragmentNodeByWSID(wsid) {
     return Array.from(document.querySelectorAll("code-fragment")).find(element => element.webstrate?.id == wsid);
 }
 
-async function getOrCreateFSDirectory(base, path) {
+function isManagedElement(element) {
+    return element.nodeName === 'CODE-FRAGMENT' || folderElements.includes(element.nodeName);
+}
+
+function getPathName(path) {
+    return path.substring(path.lastIndexOf('/') + 1);
+}
+
+function isCollisionPathVariant(path, basePath) {
+    if (!path || !basePath) return false;
+    if (path === basePath) return true;
+    let escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (new RegExp('^' + escapeRegExp(basePath) + '_\\d+$').test(path)) return true;
+
+    let extensionLocation = basePath.lastIndexOf('.');
+    let directoryLocation = basePath.lastIndexOf('/');
+    if (extensionLocation <= directoryLocation) return false;
+    let stem = basePath.substring(0, extensionLocation);
+    let extension = basePath.substring(extensionLocation);
+    return new RegExp('^' + escapeRegExp(stem) + '_\\d+' + escapeRegExp(extension) + '$').test(path);
+}
+
+function isValidDomOrder(domOrder) {
+    if (typeof domOrder !== 'object' || domOrder === null || Array.isArray(domOrder)) return false;
+    return Object.entries(domOrder).every(([path, childNames]) => {
+        return path.startsWith('/') && Array.isArray(childNames) && childNames.every((childName) => typeof childName === 'string');
+    });
+}
+
+function reorderManagedChildSlots(parentNode, currentChildren, desiredChildren) {
+    if (currentChildren.every((child, index) => child === desiredChildren[index])) return;
+
+    let managedChildren = new Set(currentChildren);
+    let desiredIndex = 0;
+    let finalChildren = Array.from(parentNode.children).map((child) => {
+        return managedChildren.has(child) ? desiredChildren[desiredIndex++] : child;
+    });
+    finalChildren.forEach((child, index) => {
+        let currentChild = parentNode.children[index];
+        if (currentChild !== child) parentNode.insertBefore(child, currentChild);
+    });
+}
+
+async function getOrCreateFSDirectory(base, path, replaceMismatchedEntry = false) {
     let directories = path.split("/");
     let currentDir = base;
     for (let directory of directories) {
         if (directory.length === 0) continue; // skip initial slash
-        currentDir = await currentDir.getDirectoryHandle(directory, { create: true })
+        try {
+            currentDir = await currentDir.getDirectoryHandle(directory, { create: true })
+        } catch (error) {
+            if (!replaceMismatchedEntry || error?.name !== 'TypeMismatchError') throw error;
+            await currentDir.removeEntry(directory, { recursive: true });
+            currentDir = await currentDir.getDirectoryHandle(directory, { create: true });
+        }
     }
     return currentDir;
 }
@@ -2645,6 +3192,16 @@ async function writeFile(fileHandle, contents) {
     const writable = await fileHandle.createWritable();
     await writable.write(contents);
     await writable.close();
+}
+
+async function getOrCreateFSFile(directoryHandle, fileName, replaceMismatchedEntry = false) {
+    try {
+        return await directoryHandle.getFileHandle(fileName, { create: true });
+    } catch (error) {
+        if (!replaceMismatchedEntry || error?.name !== 'TypeMismatchError') throw error;
+        await directoryHandle.removeEntry(fileName, { recursive: true });
+        return directoryHandle.getFileHandle(fileName, { create: true });
+    }
 }
 
 async function traverseDirectoryStructure(currentPath, dirHandle, dirCallback, fileCallback) {
@@ -2703,30 +3260,65 @@ if (FragmentFilesystemSync.isSupported()) {
         window.FragmentFilesystemSync = FragmentFilesystemSync;
 
         // Register with Cauldron (when available)
-        let item;
+        let items = [];
+        fragmentFilesystemSync.onSyncStateChanged = () => {
+            let menus = new Set();
+            items.forEach((item) => {
+                item.menuItemConfig._allMenuItems?.forEach((menuItem) => menus.add(menuItem.menu));
+            });
+            menus.forEach((menu) => menu.checkUpdate());
+        };
         let registerMenuItem = function registerMenuItem() {
-            if (!item) item = MenuSystem.MenuManager.registerMenuItem("Cauldron.File.Sync", {
-                label: "Fragments to Disk...",
-                tooltip: "Copy fragments to a local folder when the page loads and keep them in sync",
-                group: "Codestrates",
-                groupOrder: 200,
-                order: 200,
-                checked: () => {
-                    return fragmentFilesystemSync.isSyncing;
-                },
-                onAction: async (menuItem) => {
-                    // Toggle sync
-                    if (fragmentFilesystemSync.isSyncing) {
-                        fragmentFilesystemSync.disableSyncing();
-                        fragmentFilesystemSync.setDirectory();
-                    } else {
-                        let dir = await fragmentFilesystemSync.popupDirectoryPicker();
-                        if (dir) {
-                            await fragmentFilesystemSync.setDirectory(dir);
-                            fragmentFilesystemSync.enableSyncing();
-                        }
-                    }
+            if (items.length > 0) return;
+
+            let onAction = async () => {
+                if (fragmentFilesystemSync.isEnabled) {
+                    await fragmentFilesystemSync.disableSyncingAcrossTabs();
+                } else {
+                    let directoryHandle = await fragmentFilesystemSync.popupDirectoryPicker();
+                    if (directoryHandle) await fragmentFilesystemSync.enableSyncingAcrossTabs(directoryHandle);
                 }
+            };
+            let menuStates = [
+                {
+                    state: 'disabled',
+                    label: 'Fragments to Disk...',
+                    tooltip: 'Choose a local folder and synchronize fragments to disk',
+                    checked: false
+                },
+                {
+                    state: 'syncing',
+                    label: 'Fragments to Disk — Syncing in This Tab',
+                    tooltip: 'This tab is synchronizing fragments to disk. Click to disable synchronization in all tabs',
+                    checked: true
+                },
+                {
+                    state: 'waiting',
+                    label: 'Fragments to Disk — Syncing in Another Tab',
+                    tooltip: 'Another tab is synchronizing fragments to disk. This tab will take over automatically if it closes. Click to disable synchronization in all tabs',
+                    checked: true
+                },
+                {
+                    state: 'error',
+                    label: 'Fragments to Disk — Sync Paused',
+                    tooltip: 'This tab could not access the sync directory. Click to disable synchronization in all tabs',
+                    checked: true
+                }
+            ];
+
+            menuStates.forEach((menuState) => {
+                let menuItemConfig = {
+                    label: menuState.label,
+                    tooltip: menuState.tooltip,
+                    group: 'Codestrates',
+                    groupOrder: 200,
+                    order: 200,
+                    checked: () => menuState.checked,
+                    onOpen: () => fragmentFilesystemSync.syncState === menuState.state,
+                    onAction: onAction
+                };
+                let registration = MenuSystem.MenuManager.registerMenuItem('Cauldron.File.Sync', menuItemConfig);
+                items.push({ registration: registration, menuItemConfig: menuItemConfig });
             });
         }
 
@@ -2738,12 +3330,19 @@ if (FragmentFilesystemSync.isSupported()) {
         }
 
         wpm.onRemoved(({ detail: packageName }) => {
-            fragmentFilesystemSync.disableSyncing();
-            item?.delete();
+            fragmentFilesystemSync.destroy();
+            items.forEach((item) => item.registration.delete());
+            items = [];
         });
     });
 }
 </script><code-fragment data-type="text/javascript" name="Fragment Filesystem Sync">let store = "directoryHandles";
+let controlDirectoryName = '.ffs';
+let metaFileName = 'ffs.meta';
+let attributesFileName = 'ffs.attributes.json';
+let domOrderFileName = 'ffs.dom-order.json';
+let bootConfigFileName = 'wpm.bootconfig.json';
+let bootConfigSelector = 'head script[type="text/json+bootconfig"]';
 let folderElements = ["CODE-FOLDER", "WPM-PACKAGE"];
 let extensionTypes = {
     "text/javascript": "js",
@@ -2772,16 +3371,32 @@ class FragmentFilesystemSync {
         if (!window.showDirectoryPicker) return false;
         if (!window.indexedDB) return false;
         if (!window.MutationObserver) return false;
+        if (!window.BroadcastChannel) return false;
+        if (!navigator.locks?.request) return false;
         return true;
     }
 
     constructor(dbname) {
         let self = this;
         this.isSyncing = false;
+        this.isEnabled = false;
+        this.syncState = 'disabled';
         this.fragmentLinks = [];
         this.directoryHandle = false;
+        this.controlDirectoryHandle = false;
         this.pathMapping = new Map();
         this.nodeMapping = new Map();
+        this.pendingFragmentLinkTimeouts = new Set();
+        this.workerGeneration = 0;
+        this.workerActive = false;
+        this.lockRequestPromise = false;
+        this.lockAbortController = false;
+        this.syncDelayResolver = false;
+        this.updater = false;
+        this.isDestroyed = false;
+        this.coordinationGeneration = 0;
+        this.dbname = dbname;
+        this.coordinationName = 'fragment-filesystem-sync:' + dbname + ':' + location.pathname;
 
         const request = indexedDB.open(dbname);
         request.onerror = (event) => {
@@ -2789,6 +3404,7 @@ class FragmentFilesystemSync {
         };
         request.onsuccess = (event) => {
             self.db = event.target.result;
+            self.initializeCoordinationChannel();
             self.onPageLoad();
         };
         request.onupgradeneeded = (event) => {
@@ -2799,11 +3415,65 @@ class FragmentFilesystemSync {
         }
     }
 
+    get syncState() {
+        return this._syncState;
+    }
+
+    set syncState(syncState) {
+        if (this._syncState === syncState) return;
+        this._syncState = syncState;
+        try {
+            this.onSyncStateChanged?.(syncState);
+        } catch (error) {
+            console.warn('Could not update the Fragment Filesystem Sync menu state', error);
+        }
+    }
+
     async onPageLoad() {
-        this.directoryHandle = await this.getSavedHandle();
-        if (this.directoryHandle) {
+        let coordinationGeneration = this.coordinationGeneration;
+        let directoryHandle = await this.getSavedHandle();
+        if (coordinationGeneration !== this.coordinationGeneration) return;
+        this.directoryHandle = directoryHandle;
+        if (this.directoryHandle && !this.isDestroyed) {
             // Sync immediately
+            this.isEnabled = true;
+            this.syncState = 'waiting';
             this.enableSyncing();
+        }
+    }
+
+    initializeCoordinationChannel() {
+        if (this.coordinationChannel || this.isDestroyed) return;
+        this.coordinationChannel = new BroadcastChannel(this.coordinationName);
+        this.coordinationChannel.onmessage = (event) => {
+            let coordinationGeneration = ++this.coordinationGeneration;
+            this.onCoordinationMessage(event.data, coordinationGeneration);
+        };
+    }
+
+    async onCoordinationMessage(message, coordinationGeneration) {
+        if (this.isDestroyed || !message) return;
+
+        if (message.type === 'enabled') {
+            try {
+                let handle = await this.getSavedHandle();
+                if (!handle || this.isDestroyed || coordinationGeneration !== this.coordinationGeneration) return;
+                let previousLockRequest = this.lockRequestPromise;
+                if (previousLockRequest) {
+                    this.disableSyncing();
+                    await previousLockRequest;
+                }
+                if (this.isDestroyed || coordinationGeneration !== this.coordinationGeneration) return;
+                this.directoryHandle = handle;
+                this.isEnabled = true;
+                this.syncState = 'waiting';
+                this.enableSyncing();
+            } catch (error) {
+                console.error('Failed to enable Fragment Filesystem Sync in this tab', error);
+                this.syncState = 'error';
+            }
+        } else if (message.type === 'disabled') {
+            this.disableSyncing();
         }
     }
 
@@ -2820,7 +3490,7 @@ class FragmentFilesystemSync {
     }
 
     setDirectory(handle = false) {
-        this.directoryHandle = handle;
+        if (handle || !this.isSyncing) this.directoryHandle = handle;
         return new Promise((resolve, reject) => {
             let request;
             if (handle) {
@@ -2851,123 +3521,336 @@ class FragmentFilesystemSync {
         }
         if (fileCount === 0) needConfirm = false;
 
-        // Check if folder already contains meta file for this webstrate then it is also ok
+        // Check if folder already contains metadata for this webstrate then it is also ok
         try {
-            let metaFileHandle = await directoryHandle.getFileHandle("ffs.meta");
+            let controlDirectoryHandle = await directoryHandle.getDirectoryHandle(controlDirectoryName);
+            let metaFileHandle = await controlDirectoryHandle.getFileHandle(metaFileName);
             let metaFile = await metaFileHandle.getFile();
             if (JSON.parse(await metaFile.text()).location == location.pathname) needConfirm = false;
         } catch (ex) {
             // ignore
         }
 
-        if (needConfirm && !window.confirm('Warning: The contents of the folder ' + directoryHandle.name + ' you selected will be overwritten with the fragments in this codestrate. All its content will be deleted!')) return;
+        if (needConfirm && !window.confirm('Warning: The folder ' + directoryHandle.name + ' will be aligned with the fragments in this codestrate. Differing managed files will be overwritten, and files or folders not represented in the codestrate will be deleted.')) return;
         return directoryHandle;
     }
 
-    async enableSyncing() {
-        let self = this;
-        if (this.isSyncing) throw new Error("Cannot start FFS, already syncing, stop it first");
-        if (!this.directoryHandle) throw new Error("No sync directory set");
-        if (!await this.directoryHandle.requestPermission({ mode: "readwrite" })) throw new Error("Must have access to dir");
-        console.log("Starting Fragment Filesystem Sync");
-        this.lastKnownDiskAttributes = {};
+    async enableSyncingAcrossTabs(directoryHandle) {
+        this.coordinationGeneration++;
+        let previousLockRequest = this.lockRequestPromise;
+        if (previousLockRequest) {
+            this.disableSyncing();
+            await previousLockRequest;
+        }
+        if (this.isDestroyed) return;
+        await this.setDirectory(directoryHandle);
+        this.isEnabled = true;
+        this.syncState = 'waiting';
+        this.coordinationChannel?.postMessage({ type: 'enabled' });
+        this.enableSyncing();
+    }
 
-        // TODO: Test if out-of-sync and ask for whether to overwrite filesystem or webstrate
+    async disableSyncingAcrossTabs() {
+        this.coordinationGeneration++;
+        await this.setDirectory(false);
+        this.coordinationChannel?.postMessage({ type: 'disabled' });
+        this.disableSyncing();
+    }
 
-        // Clean up the directory
-        for await (const entry of this.directoryHandle.values()) {
-            await this.directoryHandle.removeEntry(entry.name, { recursive: true });
+    enableSyncing() {
+        if (this.isDestroyed) return;
+        if (!this.directoryHandle) {
+            this.syncState = 'error';
+            console.error('Cannot start Fragment Filesystem Sync without a directory');
+            return;
         }
 
-        // Observe when fragments are added/removed
-        this.observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === "childList") {
-                    for (const addedNode of mutation.addedNodes) {
-                        if (addedNode.matches && addedNode.matches("code-fragment")) {
-                            self.onWSFragmentElementAdded(addedNode);
-                        } else if (addedNode.querySelectorAll) {
-                            addedNode.querySelectorAll("code-fragment").forEach((node) => {
-                                self.onWSFragmentElementAdded(node);
-                            })
-                        }
-                    }
-                    for (const removedNode of mutation.removedNodes) {
-                        if (removedNode.matches && removedNode.matches("code-fragment")) {
-                            self.onWSFragmentElementRemoved(removedNode);
-                        } else if (removedNode.querySelectorAll) {
-                            removedNode.querySelectorAll("code-fragment").forEach((node) => {
-                                self.onWSFragmentElementRemoved(node);
-                            })
-                        }
-                    }
-                }
-            }
-        });
-        this.observer.observe(document.body, { childList: true, subtree: true });
-        document.querySelectorAll("body code-fragment").forEach((fragment) => {
-            self.onWSFragmentElementAdded(fragment);
-        });
+        this.isEnabled = true;
+        if (this.isSyncing || this.lockRequestPromise) return this.lockRequestPromise;
 
-        // Every second synchronize contents
-        let ffsUpdateTick = async () => {
-            let metaFileHandle = await this.directoryHandle.getFileHandle("ffs.meta", { create: true });
-            let metaFile = await metaFileHandle.getFile();
-            let oldMeta = {};
+        this.syncState = 'waiting';
+        let abortController = new AbortController();
+        this.lockAbortController = abortController;
+
+        let lockRequest = navigator.locks.request(this.coordinationName, {
+            mode: 'exclusive',
+            signal: abortController.signal
+        }, async () => {
+            if (!this.isEnabled || this.isDestroyed) return;
+
+            let savedHandle = await this.getSavedHandle();
+            if (!savedHandle) {
+                this.directoryHandle = false;
+                this.isEnabled = false;
+                this.syncState = 'disabled';
+                return;
+            }
+            this.directoryHandle = savedHandle;
+
+            let permission = await this.directoryHandle.requestPermission({ mode: 'readwrite' });
+            if (permission !== 'granted') throw new Error('Must have read/write access to the sync directory');
+            if (!this.isEnabled || this.isDestroyed) return;
+
+            console.log('Starting Fragment Filesystem Sync in this tab');
+            this.isSyncing = true;
+            this.syncState = 'syncing';
+
             try {
-                oldMeta = JSON.parse(await metaFile.text());
-            } catch (ex) {
-                // Ignore this, just create a new one
+                await this.runSyncWorker();
+            } finally {
+                this.isSyncing = false;
+                if (this.isEnabled && this.syncState === 'syncing') this.syncState = 'waiting';
             }
-            let metaChangeDetector = JSON.stringify(oldMeta.paths);
+        });
 
-            // Sync FS and WS
-            if (oldMeta.paths) await self.synchronizeFSOperations(oldMeta);
-            await self.synchronizeWSFragments();
-            await self.synchronizeAttributes();
+        let trackedLockRequest = lockRequest.catch((error) => {
+            if (error?.name === 'AbortError') return;
+            console.error('Fragment Filesystem Sync could not acquire or use the sync lock', error);
+            if (this.isEnabled && !this.isDestroyed) this.syncState = 'error';
+        }).finally(() => {
+            if (this.lockAbortController === abortController) this.lockAbortController = false;
+            if (this.lockRequestPromise === trackedLockRequest) this.lockRequestPromise = false;
 
-            // Generate new meta file for advanced merging functionality
-            let meta = { metaVersion: 1, version: webstrate.version, lastMetaSync: new Date().getTime(), paths: {}, location: location.pathname };
-            for (const [path, part] of this.pathMapping) {
-                let entryMeta = { wid: part.node.webstrate.id };
-                if (part.link) {
-                    entryMeta.type = "fragment";
-                    entryMeta.lastModified = part.link.elementLastModified;
-                    entryMeta.hash = part.link.hash;
-                } else {
-                    entryMeta.type = "directory";
+            if (this.isEnabled && !this.isDestroyed && this.syncState !== 'error') {
+                setTimeout(() => this.enableSyncing(), 0);
+            }
+        });
+        this.lockRequestPromise = trackedLockRequest;
+        return trackedLockRequest;
+    }
+
+    async prepareSyncDirectory() {
+        try {
+            this.controlDirectoryHandle = await this.directoryHandle.getDirectoryHandle(controlDirectoryName, { create: true });
+        } catch (error) {
+            if (error?.name !== 'TypeMismatchError') throw error;
+            await this.directoryHandle.removeEntry(controlDirectoryName, { recursive: true });
+            this.controlDirectoryHandle = await this.directoryHandle.getDirectoryHandle(controlDirectoryName, { create: true });
+        }
+    }
+
+    async waitForInitialFragmentLinks() {
+        while (this.workerActive) {
+            await new Promise((resolve) => setTimeout(resolve, 1));
+            if (!this.workerActive) return;
+            let fragmentElements = Array.from(document.querySelectorAll('body code-fragment'));
+            let fragmentLinkMap = new Map();
+            this.fragmentLinks.forEach((link) => fragmentLinkMap.set(link.fragment.element, link));
+
+            fragmentElements.forEach((fragmentElement) => {
+                if (!fragmentLinkMap.has(fragmentElement) && fragmentElement.fragment) {
+                    let link = new FragmentLink(fragmentElement.fragment);
+                    this.fragmentLinks.push(link);
+                    fragmentLinkMap.set(fragmentElement, link);
                 }
-                autoCloneAttributes.forEach(attr => {
-                    if (part.node.hasAttribute(attr)) entryMeta[attr] = part.node.getAttribute(attr);
-                })
-                meta.paths[path] = entryMeta;
-            };
-            if (metaChangeDetector != JSON.stringify(meta.paths)) {
-                // Meta needs to be rewritten
-                await writeFile(metaFileHandle, JSON.stringify(meta));
-            }
-            self.updater = setTimeout(ffsUpdateTick, 1000);
-        };
-        ffsUpdateTick();
+            });
 
-        this.isSyncing = true;
+            if (fragmentElements.every((fragmentElement) => fragmentLinkMap.has(fragmentElement))) {
+                await Promise.all(this.fragmentLinks.map((link) => link.ready));
+                return;
+            }
+        }
+    }
+
+    async runSyncWorker() {
+        let self = this;
+        this.workerActive = true;
+        this.workerGeneration++;
+        this.lastKnownDiskAttributes = {};
+        this.lastKnownDiskDomOrder = undefined;
+        this.lastInvalidDiskDomOrder = undefined;
+        this.lastKnownDiskBootConfig = undefined;
+
+        try {
+            await this.prepareSyncDirectory();
+            if (!this.workerActive || !this.controlDirectoryHandle) return;
+
+            // Observe when fragments are added/removed
+            this.observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.type === "childList") {
+                        for (const addedNode of mutation.addedNodes) {
+                            if (addedNode.matches && addedNode.matches("code-fragment")) {
+                                self.onWSFragmentElementAdded(addedNode);
+                            } else if (addedNode.querySelectorAll) {
+                                addedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                    self.onWSFragmentElementAdded(node);
+                                })
+                            }
+                        }
+                        for (const removedNode of mutation.removedNodes) {
+                            if (removedNode.matches && removedNode.matches("code-fragment")) {
+                                self.onWSFragmentElementRemoved(removedNode);
+                            } else if (removedNode.querySelectorAll) {
+                                removedNode.querySelectorAll("code-fragment").forEach((node) => {
+                                    self.onWSFragmentElementRemoved(node);
+                                })
+                            }
+                        }
+                    }
+                }
+            });
+            this.observer.observe(document.body, { childList: true, subtree: true });
+            document.querySelectorAll("body code-fragment").forEach((fragment) => {
+                self.onWSFragmentElementAdded(fragment);
+            });
+
+            await this.waitForInitialFragmentLinks();
+            let authoritativeSyncPending = true;
+            while (this.workerActive) {
+                try {
+                    await this.synchronizeTick(authoritativeSyncPending);
+                    authoritativeSyncPending = false;
+                    if (this.isEnabled) this.syncState = 'syncing';
+                } catch (error) {
+                    console.error('Fragment Filesystem Sync tick failed; retrying', error);
+                    if (this.isEnabled) this.syncState = 'error';
+                }
+                if (this.workerActive) await this.waitForNextSyncTick();
+            }
+        } finally {
+            this.cleanupSyncWorker();
+        }
     }
 
     disableSyncing() {
-        clearTimeout(this.updater);
+        let wasEnabled = this.isEnabled || this.isSyncing || this.lockRequestPromise;
+        this.isEnabled = false;
+        this.syncState = 'disabled';
+        this.lockAbortController?.abort();
+        this.requestSyncWorkerStop();
+        if (!this.isSyncing) this.directoryHandle = false;
+        if (wasEnabled) console.log('Stopped Fragment Filesystem Sync in this tab');
+    }
+
+    requestSyncWorkerStop() {
+        this.workerActive = false;
         this.observer?.disconnect();
+        if (this.updater) clearTimeout(this.updater);
+        this.updater = false;
+        if (this.syncDelayResolver) {
+            let resolve = this.syncDelayResolver;
+            this.syncDelayResolver = false;
+            resolve();
+        }
+    }
+
+    waitForNextSyncTick() {
+        return new Promise((resolve) => {
+            this.syncDelayResolver = resolve;
+            this.updater = setTimeout(() => {
+                this.updater = false;
+                this.syncDelayResolver = false;
+                resolve();
+            }, 1000);
+        });
+    }
+
+    cleanupSyncWorker() {
+        this.requestSyncWorkerStop();
+        this.workerGeneration++;
+        this.pendingFragmentLinkTimeouts.forEach((timeout) => clearTimeout(timeout));
+        this.pendingFragmentLinkTimeouts.clear();
+        this.observer = false;
         this.fragmentLinks = [];
+        this.pathMapping = new Map();
+        this.nodeMapping = new Map();
         this.lastKnownDiskAttributes = {};
-        this.isSyncing = false;
-        console.log("Stopped FFS");
+        this.lastKnownDiskDomOrder = undefined;
+        this.lastInvalidDiskDomOrder = undefined;
+        this.lastKnownDiskBootConfig = undefined;
+        this.controlDirectoryHandle = false;
+        if (!this.isEnabled) this.directoryHandle = false;
+    }
+
+    destroy() {
+        this.isDestroyed = true;
+        this.disableSyncing();
+        this.coordinationChannel?.close();
+        this.coordinationChannel = false;
     }
 
     onWSFragmentElementAdded(fragmentElement) {
-        // TODO: Check if already exists and ignore
-        setTimeout(() => { this.fragmentLinks.push(new FragmentLink(fragmentElement.fragment)) }, 1);
+        let workerGeneration = this.workerGeneration;
+        let timeout = setTimeout(() => {
+            this.pendingFragmentLinkTimeouts.delete(timeout);
+            if (!this.workerActive || workerGeneration !== this.workerGeneration) return;
+            if (!fragmentElement.fragment) return;
+            if (this.fragmentLinks.some((link) => link.fragment.element === fragmentElement)) return;
+            this.fragmentLinks.push(new FragmentLink(fragmentElement.fragment));
+        }, 1);
+        this.pendingFragmentLinkTimeouts.add(timeout);
     }
     onWSFragmentElementRemoved(fragmentElement) {
+        if (document.body.contains(fragmentElement)) return;
         this.fragmentLinks = this.fragmentLinks.filter((link) => link.fragment.element !== fragmentElement);
+    }
+
+    async synchronizeTick(webstrateAuthoritative = false) {
+        let metaFileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, metaFileName, webstrateAuthoritative);
+        let metaFile = await metaFileHandle.getFile();
+        let oldMeta = {};
+        try {
+            oldMeta = JSON.parse(await metaFile.text());
+        } catch (error) {
+            // Ignore this, just create a new one.
+        }
+        let metaChangeDetector = JSON.stringify(oldMeta.paths);
+        this.restorePathMappingsFromMeta(oldMeta);
+
+        // Sync FS and WS
+        if (!webstrateAuthoritative && oldMeta.paths) await this.synchronizeFSOperations(oldMeta);
+        await this.synchronizeWSFragments(webstrateAuthoritative, oldMeta);
+        await this.synchronizeDomOrder(webstrateAuthoritative);
+        await this.synchronizeAttributes(webstrateAuthoritative);
+        await this.synchronizeBootConfig(webstrateAuthoritative);
+
+        // Generate new meta file for advanced merging functionality
+        let meta = { metaVersion: 3, version: webstrate.version, lastMetaSync: new Date().getTime(), paths: {}, location: location.pathname };
+        for (const [path, part] of this.pathMapping) {
+            let entryMeta = { wid: part.node.webstrate.id, basePath: part.basePath };
+            if (part.link) {
+                entryMeta.type = "fragment";
+                entryMeta.fragmentLastModified = part.link.elementLastModified;
+                // The contents both sides agreed on, plus the file stats they were observed with
+                entryMeta.hash = part.syncedHash;
+                entryMeta.fileLastModified = part.fileLastModified;
+                entryMeta.fileSize = part.fileSize;
+            } else {
+                entryMeta.type = "directory";
+            }
+            // Snapshot of the attributes that a file renamed on disk gets back, matched on the
+            // content hash. ffs.attributes.json cannot recover them because it is keyed by path.
+            autoCloneAttributes.forEach(attr => {
+                if (part.node.hasAttribute(attr)) entryMeta[attr] = part.node.getAttribute(attr);
+            })
+            meta.paths[path] = entryMeta;
+        };
+        if (webstrateAuthoritative || metaChangeDetector != JSON.stringify(meta.paths)) {
+            // Meta needs to be rewritten
+            await writeFile(metaFileHandle, JSON.stringify(meta));
+        }
+    }
+
+    restorePathMappingsFromMeta(meta) {
+        if (this.pathMapping.size > 0 || meta.location !== location.pathname || !meta.paths) return;
+
+        let fragmentLinkMap = new Map();
+        this.fragmentLinks.forEach((link) => fragmentLinkMap.set(link.fragment.element, link));
+        for (const [path, entry] of Object.entries(meta.paths)) {
+            let node;
+            let link;
+            if (entry.type === 'directory') {
+                node = findFolderNodeByWSID(entry.wid);
+            } else if (entry.type === 'fragment') {
+                node = findFragmentNodeByWSID(entry.wid);
+                link = fragmentLinkMap.get(node);
+                if (!link) continue;
+            }
+            if (!node) continue;
+            this.pathMapping.set(path, { node: node, link: link, basePath: entry.basePath });
+            this.nodeMapping.set(node, path);
+        }
     }
 
     async synchronizeFSOperations(oldMeta) {
@@ -3005,6 +3888,8 @@ class FragmentFilesystemSync {
 
         // Check if any new files/dirs in FS with the old mapping from FS
         await traverseDirectoryStructure("", this.directoryHandle, async (path, name, parent, entry) => {
+            if (path === '/' + controlDirectoryName) return false;
+
             if (!oldMeta.paths[path]) {
                 // A new directory, create it in the webstrate
                 let newFolderElement;
@@ -3022,7 +3907,7 @@ class FragmentFilesystemSync {
         }, async (path, name, parent, entry) => {
             if (!oldMeta.paths[path]) {
                 // A new file, create the fragment
-                if (path === "/ffs.meta" || path === "/ffs.attributes.json") return; // Ignore meta files
+                if (path === '/ffs.meta' || path === '/ffs.attributes.json' || path === '/ffs.dom-order.json') return; // Ignore legacy control files
                 let extension = name.substring(name.lastIndexOf(".") + 1);
                 let type = Object.keys(extensionTypes).find(key => extensionTypes[key] == extension);
                 if (FragmentFilesystemSync.DEBUG) console.log("New file spotted", extension, type, path, name, parent, entry);
@@ -3057,26 +3942,9 @@ class FragmentFilesystemSync {
                 }
             }
 
-            // Check file existance again
-            if (oldMeta.paths[path]) {
-                // Also check for modifications
-                let file = await entry.getFile();
-                let oldFileMeta = oldMeta.paths[path]
-                if ((!oldFileMeta.lastModified) || file.lastModified > oldMeta.lastMetaSync) {
-                    let element = await findFragmentNodeByWSID(oldFileMeta.wid);
-                    if (!element) {
-                        console.log("Couldn't find element node to push FS contents to", path);
-                    } else {
-                        let fileContents = await file.text();
-                        // Only update fragment if content actually differs to avoid feedback loops
-                        if (element.fragment.raw !== fileContents) {
-                            element.fragment.raw = fileContents;
-                        }
-                    }
-                }
-
-                oldMeta.paths[path].seen = true;
-            }
+            // Check file existance again and flag as seen if it exists now. Contents are
+            // synchronized in synchronizeWSFragments, where both sides of the file are known.
+            if (oldMeta.paths[path]) oldMeta.paths[path].seen = true;
         });
 
         // Check if any deleted files in FS with the old mapping from FS
@@ -3110,52 +3978,78 @@ class FragmentFilesystemSync {
         await new Promise(resolve => setTimeout(resolve, 1));
     }
 
-    async synchronizeWSFragments() {
+    async synchronizeWSFragments(webstrateAuthoritative = false, oldMeta = {}) {
         // Create new filename and directory mapping for fragment links
         let sanitizeFileName = (rawName) => rawName.replace(/[^()a-z0-9.#\-_ ]/gi, '_');
+        let previousPathMapping = this.pathMapping;
+        let previousNodeMapping = this.nodeMapping;
+        let reservedPreviousPaths = new Set(previousNodeMapping.values());
         let newPathMapping = new Map();
         let newNodeMapping = new Map();
 
         // Build element-to-FragmentLink lookup for quick access during traversal
+        let fragmentLinks = this.fragmentLinks;
         let fragmentLinkMap = new Map();
-        this.fragmentLinks.forEach((link) => {
+        fragmentLinks.forEach((link) => {
             fragmentLinkMap.set(link.fragment.element, link);
         });
+
+        let allocatePath = function allocatePath(node, basePath, createCandidate) {
+            let previousPath = previousNodeMapping.get(node);
+            let previousPart = previousPathMapping.get(previousPath);
+            let matchesPreviousBase = previousPart?.basePath === basePath ||
+                (previousPart?.basePath === undefined && isCollisionPathVariant(previousPath, basePath));
+            if (previousPath && matchesPreviousBase && !newPathMapping.has(previousPath)) {
+                return previousPath;
+            }
+
+            let path;
+            let counter = 0;
+            do {
+                path = createCandidate(counter);
+                counter++;
+            } while (newPathMapping.has(path) || reservedPreviousPaths.has(path) || path === '/' + controlDirectoryName);
+            return path;
+        };
 
         // Recurse through DOM in order, registering both folders and fragments
         let registerElements = function registerElements(currentPath, currentElement) {
             if (folderElements.includes(currentElement.nodeName)) {
                 // This is a folder
-                let path;
-                let counter = 0;
-                let extension = "";
-                if (currentElement.nodeName === "WPM-PACKAGE") extension = ".wpm";
-                do {
-                    // Not unique, append a number
-                    path = currentPath + "/" + sanitizeFileName(getNodeName(currentElement)) + (counter > 0 ? "_" + counter : "") + extension;
-                    counter++;
-                } while (newPathMapping.get(path));
-                newPathMapping.set(path, { node: currentElement });
+                let extension = '';
+                if (currentElement.nodeName === 'WPM-PACKAGE') extension = '.wpm';
+                let pathName = sanitizeFileName(getNodeName(currentElement));
+                let basePath = currentPath + '/' + pathName + extension;
+                let path = allocatePath(currentElement, basePath, (counter) => {
+                    return currentPath + '/' + pathName + (counter > 0 ? '_' + counter : '') + extension;
+                });
+                newPathMapping.set(path, { node: currentElement, basePath: basePath });
                 newNodeMapping.set(currentElement, path);
                 currentPath = path;
             } else if (currentElement.nodeName === "CODE-FRAGMENT") {
                 // This is a fragment
                 let link = fragmentLinkMap.get(currentElement);
+                if (!link && currentElement.fragment) {
+                    // Pick up fragments that appeared after the last mutation callback ran
+                    link = new FragmentLink(currentElement.fragment);
+                    fragmentLinks.push(link);
+                    fragmentLinkMap.set(currentElement, link);
+                }
                 if (link) {
-                    let fragmentPath;
-                    let counter = 0;
-                    do {
-                        fragmentPath = currentPath + "/" + sanitizeFileName(link.getRawName()) + (counter > 0 ? "_" + counter : "") + "." + link.getExtension();
-                        counter++;
-                    } while (newPathMapping.get(fragmentPath));
-                    newPathMapping.set(fragmentPath, { node: link.fragment.element, link: link });
+                    let pathName = sanitizeFileName(link.getRawName());
+                    let extension = '.' + link.getExtension();
+                    let basePath = currentPath + '/' + pathName + extension;
+                    let fragmentPath = allocatePath(currentElement, basePath, (counter) => {
+                        return currentPath + '/' + pathName + (counter > 0 ? '_' + counter : '') + extension;
+                    });
+                    newPathMapping.set(fragmentPath, { node: link.fragment.element, link: link, basePath: basePath });
                     newNodeMapping.set(link.fragment.element, fragmentPath);
                 }
             }
             for (let i = 0; i &lt; currentElement.children.length; i++) {
                 registerElements(currentPath, currentElement.children[i]);
             }
-        }
+        };
         registerElements("", document.body);
         this.nodeMapping = newNodeMapping;
         this.pathMapping = newPathMapping;
@@ -3170,7 +4064,7 @@ class FragmentFilesystemSync {
             let entity = this.pathMapping.get(path);
             if (!entity.link) {
                 // Directory
-                sortedDirs.push({ path: path, handle: await getOrCreateFSDirectory(this.directoryHandle, path) });
+                sortedDirs.push({ path: path, handle: await getOrCreateFSDirectory(this.directoryHandle, path, webstrateAuthoritative) });
             }
         }
 
@@ -3185,14 +4079,27 @@ class FragmentFilesystemSync {
                     let entity = this.pathMapping.get(path);
                     if (entity.link) {
                         // File in this dir
+                        let previousEntry = oldMeta.paths?.[path];
+                        if (previousEntry?.type === 'fragment') {
+                            // Carry the last known sync state over in case the file cannot be opened below
+                            entity.syncedHash = previousEntry.hash;
+                            entity.fileLastModified = previousEntry.fileLastModified;
+                            entity.fileSize = previousEntry.fileSize;
+                        } else {
+                            previousEntry = undefined;
+                        }
+
                         let fileWasJustCreated = false;
                         let fileName = path.substring(path.lastIndexOf('/') + 1);
                         let fileHandle;
                         try {
                             fileHandle = await dir.handle.getFileHandle(fileName);
                         } catch (ex) {
-                            // Not found
-                            // TODO: Test for other things than NotFound
+                            if (webstrateAuthoritative && ex?.name === 'TypeMismatchError') {
+                                await dir.handle.removeEntry(fileName, { recursive: true });
+                            } else if (ex?.name !== 'NotFoundError') {
+                                throw ex;
+                            }
                             try {
                                 fileHandle = await dir.handle.getFileHandle(fileName, { create: true });
                                 if (FragmentFilesystemSync.DEBUG) console.log("Creating new file in FS because it didnt exist", path)
@@ -3201,25 +4108,19 @@ class FragmentFilesystemSync {
                                 console.log("Cannot write file, skipping", path, ex2);
                             }
                         }
+                        if (!fileHandle) continue;
 
-                        let file = await fileHandle.getFile();
-                        if (fileWasJustCreated || entity.link.elementLastModified > file.lastModified) {
-                            // Only write to FS if content actually differs to avoid feedback loops
-                            let fileContents = await file.text();
-                            if (fileWasJustCreated || entity.link.fragment.raw !== fileContents) {
-                                await writeFile(fileHandle, entity.link.fragment.raw);
-                            }
-                        }
+                        await synchronizeFragmentContents(entity, fileHandle, previousEntry, fileWasJustCreated, webstrateAuthoritative);
                     }
                 }
             }
         };
 
         // Check if FS has fragments/dirs that should be deleted
-        let unknownPathDeleter = (path, name, parent, entry) => {
+        let unknownPathDeleter = async (path, name, parent, entry) => {
+            if (path === '/' + controlDirectoryName) return false;
             if (!this.pathMapping.has(path)) {
-                if (path == "/ffs.meta" || path == "/ffs.attributes.json") return false; // leave meta files alone
-                parent.removeEntry(name, { recursive: true }); // Delete it
+                await parent.removeEntry(name, { recursive: true }); // Delete it
                 return false; // Do not continue into the directory
             }
             return true;
@@ -3227,14 +4128,95 @@ class FragmentFilesystemSync {
         await traverseDirectoryStructure("", this.directoryHandle, unknownPathDeleter, unknownPathDeleter);
     }
 
-    async synchronizeAttributes() {
-        let attributesFileName = 'ffs.attributes.json';
+    getDomOrderGroups() {
+        let groups = [{ path: '/', node: document.body }];
+        for (const [path, part] of this.pathMapping) {
+            if (!part.link) groups.push({ path: path, node: part.node });
+        }
+        return groups.map((group) => {
+            return {
+                path: group.path,
+                node: group.node,
+                children: Array.from(group.node.children).filter((child) => {
+                    return isManagedElement(child) && this.nodeMapping.has(child);
+                })
+            };
+        });
+    }
 
+    buildDomOrder() {
+        let domOrder = {};
+        this.getDomOrderGroups().forEach((group) => {
+            domOrder[group.path] = group.children.map((child) => getPathName(this.nodeMapping.get(child)));
+        });
+        return domOrder;
+    }
+
+    applyDomOrder(diskDomOrder) {
+        this.getDomOrderGroups().forEach((group) => {
+            if (!Object.prototype.hasOwnProperty.call(diskDomOrder, group.path)) return;
+
+            let childByName = new Map();
+            group.children.forEach((child) => childByName.set(getPathName(this.nodeMapping.get(child)), child));
+            let seenChildren = new Set();
+            let desiredChildren = [];
+            diskDomOrder[group.path].forEach((childName) => {
+                let child = childByName.get(childName);
+                if (!child || seenChildren.has(child)) return;
+                seenChildren.add(child);
+                desiredChildren.push(child);
+            });
+            group.children.forEach((child) => {
+                if (!seenChildren.has(child)) desiredChildren.push(child);
+            });
+            reorderManagedChildSlots(group.node, group.children, desiredChildren);
+        });
+    }
+
+    async synchronizeDomOrder(webstrateAuthoritative = false) {
+        let diskRawText;
+        let diskDomOrder;
+        try {
+            let fileHandle = await this.controlDirectoryHandle.getFileHandle(domOrderFileName);
+            let file = await fileHandle.getFile();
+            diskRawText = await file.text();
+        } catch (error) {
+            if (error?.name !== 'NotFoundError') throw error;
+        }
+
+        if (!webstrateAuthoritative && diskRawText !== undefined) {
+            try {
+                diskDomOrder = JSON.parse(diskRawText);
+                if (!isValidDomOrder(diskDomOrder)) throw new Error('Expected an object whose values are arrays of child names');
+            } catch (error) {
+                if (diskRawText !== this.lastInvalidDiskDomOrder) {
+                    console.warn('Ignoring invalid Fragment Filesystem Sync DOM order file', error);
+                }
+                this.lastInvalidDiskDomOrder = diskRawText;
+                return;
+            }
+        }
+        this.lastInvalidDiskDomOrder = undefined;
+
+        let diskChanged = !webstrateAuthoritative && diskDomOrder !== undefined &&
+            JSON.stringify(diskDomOrder) !== JSON.stringify(this.lastKnownDiskDomOrder);
+        if (diskChanged) this.applyDomOrder(diskDomOrder);
+
+        let finalDomOrder = this.buildDomOrder();
+        let outputJSON = JSON.stringify(finalDomOrder, null, 4) + '\n';
+        if (outputJSON !== diskRawText) {
+            let fileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, domOrderFileName, webstrateAuthoritative);
+            await writeFile(fileHandle, outputJSON);
+        }
+        this.lastKnownDiskDomOrder = JSON.parse(JSON.stringify(finalDomOrder));
+    }
+
+    async synchronizeAttributes(webstrateAuthoritative = false) {
         // Read current attributes file from disk
         let diskRawText = '';
         let diskAttributes = {};
         try {
-            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName);
+            let fileHandle = await this.controlDirectoryHandle.getFileHandle(attributesFileName);
             let file = await fileHandle.getFile();
             diskRawText = await file.text();
             if (diskRawText.trim().length > 0) {
@@ -3244,33 +4226,35 @@ class FragmentFilesystemSync {
             // File doesn't exist yet or parse error, treat as empty
         }
 
-        // Detect disk changes (user edits) and apply to DOM
-        // Only process paths that exist in both disk JSON and current pathMapping
-        for (const [path, diskAttrs] of Object.entries(diskAttributes)) {
-            let part = this.pathMapping.get(path);
-            if (!part) continue; // Path doesn't exist in current mapping, skip
-            if (typeof diskAttrs !== 'object' || diskAttrs === null) continue;
+        if (!webstrateAuthoritative) {
+            // Detect disk changes (user edits) and apply to DOM
+            // Only process paths that exist in both disk JSON and current pathMapping
+            for (const [path, diskAttrs] of Object.entries(diskAttributes)) {
+                let part = this.pathMapping.get(path);
+                if (!part) continue; // Path doesn't exist in current mapping, skip
+                if (typeof diskAttrs !== 'object' || diskAttrs === null) continue;
 
-            let lastKnown = this.lastKnownDiskAttributes[path] || {};
+                let lastKnown = this.lastKnownDiskAttributes[path] || {};
 
-            for (const attr of trackedAttributes) {
-                let hasDiskValue = diskAttrs.hasOwnProperty(attr);
-                let hasLastKnownValue = lastKnown.hasOwnProperty(attr);
-                let diskValue = hasDiskValue ? diskAttrs[attr] : undefined;
-                let lastKnownValue = hasLastKnownValue ? lastKnown[attr] : undefined;
+                for (const attr of trackedAttributes) {
+                    let hasDiskValue = diskAttrs.hasOwnProperty(attr);
+                    let hasLastKnownValue = lastKnown.hasOwnProperty(attr);
+                    let diskValue = hasDiskValue ? diskAttrs[attr] : undefined;
+                    let lastKnownValue = hasLastKnownValue ? lastKnown[attr] : undefined;
 
-                // Only apply if this attribute actually changed on disk since last sync
-                if (hasDiskValue !== hasLastKnownValue || diskValue !== lastKnownValue) {
-                    if (!hasDiskValue) {
-                        // Attribute was removed from disk JSON entry
-                        if (part.node.hasAttribute(attr)) {
-                            part.node.removeAttribute(attr);
-                        }
-                    } else {
-                        // Attribute was changed or added on disk
-                        let currentDOMValue = part.node.getAttribute(attr);
-                        if (currentDOMValue !== diskValue) {
-                            part.node.setAttribute(attr, diskValue);
+                    // Only apply if this attribute actually changed on disk since last sync
+                    if (hasDiskValue !== hasLastKnownValue || diskValue !== lastKnownValue) {
+                        if (!hasDiskValue) {
+                            // Attribute was removed from disk JSON entry
+                            if (part.node.hasAttribute(attr)) {
+                                part.node.removeAttribute(attr);
+                            }
+                        } else {
+                            // Attribute was changed or added on disk
+                            let currentDOMValue = part.node.getAttribute(attr);
+                            if (currentDOMValue !== diskValue) {
+                                part.node.setAttribute(attr, diskValue);
+                            }
                         }
                     }
                 }
@@ -3296,12 +4280,50 @@ class FragmentFilesystemSync {
         let nestedOutput = flatToNestedAttributes(finalAttributes);
         let outputJSON = JSON.stringify(nestedOutput, null, 4) + '\n';
         if (outputJSON !== diskRawText) {
-            let fileHandle = await this.directoryHandle.getFileHandle(attributesFileName, { create: true });
+            let fileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, attributesFileName, webstrateAuthoritative);
             await writeFile(fileHandle, outputJSON);
         }
 
         // Update last known disk state to detect future user edits
         this.lastKnownDiskAttributes = JSON.parse(JSON.stringify(finalAttributes));
+    }
+
+    async synchronizeBootConfig(webstrateAuthoritative = false) {
+        let bootConfigElement = document.querySelector(bootConfigSelector);
+        if (!bootConfigElement) {
+            if (webstrateAuthoritative) {
+                try {
+                    await this.controlDirectoryHandle.removeEntry(bootConfigFileName, { recursive: true });
+                } catch (error) {
+                    if (error?.name !== 'NotFoundError') throw error;
+                }
+                this.lastKnownDiskBootConfig = undefined;
+            }
+            return;
+        }
+
+        let diskRawText;
+        try {
+            let fileHandle = await this.controlDirectoryHandle.getFileHandle(bootConfigFileName);
+            let file = await fileHandle.getFile();
+            diskRawText = await file.text();
+        } catch (ex) {
+            // File does not exist yet, so it will be created from the DOM below
+        }
+
+        // A disk edit wins when both disk and DOM changed since the previous tick
+        let diskChanged = !webstrateAuthoritative && diskRawText !== undefined && diskRawText !== this.lastKnownDiskBootConfig;
+        if (diskChanged && bootConfigElement.textContent !== diskRawText) {
+            bootConfigElement.textContent = diskRawText;
+        }
+
+        let finalRawText = bootConfigElement.textContent;
+        if (diskRawText !== finalRawText) {
+            let fileHandle = await getOrCreateFSFile(this.controlDirectoryHandle, bootConfigFileName, webstrateAuthoritative);
+            await writeFile(fileHandle, finalRawText);
+        }
+
+        this.lastKnownDiskBootConfig = finalRawText;
     }
 }
 
@@ -3311,27 +4333,30 @@ class FragmentLink {
         this.fragment = fragment;
         if (!fragment) throw Error("Cannot construct FragmentLink without a fragment");
 
+        this.elementLastModified = new Date().getTime();
         this.fragment.registerOnFragmentChangedHandler(() => { self.onFragmentUpdated() });
-        this.onFragmentUpdated();
+        this.ready = this.onFragmentUpdated();
         if (FragmentFilesystemSync.DEBUG) console.log("Monitoring", fragment);
     }
 
-
-
     async onFragmentUpdated() {
-        // Store time and hash
-        let newHash = await sha256(this.fragment.raw);
-        if (newHash != this.hash) {
-            // Only update the timestamp if this is a genuine content change,
-            // not just a sync from the filesystem (which would have the same content)
-            let isInitialHash = this.hash === undefined;
-            this.hash = newHash;
-            // Don't update elementLastModified on initial hash calculation,
-            // only on subsequent real changes
-            if (!isInitialHash) {
-                this.elementLastModified = new Date().getTime();
-            }
+        // Record when the contents genuinely changed, for the metadata file
+        let previousHash = this.hash;
+        let newHash = await this.getContentHash();
+        if (previousHash !== undefined && newHash !== previousHash) {
+            this.elementLastModified = new Date().getTime();
         }
+    }
+
+    async getContentHash(contents = this.fragment.raw) {
+        // Memoized, because every sync tick hashes contents that usually did not change
+        if (this.hash === undefined || this.hashedContents !== contents) {
+            let hash = await sha256(contents);
+            this.hash = hash;
+            this.hashedContents = contents;
+            return hash;
+        }
+        return this.hash;
     }
 
     getRawName() {
@@ -3346,6 +4371,72 @@ class FragmentLink {
     }
 }
 
+
+function recordSyncedFragmentState(entity, file, contentHash) {
+    entity.syncedHash = contentHash;
+    entity.fileLastModified = file.lastModified;
+    entity.fileSize = file.size;
+}
+
+async function writeFragmentFile(entity, fileHandle, contents, contentHash) {
+    await writeFile(fileHandle, contents);
+    recordSyncedFragmentState(entity, await fileHandle.getFile(), contentHash);
+}
+
+/**
+ * Synchronizes the contents of a single fragment and its file in both directions.
+ *
+ * The side that changed since the previous tick wins, which is decided on content hashes rather
+ * than on timestamps: the meta file records the hash of the contents both sides last agreed on.
+ * The recorded file stats are only used to skip reading files that were not touched on disk.
+ */
+async function synchronizeFragmentContents(entity, fileHandle, previousEntry, fileWasJustCreated, webstrateAuthoritative) {
+    let fragmentContents = entity.link.fragment.raw;
+    let fragmentHash = await entity.link.getContentHash(fragmentContents);
+    let syncedHash = previousEntry?.hash;
+
+    if (fileWasJustCreated) {
+        await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        return;
+    }
+
+    let file = await fileHandle.getFile();
+    let fileUntouched = syncedHash !== undefined &&
+        previousEntry.fileLastModified === file.lastModified &&
+        previousEntry.fileSize === file.size;
+    if (fileUntouched && !webstrateAuthoritative) {
+        // The file still is what we wrote or read last, so only the fragment can have changed
+        if (fragmentHash === syncedHash) {
+            recordSyncedFragmentState(entity, file, syncedHash);
+        } else {
+            await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        }
+        return;
+    }
+
+    let fileContents = await file.text();
+    if (fileContents === fragmentContents) {
+        // Both sides already agree, only the file stats need to be refreshed
+        recordSyncedFragmentState(entity, file, fragmentHash);
+        return;
+    }
+    if (webstrateAuthoritative || previousEntry === undefined) {
+        // The webstrate wins while resuming, and for files we have no synchronized state for
+        await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        return;
+    }
+
+    let fileHash = await sha256(fileContents);
+    if (syncedHash !== undefined && fileHash === syncedHash) {
+        // Only the fragment changed since the last tick
+        await writeFragmentFile(entity, fileHandle, fragmentContents, fragmentHash);
+        return;
+    }
+
+    // The file changed on disk, which also wins when the fragment changed as well
+    entity.link.fragment.raw = fileContents;
+    recordSyncedFragmentState(entity, file, fileHash);
+}
 
 function getNodeName(node) {
     let name = node.hasAttribute("name") ? node.getAttribute("name").trim() : "";
@@ -3363,12 +4454,61 @@ function findFragmentNodeByWSID(wsid) {
     return Array.from(document.querySelectorAll("code-fragment")).find(element => element.webstrate?.id == wsid);
 }
 
-async function getOrCreateFSDirectory(base, path) {
+function isManagedElement(element) {
+    return element.nodeName === 'CODE-FRAGMENT' || folderElements.includes(element.nodeName);
+}
+
+function getPathName(path) {
+    return path.substring(path.lastIndexOf('/') + 1);
+}
+
+function isCollisionPathVariant(path, basePath) {
+    if (!path || !basePath) return false;
+    if (path === basePath) return true;
+    let escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (new RegExp('^' + escapeRegExp(basePath) + '_\\d+$').test(path)) return true;
+
+    let extensionLocation = basePath.lastIndexOf('.');
+    let directoryLocation = basePath.lastIndexOf('/');
+    if (extensionLocation &lt;= directoryLocation) return false;
+    let stem = basePath.substring(0, extensionLocation);
+    let extension = basePath.substring(extensionLocation);
+    return new RegExp('^' + escapeRegExp(stem) + '_\\d+' + escapeRegExp(extension) + '$').test(path);
+}
+
+function isValidDomOrder(domOrder) {
+    if (typeof domOrder !== 'object' || domOrder === null || Array.isArray(domOrder)) return false;
+    return Object.entries(domOrder).every(([path, childNames]) => {
+        return path.startsWith('/') && Array.isArray(childNames) && childNames.every((childName) => typeof childName === 'string');
+    });
+}
+
+function reorderManagedChildSlots(parentNode, currentChildren, desiredChildren) {
+    if (currentChildren.every((child, index) => child === desiredChildren[index])) return;
+
+    let managedChildren = new Set(currentChildren);
+    let desiredIndex = 0;
+    let finalChildren = Array.from(parentNode.children).map((child) => {
+        return managedChildren.has(child) ? desiredChildren[desiredIndex++] : child;
+    });
+    finalChildren.forEach((child, index) => {
+        let currentChild = parentNode.children[index];
+        if (currentChild !== child) parentNode.insertBefore(child, currentChild);
+    });
+}
+
+async function getOrCreateFSDirectory(base, path, replaceMismatchedEntry = false) {
     let directories = path.split("/");
     let currentDir = base;
     for (let directory of directories) {
         if (directory.length === 0) continue; // skip initial slash
-        currentDir = await currentDir.getDirectoryHandle(directory, { create: true })
+        try {
+            currentDir = await currentDir.getDirectoryHandle(directory, { create: true })
+        } catch (error) {
+            if (!replaceMismatchedEntry || error?.name !== 'TypeMismatchError') throw error;
+            await currentDir.removeEntry(directory, { recursive: true });
+            currentDir = await currentDir.getDirectoryHandle(directory, { create: true });
+        }
     }
     return currentDir;
 }
@@ -3377,6 +4517,16 @@ async function writeFile(fileHandle, contents) {
     const writable = await fileHandle.createWritable();
     await writable.write(contents);
     await writable.close();
+}
+
+async function getOrCreateFSFile(directoryHandle, fileName, replaceMismatchedEntry = false) {
+    try {
+        return await directoryHandle.getFileHandle(fileName, { create: true });
+    } catch (error) {
+        if (!replaceMismatchedEntry || error?.name !== 'TypeMismatchError') throw error;
+        await directoryHandle.removeEntry(fileName, { recursive: true });
+        return directoryHandle.getFileHandle(fileName, { create: true });
+    }
 }
 
 async function traverseDirectoryStructure(currentPath, dirHandle, dirCallback, fileCallback) {
@@ -3435,30 +4585,65 @@ if (FragmentFilesystemSync.isSupported()) {
         window.FragmentFilesystemSync = FragmentFilesystemSync;
 
         // Register with Cauldron (when available)
-        let item;
+        let items = [];
+        fragmentFilesystemSync.onSyncStateChanged = () => {
+            let menus = new Set();
+            items.forEach((item) => {
+                item.menuItemConfig._allMenuItems?.forEach((menuItem) => menus.add(menuItem.menu));
+            });
+            menus.forEach((menu) => menu.checkUpdate());
+        };
         let registerMenuItem = function registerMenuItem() {
-            if (!item) item = MenuSystem.MenuManager.registerMenuItem("Cauldron.File.Sync", {
-                label: "Fragments to Disk...",
-                tooltip: "Copy fragments to a local folder when the page loads and keep them in sync",
-                group: "Codestrates",
-                groupOrder: 200,
-                order: 200,
-                checked: () => {
-                    return fragmentFilesystemSync.isSyncing;
-                },
-                onAction: async (menuItem) => {
-                    // Toggle sync
-                    if (fragmentFilesystemSync.isSyncing) {
-                        fragmentFilesystemSync.disableSyncing();
-                        fragmentFilesystemSync.setDirectory();
-                    } else {
-                        let dir = await fragmentFilesystemSync.popupDirectoryPicker();
-                        if (dir) {
-                            await fragmentFilesystemSync.setDirectory(dir);
-                            fragmentFilesystemSync.enableSyncing();
-                        }
-                    }
+            if (items.length > 0) return;
+
+            let onAction = async () => {
+                if (fragmentFilesystemSync.isEnabled) {
+                    await fragmentFilesystemSync.disableSyncingAcrossTabs();
+                } else {
+                    let directoryHandle = await fragmentFilesystemSync.popupDirectoryPicker();
+                    if (directoryHandle) await fragmentFilesystemSync.enableSyncingAcrossTabs(directoryHandle);
                 }
+            };
+            let menuStates = [
+                {
+                    state: 'disabled',
+                    label: 'Fragments to Disk...',
+                    tooltip: 'Choose a local folder and synchronize fragments to disk',
+                    checked: false
+                },
+                {
+                    state: 'syncing',
+                    label: 'Fragments to Disk — Syncing in This Tab',
+                    tooltip: 'This tab is synchronizing fragments to disk. Click to disable synchronization in all tabs',
+                    checked: true
+                },
+                {
+                    state: 'waiting',
+                    label: 'Fragments to Disk — Syncing in Another Tab',
+                    tooltip: 'Another tab is synchronizing fragments to disk. This tab will take over automatically if it closes. Click to disable synchronization in all tabs',
+                    checked: true
+                },
+                {
+                    state: 'error',
+                    label: 'Fragments to Disk — Sync Paused',
+                    tooltip: 'This tab could not access the sync directory. Click to disable synchronization in all tabs',
+                    checked: true
+                }
+            ];
+
+            menuStates.forEach((menuState) => {
+                let menuItemConfig = {
+                    label: menuState.label,
+                    tooltip: menuState.tooltip,
+                    group: 'Codestrates',
+                    groupOrder: 200,
+                    order: 200,
+                    checked: () => menuState.checked,
+                    onOpen: () => fragmentFilesystemSync.syncState === menuState.state,
+                    onAction: onAction
+                };
+                let registration = MenuSystem.MenuManager.registerMenuItem('Cauldron.File.Sync', menuItemConfig);
+                items.push({ registration: registration, menuItemConfig: menuItemConfig });
             });
         }
 
@@ -3470,8 +4655,9 @@ if (FragmentFilesystemSync.isSupported()) {
         }
 
         wpm.onRemoved(({ detail: packageName }) => {
-            fragmentFilesystemSync.disableSyncing();
-            item?.delete();
+            fragmentFilesystemSync.destroy();
+            items.forEach((item) => item.registration.delete());
+            items = [];
         });
     });
 }
@@ -3479,24 +4665,61 @@ if (FragmentFilesystemSync.isSupported()) {
 
 Synchronizes code fragments from a Codestrates webstrate to a local folder on disk and keeps them in sync bidirectionally.
 
+## Startup and Resume
+
+The webstrate is the source of truth whenever filesystem synchronization starts or a different browser tab takes over synchronization. Before bidirectional synchronization begins, the complete managed state is exported from the webstrate to the selected folder:
+
+- Missing files and folders are created.
+- Files with differing contents are overwritten, while matching files are left untouched.
+- Files and folders that do not represent elements in the webstrate are removed.
+- Fragment attributes, managed DOM order, and the WPM boot configuration are exported from the DOM.
+- `.ffs/ffs.meta` is regenerated with the current mapping and synchronization time.
+
+The folder is reconciled path by path and is not cleared and recreated as a whole. This startup reconciliation also runs if `.ffs/ffs.meta` is missing, invalid, or belongs to another webstrate. Changes made only on disk while no browser tab is synchronizing are therefore overwritten or removed when synchronization resumes.
+
+After the startup reconciliation succeeds, synchronization becomes bidirectional and disk edits are applied to the webstrate on the next sync tick.
+
+## Fragment Contents
+
+During bidirectional synchronization, the side that changed since the previous tick decides which contents win. `.ffs/ffs.meta` records the hash of the contents that a fragment and its file last agreed on, together with the modification time and size the file had at that point:
+
+- Only the fragment changed — the file is rewritten.
+- Only the file changed — the contents are applied to the fragment.
+- Both changed between two ticks — the disk wins, as for the other control files.
+- Neither changed — nothing is read or written.
+
+Change detection is based on content rather than on timestamps, so a fragment edit is never reverted by a file that did not change, and a file that is rewritten with identical contents does not create a webstrate version. The recorded modification time and size are only used to skip reading files that were not touched on disk.
+
+> **Important:** Use a dedicated folder for filesystem synchronization. Files and folders that are not represented in the webstrate may be removed during startup or ongoing synchronization.
+
+## Multiple Browser Tabs
+
+Only one browser tab synchronizes a given webstrate pathname to disk at a time. Other tabs wait without accessing the filesystem, and a waiting tab automatically takes over if the synchronizing tab closes or the package is removed from it.
+
+The Cauldron menu indicates whether synchronization is running in the current tab, running in another tab, paused because of an error, or disabled. Enabling and disabling synchronization applies to all open tabs for the same pathname. Query strings and URL fragments do not create separate synchronizers.
+
 ## Files on Disk
 
 - **Fragment files** (`.js`, `.jsx`, `.css`, `.scss`, `.json`, `.md`, etc.) — the source code of each `&lt;code-fragment>` element, synchronized in both directions.
-- **`ffs.meta`** — internal bookkeeping file that tracks webstrate IDs, content hashes, and timestamps. Do not edit manually.
-- **`ffs.attributes.json`** — a human- and agent-readable JSON file that mirrors the tracked DOM attributes of every fragment and folder. This file is editable: changes made on disk are applied back to the DOM on the next sync tick.
+- **`.ffs/ffs.meta`** — internal bookkeeping file that tracks webstrate IDs, synchronized content hashes, and file stats. Do not edit manually.
+- **`.ffs/ffs.attributes.json`** — a human- and agent-readable JSON file that mirrors the tracked DOM attributes of every fragment and folder. This file is editable: changes made on disk are applied back to the DOM on the next sync tick.
+- **`.ffs/ffs.dom-order.json`** — an editable manifest that records the DOM order of synchronized fragments and folders under each managed parent.
+- **`.ffs/wpm.bootconfig.json`** — the raw contents of the WPM boot configuration stored in `head script[type="text/json+bootconfig"]`. Changes are synchronized in both directions without parsing or reformatting.
+
+The `.ffs` directory is reserved for synchronization state and is never represented as a folder in the codestrate DOM. Existing root-level FFS control files are not migrated; they are removed when the folder is reconciled with the webstrate.
 
 ## Files and Folders
 
-Files and folders can be created, renamed, and deleted on disk. The sync will propagate these changes to the DOM:
+After startup reconciliation, files and folders can be created, renamed, and deleted on disk. The sync will propagate these changes to the DOM:
 
 - **Creating** a file with a recognized extension creates a new `&lt;code-fragment>` in the webstrate.
 - **Creating** a folder (or `.wpm` folder) creates a new `&lt;code-folder>` or `&lt;wpm-package>` element.
 - **Deleting** a file or folder on disk removes the corresponding element from the DOM.
-- **Renaming** is treated as a delete + create. The sync attempts to detect moves by matching content hashes and will carry over attributes like `id` and `class` when possible, but attributes may be lost and need to be re-added in `ffs.attributes.json` after the rename.
+- **Renaming** is treated as a delete + create. The sync attempts to detect moves by matching content hashes and will carry over attributes like `id` and `class` when possible, but attributes may be lost and need to be re-added in `.ffs/ffs.attributes.json` after the rename.
 
-> **Important:** When creating or renaming files/folders, the new entries will initially have no attributes. You must add the required `_attributes` (such as `class`, `id`, `auto`) in `ffs.attributes.json` for the new entries to function correctly with WPM imports and auto-run.
+> **Important:** When creating or renaming files/folders, the new entries will initially have no attributes. You must add the required `_attributes` (such as `class`, `id`, `auto`) in `.ffs/ffs.attributes.json` for the new entries to function correctly with WPM imports and auto-run.
 
-## `ffs.attributes.json`
+## `.ffs/ffs.attributes.json`
 
 This file uses a nested structure that mirrors the filesystem hierarchy. Each node can have an `_attributes` key containing the tracked DOM attributes for that fragment or folder:
 
@@ -3538,9 +4761,50 @@ This file uses a nested structure that mirrors the filesystem hierarchy. Each no
 - Only change attribute **values** within existing `_attributes` objects, or add/remove attribute keys.
 - Do not add new file/folder entries — those are managed by the filesystem sync.
 - Changes are applied on the next sync tick (~1 second). Only values that actually differ from the current DOM are written, avoiding unnecessary webstrate versions.
+- When synchronization starts or resumes, DOM attributes overwrite disk attributes before bidirectional synchronization begins.
+- JSON object property order has no effect on DOM order. Use `.ffs/ffs.dom-order.json` to reorder elements.
+
+## `.ffs/ffs.dom-order.json`
+
+This file records the order of the immediate `&lt;code-fragment>`, `&lt;code-folder>`, and `&lt;wpm-package>` children under `document.body` and every synchronized folder. Object keys are synchronized filesystem directory paths, and each value is an array of immediate child filenames and folder names in DOM order:
+
+```json
+{
+    "/": ["Code", "Setup.js"],
+    "/Code": ["Core", "Components", "App.jsx"],
+    "/Code/Core": ["AppShell.wpm", "MaterialColors.wpm"]
+}
+```
+
+Reordering names in an array moves the corresponding elements in the DOM on the next sync tick. Ordering is recursive: `/` controls managed children directly under the document body, while each folder path controls its own direct managed children. Ordinary HTML children are not listed and retain their positions and relative order. Managed elements nested inside ordinary HTML wrappers are not reordered.
+
+During active synchronization, a disk edit wins if the disk manifest and DOM order both change between ticks. A DOM-only reorder is exported to disk. When synchronization starts or another tab takes over, the webstrate is authoritative and its current DOM order overwrites the disk manifest.
+
+The manifest is reconciled with the synchronized filesystem structure:
+
+- A valid partial array places its known entries first, then retains unlisted children in their current relative order.
+- Unknown and duplicate entries are ignored and removed when the canonical manifest is written.
+- Creating, deleting, or renaming a file or folder updates the manifest after the filesystem operation is synchronized.
+- Deleting the manifest regenerates it from the DOM.
+- During active synchronization, invalid JSON or an invalid top-level schema is preserved without changing the DOM. A console warning is emitted, and order synchronization resumes after the file is corrected. Startup reconciliation still replaces it with the authoritative DOM order.
+- Collision suffixes such as `_1` remain associated with the same DOM elements when same-named siblings are reordered.
+
+## `.ffs/wpm.bootconfig.json`
+
+This file synchronizes the exact text content of the WPM boot configuration in both directions:
+
+- Editing the file updates the DOM script on the next sync tick.
+- Editing the DOM script updates the file on the next sync tick.
+- Content is not parsed or validated, so temporarily invalid JSON is still synchronized.
+- During active bidirectional synchronization, if disk and DOM both change between ticks, the disk content wins.
+- Deleting the file regenerates it from the DOM.
+- When synchronization starts or resumes, the DOM content wins. If the boot configuration script is absent, a stale `.ffs/wpm.bootconfig.json` file is removed.
+- During active synchronization, boot configuration synchronization is skipped while the DOM script is absent.
+
+Changing the boot configuration does not reload WPM packages in the current page session; WPM consumes the configuration during the next page boot.
 </code-fragment></wpm-package></code-folder><code-fragment data-type="text/markdown" name="AGENTS"># AGENTS.md
 
-Webstrates + Codestrates + Fragment Filesystem Sync — Agents Documentation — V1
+Webstrates + Codestrates + Fragment Filesystem Sync — Agents Documentation — V2.2
 
 
 ## Fragment Filesystem Sync
@@ -3555,38 +4819,67 @@ Folders correspond to `&lt;code-folder>` elements, and folders ending in `.wpm` 
 
 The file- and foldername comes from the `name=""` attribute on the fragment element.
 
-### Attributes File
+### Control Files
 
-The `ffs.attributes.json` file in the workspace root contains a nested JSON tree mirroring the filesystem hierarchy. Each entry can have an `_attributes` key with the tracked DOM attributes (`auto`, `data-type`, `class`, `id`) for that fragment or folder.
+Fragment Filesystem Sync stores its control files in the `.ffs` folder in the workspace root. This folder is reserved and does not represent a folder in the codestrate DOM.
+
+The `.ffs/ffs.attributes.json` file contains a nested JSON tree mirroring the filesystem hierarchy. Each entry can have an `_attributes` key with the tracked DOM attributes (`auto`, `data-type`, `class`, `id`) for that fragment or folder.
 
 - Read this file to understand which CSS classes and IDs are assigned to each fragment
 - Edit attribute values here and they will be synced to the DOM automatically on the next tick
 - Do not add or remove file/folder entries in this JSON — only modify attribute values
+- The `.ffs/ffs.meta` file contains internal synchronization state and must never be edited manually
+
+The `.ffs/ffs.dom-order.json` file contains arrays describing the DOM order of synchronized fragments and folders under each filesystem directory path.
+
+- Reorder existing generated array entries to change DOM sibling order; do not invent paths or entry names
+- Changing an array moves the corresponding elements in the live DOM on the next sync tick
+- Wait for a newly created or renamed file/folder to appear after a sync tick before changing its order
+- JSON property order in `.ffs/ffs.attributes.json` does not control DOM order
+
+The `.ffs/wpm.bootconfig.json` file contains the exact text of the WPM boot configuration from `head script[type="text/json+bootconfig"]`.
+
+- Changes are synchronized in both directions without JSON validation or reformatting
+- If both disk and DOM change between ticks, the disk content wins
+- Deleting the file regenerates it from the DOM
+- Changing it affects WPM on the next page boot; it does not reload packages in the current session
 
 ### Creating, Renaming, and Deleting Files
 
 Files and folders can be created, renamed, and deleted on disk, and the changes will sync to the DOM:
 
-- **Renaming** a file or folder may cause its attributes (`class`, `id`, `auto`) to be lost — re-add them in `ffs.attributes.json` after renaming
-- **Creating** a new file or folder will initially have no attributes — add the required `_attributes` in `ffs.attributes.json` for it to work with WPM imports and auto-run (for example CSS and SCSS files need `auto: ""` to be active)
+- **Renaming** a file or folder may cause its attributes (`class`, `id`, `auto`) to be lost — re-add them in `.ffs/ffs.attributes.json` after renaming
+- **Creating** a new file or folder will initially have no attributes — wait approximately one sync tick for its entry to appear in `.ffs/ffs.attributes.json`, then add or modify only the required keys inside its generated `_attributes` object
+- **Ordering** a new or renamed file/folder requires waiting for it to appear in `.ffs/ffs.dom-order.json`, then moving its existing array entry
+- Never create the file/folder entry in `.ffs/ffs.attributes.json` manually; Fragment Filesystem Sync owns the tree structure
+- CSS and SCSS fragments need `auto: ""` to be active, and importable JavaScript or JSX fragments need the appropriate `class` or `id`
 
 
 ## Development
 
-You should only edit files in the `Code` folder unless the user asks for other changes explicitely.
+- You should only edit files in the `Code` folder unless the user asks for other changes explicitely
+- `.ffs/ffs.attributes.json` and `.ffs/ffs.dom-order.json` are the permitted exceptions when a Code change requires assigning attributes or changing DOM order; only edit generated attribute keys/values or reorder generated array entries
+- Refrain from making edits to files by deleting and recreating them, as this removes attributes from fragments and reorders fragments in the DOM
 
 ### Importing and Exporting
 
 - Imports between fragments use DOM query selectors under the hood, not the filesystem path
 - **Exporting** a value from a fragment:
     - Use standard ES module `export` syntax.
-    - The fragment must have an `id` or `class` attribute set in `ffs.attributes.json` that the importer can reference
+    - The fragment must have an `id` or `class` attribute set in `.ffs/ffs.attributes.json` that the importer can reference
 - **Importing** from another fragment:
     - Use `import MyComponent from '#PackageId .fragmentClass';` — where `PackageId` is the `id` of the `.wpm` folder and `fragmentClass` is the `class` on the fragment file
-    - Example: `import MyComponent from '#MyPackage .default';` imports the default export from the fragment with `class="default"` inside the package with `id="MyPackage"`
+    - The `.default` portion of a selector refers to the fragment's CSS class, not to a JavaScript default export
+    - Match the import syntax to the fragment's actual ES module export: use `import { MyComponent } from '#MyPackage .default';` for a named export
     - Do **not** use relative imports like `import MyComponent from '../MyComponent';`
     - Do **not** use filesystem folder paths like `import MyComponent from '#Code/MyComponent';`
 - CSS and SCSS files cannot export and import values
+
+### WPM Descriptors and Assets
+
+- List every package dependency and asset in the package's `descriptor.json`
+- Shared repository packages must declare their own transitive package dependencies rather than relying on the consuming app to install them
+- Assets are not fragment files and may not appear in the synchronized package folder; after an asset has been added to the WPM package, list its filename in `assets` and reference it with a package-relative URL such as `example.svg`
 
 ### Code Style
 
@@ -20496,5 +21789,6 @@ addControllerSubMenu('movables', 100, false);
 addItemToControllerSubMenu('movables', 'title', &lt;ControllerMenuTitle title="Menu" />, 0);
 addItemToControllerSubMenu('movables', 'add-model-shelf', &lt;ControllerMenuButton onClick={() => createMovable('ModelShelf')}>New Model Gallery&lt;/ControllerMenuButton>, 350);
 addItemToControllerSubMenu('movables', 'spacer-items', &lt;ControllerMenuSpacer />, 400);
-</code-fragment></wpm-package></code-folder></code-folder><code-folder id="vis-component-container" name="Vis-Components"><code-folder class="spec-container" name="Specs"></code-folder><code-folder class="dataset-container" name="Datasets"></code-fragment></code-folder></code-folder>
+</code-fragment></wpm-package></code-folder></code-folder><code-folder id="vis-component-container" name="Vis-Components"><code-folder class="spec-container" name="Specs"></code-folder><code-folder class="dataset-container" name="Datasets"></code-folder></code-folder>
+
 </body></html>
