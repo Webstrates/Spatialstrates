@@ -2792,7 +2792,7 @@ class FragmentFilesystemSync {
         };
 
         // Check if FS has fragments/dirs that should be deleted
-        let unknownPathDeleter = async (path,, parent, entry) => {
+        let unknownPathDeleter = async (path, name, parent, entry) => {
             if (path === '/' + controlDirectoryName) return false;
             if (!this.pathMapping.has(path)) {
                 await parent.removeEntry(name, { recursive: true }); // Delete it
